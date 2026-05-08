@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Post-Contact Email Generator</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f5f7; color: #1a1a1a; min-height: 100vh; padding: 2rem 1rem; }
+.page { max-width: 720px; margin: 0 auto; }
+.header { margin-bottom: 1.5rem; display: flex; align-items: center; gap: 14px; }
+.back-btn { font-size: 13px; color: #888; text-decoration: none; background: #fff; border: 1px solid #e2e4e8; border-radius: 6px; padding: 6px 12px; transition: color 0.15s; }
+.back-btn:hover { color: #0a7c5c; border-color: #0a7c5c; }
+.header-text h1 { font-size: 20px; font-weight: 600; }
+.header-text p { font-size: 13px; color: #666; margin-top: 2px; }
+.card { background: #fff; border: 1px solid #e2e4e8; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+.card-title { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 1rem; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 12px; color: #555; font-weight: 500; }
+input, select { font-size: 14px; padding: 8px 10px; border: 1px solid #d0d3d9; border-radius: 6px; background: #fff; color: #1a1a1a; width: 100%; outline: none; transition: border-color 0.15s; }
+input:focus, select:focus { border-color: #3b7dd8; box-shadow: 0 0 0 3px rgba(59,125,216,0.1); }
+select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+select.sel-green  { background-color:#085041;color:#9FE1CB;border-color:#085041; }
+select.sel-amber  { background-color:#633806;color:#FAC775;border-color:#633806; }
+select.sel-blue   { background-color:#0C447C;color:#B5D4F4;border-color:#0C447C; }
+select.sel-green option, select.sel-amber option, select.sel-blue option { background:#fff;color:#1a1a1a; }
+.btn-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 1rem; }
+.gen-btn { padding: 12px; background: #1a1a1a; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; color: #fff; cursor: pointer; }
+.gen-btn:hover { background: #333; }
+.clear-btn { padding: 12px 18px; background: #fff; border: 1px solid #d0d3d9; border-radius: 8px; font-size: 14px; font-weight: 500; color: #888; cursor: pointer; white-space: nowrap; }
+.clear-btn:hover { color: #c0392b; border-color: #c0392b; }
+.out { display: none; }
+.out.show { display: block; }
+.subj-box { background: #fff; border: 1px solid #e2e4e8; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+.subj-title { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.75rem; }
+.subj-option { background: #f9fafb; border: 1px solid #e2e4e8; border-radius: 7px; padding: 10px 14px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.subj-option:last-child { margin-bottom: 0; }
+.subj-text { font-size: 14px; color: #1a1a1a; flex: 1; }
+.subj-copy { font-size: 12px; color: #888; background: #fff; border: 1px solid #d0d3d9; border-radius: 5px; padding: 4px 10px; cursor: pointer; white-space: nowrap; }
+.subj-copy:hover { color: #0a7c5c; border-color: #0a7c5c; }
+.email-box { background: #fff; border: 1px solid #e2e4e8; border-radius: 10px; padding: 2rem; font-size: 14px; line-height: 1.85; color: #1a1a1a; font-family: Georgia, 'Times New Roman', serif; max-width: 600px; }
+.email-box a { color: #185FA5; }
+.copy-btn { margin-top: 10px; width: 100%; padding: 11px; background: #fff; border: 1px solid #d0d3d9; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; color: #1a1a1a; }
+.copy-btn:hover { background: #f4f5f7; }
+.call-type-seg { display: flex; border: 1px solid #d0d3d9; border-radius: 6px; overflow: hidden; }
+.call-opt { flex: 1; padding: 9px 12px; font-size: 13px; font-weight: 500; cursor: pointer; text-align: center; border: none; background: #fff; color: #888; transition: background 0.12s, color 0.12s; }
+.call-opt.on-blue   { background: #0C447C; color: #B5D4F4; }
+.call-opt.on-green  { background: #085041; color: #9FE1CB; }
+.call-opt + .call-opt { border-left: 1px solid #d0d3d9; }
+@media(max-width:520px){ .grid2,.grid3{grid-template-columns:1fr} .btn-row{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <a class="back-btn" href="index.html">← Dashboard</a>
+    <div class="header-text">
+      <h1>Post-Contact Email Generator</h1>
+      <p>First follow-up email after initial client contact</p>
+    </div>
+  </div>
+
+  <!-- BROKER DETAILS -->
+  <div class="card">
+    <div class="card-title">Broker details</div>
+    <div class="grid2">
+      <div class="field"><label>Your name</label><input id="brokerName" value="Josh Coppolelli"/></div>
+      <div class="field"><label>Phone number(s)</label><input id="brokerPhone" value="0426 275 799 / 02 7256 9675"/></div>
+      <div class="field" style="grid-column:1/-1;"><label>App / booking link</label><input id="appLink" value="https://www.aussie.com.au/mobile-app/connect-with-me/?brokerid=c56979bb-d130-8920-afe2-1a279a847012&utm_source=app-prl"/></div>
+    </div>
+  </div>
+
+  <!-- CLIENT DETAILS -->
+  <div class="card">
+    <div class="card-title">Client details</div>
+    <div class="grid2">
+      <div class="field"><label>Client first name</label><input id="clientName" placeholder="e.g. Sarah"/></div>
+      <div class="field"><label>Client email (optional)</label><input id="clientEmail" placeholder="for reference only"/></div>
+    </div>
+  </div>
+
+  <!-- APPOINTMENT -->
+  <div class="card">
+    <div class="card-title">Appointment details</div>
+    <div class="grid2" style="margin-bottom:12px;">
+      <div class="field">
+        <label>Appointment date</label>
+        <input type="date" id="apptDate"/>
+      </div>
+      <div class="field">
+        <label>Time</label>
+        <select id="apptTime">
+          <option value="">— Select time —</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label style="margin-bottom:6px;">Call type</label>
+      <div class="call-type-seg">
+        <button class="call-opt" id="optVideo" onclick="setCallType('video')">📹 Video call (Microsoft Teams)</button>
+        <button class="call-opt" id="optPhone" onclick="setCallType('phone')">📞 Phone call</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="gen-btn" onclick="generate()">Generate email</button>
+    <button class="clear-btn" onclick="clearAll()">Clear fields</button>
+  </div>
+
+  <div class="out" id="outArea">
+    <div class="subj-box">
+      <div class="subj-title">Suggested subject lines — click to copy</div>
+      <div id="subjLines"></div>
+    </div>
+    <div class="email-box" id="emailOut"></div>
+    <button class="copy-btn" onclick="copyEmail()">Copy email to clipboard</button>
+  </div>
+
+</div>
+<script>
+var callType = '';
+
+// Populate time dropdown in 15-min intervals
+(function initTime() {
+  var sel = document.getElementById('apptTime');
+  for (var h = 7; h <= 19; h++) {
+    for (var m = 0; m < 60; m += 15) {
+      var hour12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+      var ampm   = h >= 12 ? 'pm' : 'am';
+      var mins   = m === 0 ? '00' : m;
+      var label  = hour12 + ':' + mins + ampm;
+      var opt    = document.createElement('option');
+      opt.value  = label;
+      opt.textContent = label;
+      sel.appendChild(opt);
+    }
+  }
+})();
+
+// Pre-fill date to tomorrow
+(function initDate() {
+  var d = new Date();
+  d.setDate(d.getDate() + 1);
+  var yyyy = d.getFullYear();
+  var mm   = String(d.getMonth() + 1).padStart(2, '0');
+  var dd   = String(d.getDate()).padStart(2, '0');
+  document.getElementById('apptDate').value = yyyy + '-' + mm + '-' + dd;
+})();
+
+function setCallType(type) {
+  callType = type;
+  document.getElementById('optVideo').className = 'call-opt' + (type === 'video' ? ' on-blue' : '');
+  document.getElementById('optPhone').className = 'call-opt' + (type === 'phone' ? ' on-green' : '');
+}
+
+function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
+var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+function getSmartDayLabel(dateStr) {
+  if (!dateStr) return '';
+  var parts = dateStr.split('-');
+  var appt  = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+  var today = new Date(); today.setHours(0,0,0,0);
+  var diffDays = Math.round((appt - today) / 86400000);
+  var dayName  = DAYS[appt.getDay()];
+  if (diffDays === 0) return 'today';
+  if (diffDays === 1) return 'tomorrow';
+  if (diffDays > 1 && diffDays <= 6) return 'this ' + dayName;
+  if (diffDays > 6 && diffDays <= 13) return 'next ' + dayName;
+  // Further out — just say the day name
+  return dayName;
+}
+
+function getVal(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+function fmtDate(dateStr) {
+  if (!dateStr) return '';
+  var parts = dateStr.split('-');
+  return parts[2] + '/' + parts[1];
+}
+
+function clearAll() {
+  if (!confirm('Clear all fields?')) return;
+  document.getElementById('clientName').value = '';
+  document.getElementById('clientEmail').value = '';
+  document.getElementById('apptDate').value = '';
+
+  document.getElementById('apptTime').value = '';
+  callType = '';
+  setCallType('');
+  document.getElementById('outArea').className = 'out';
+  document.getElementById('emailOut').innerHTML = '';
+  document.getElementById('subjLines').innerHTML = '';
+}
+
+function generate() {
+  var name     = cap(getVal('clientName')) || 'there';
+  var broker   = getVal('brokerName');
+  var phone    = getVal('brokerPhone');
+  var appLink  = getVal('appLink');
+  var apptDate = getVal('apptDate');
+  var apptTime = getVal('apptTime');
+
+  if (!callType) { alert('Please select video call or phone call.'); return; }
+  if (!apptTime) { alert('Please select an appointment time.'); return; }
+  if (!apptDate) { alert('Please select an appointment date.'); return; }
+
+  var dateDisplay = getSmartDayLabel(apptDate) + ' ' + fmtDate(apptDate);
+
+  var apptLine = '';
+  if (callType === 'video') {
+    apptLine = 'A <strong>video call</strong> has been booked for <strong>' + dateDisplay + ' at ' + apptTime + '</strong>. An automated email will be sent to you so you can join the meeting. You can access the meeting through your web browser on your computer — however, if you access the meeting on your phone or tablet you will need to download the <strong>Microsoft Teams app</strong> first.';
+  } else {
+    apptLine = 'A <strong>phone call</strong> has been booked for <strong>' + dateDisplay + ' at ' + apptTime + '</strong>. I will call you on your registered number at that time — please make sure you are available and have good reception.';
+  }
+
+  // Subject lines
+  var subjects = [
+    'Your home loan options, ' + name + ' — as discussed',
+    'Next steps for your loan, ' + name + ' \uD83D\uDCCB',
+    'Your appointment is confirmed — ' + getSmartDayLabel(apptDate) + ' ' + fmtDate(apptDate) + ' at ' + apptTime
+  ];
+
+  var sl = document.getElementById('subjLines');
+  sl.innerHTML = '';
+  for (var si = 0; si < subjects.length; si++) {
+    (function(subj) {
+      var row = document.createElement('div');
+      row.className = 'subj-option';
+      var t = document.createElement('span');
+      t.className = 'subj-text';
+      t.textContent = subj;
+      var btn = document.createElement('button');
+      btn.className = 'subj-copy';
+      btn.textContent = 'Copy';
+      btn.onclick = function() {
+        navigator.clipboard.writeText(subj).then(function() {
+          btn.textContent = 'Copied!';
+          setTimeout(function() { btn.textContent = 'Copy'; }, 1400);
+        });
+      };
+      row.appendChild(t);
+      row.appendChild(btn);
+      sl.appendChild(row);
+    })(subjects[si]);
+  }
+
+  // Build email HTML
+  var G = '#0a7c5c';
+  var html = '<p style="margin-bottom:14px;">Hi ' + name + ',</p>';
+  html += '<p style="margin-bottom:14px;">Please see the options we spoke about attached.</p>';
+
+  // Appointment block
+  html += '<div style="background:#f0f7f4;border-left:3px solid ' + G + ';border-radius:4px;padding:12px 16px;margin-bottom:14px;">';
+  html += '<p style="font-size:14px;line-height:1.7;">' + apptLine + '</p>';
+  html += '</div>';
+
+  // App section
+  html += '<p style="margin-bottom:10px;">Please upload the documents required via the <a href="' + appLink + '" style="color:#185FA5;text-decoration:underline;">Aussie Mobile App</a>. My contact details are also available on the app.</p>';
+  html += '<p style="margin-bottom:8px;">Once you have downloaded the app:</p>';
+  html += '<ol style="margin-left:20px;margin-bottom:14px;line-height:1.9;font-size:14px;">';
+  html += '<li>Log in with your mobile number — everything will sync and you should be able to see me as your broker.</li>';
+  html += '<li>Head to the <strong>"Finances"</strong> tab (second from the left).</li>';
+  html += '<li>Under the <strong>Applications</strong> header, click the <strong>"Continue"</strong> button.</li>';
+  html += '<li>Upload your documents.</li>';
+  html += '</ol>';
+
+  html += '<p style="margin-bottom:16px;">Please let me know if you have any questions!</p>';
+
+  var sig = [broker];
+  if (phone) sig.push(phone);
+  html += '<p style="font-size:14px;color:#333;line-height:1.8;">Kind regards,<br/>' + sig.join('<br/>') + '</p>';
+
+  document.getElementById('emailOut').innerHTML = html;
+  document.getElementById('outArea').className = 'out show';
+  document.getElementById('outArea').scrollIntoView({ behavior: 'smooth' });
+}
+
+function copyEmail() {
+  var el = document.getElementById('emailOut');
+  var plain = el.innerText || el.textContent;
+  var htmlContent = '<div style="font-family:Georgia,serif;font-size:14px;line-height:1.85;max-width:600px;">' + el.innerHTML + '</div>';
+  try {
+    var item = new ClipboardItem({
+      'text/plain': new Blob([plain], { type: 'text/plain' }),
+      'text/html':  new Blob([htmlContent], { type: 'text/html' })
+    });
+    navigator.clipboard.write([item]).then(function() {
+      var b = document.querySelector('.copy-btn');
+      b.textContent = 'Copied!';
+      setTimeout(function() { b.textContent = 'Copy email to clipboard'; }, 1500);
+    });
+  } catch(e) {
+    navigator.clipboard.writeText(plain).then(function() {
+      var b = document.querySelector('.copy-btn');
+      b.textContent = 'Copied (plain text)';
+      setTimeout(function() { b.textContent = 'Copy email to clipboard'; }, 1500);
+    });
+  }
+}
+</script>
+</body>
+</html>
