@@ -16,16 +16,36 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .card { background: #fff; border: 1px solid #e2e4e8; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
 .card-title { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 1rem; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field label { font-size: 12px; color: #555; font-weight: 500; }
 input, select { font-size: 14px; padding: 8px 10px; border: 1px solid #d0d3d9; border-radius: 6px; background: #fff; color: #1a1a1a; width: 100%; outline: none; transition: border-color 0.15s; }
 input:focus, select:focus { border-color: #3b7dd8; box-shadow: 0 0 0 3px rgba(59,125,216,0.1); }
 select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
-select.sel-green  { background-color:#085041;color:#9FE1CB;border-color:#085041; }
-select.sel-amber  { background-color:#633806;color:#FAC775;border-color:#633806; }
-select.sel-blue   { background-color:#0C447C;color:#B5D4F4;border-color:#0C447C; }
-select.sel-green option, select.sel-amber option, select.sel-blue option { background:#fff;color:#1a1a1a; }
+select.sel-green  { background-color:#085041;color:#9FE1CB;border-color:#085041; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239FE1CB' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); }
+select.sel-amber  { background-color:#633806;color:#FAC775;border-color:#633806; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23FAC775' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); }
+select.sel-blue   { background-color:#0C447C;color:#B5D4F4;border-color:#0C447C; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23B5D4F4' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); }
+select.sel-teal   { background-color:#0e5c6e;color:#a8dde8;border-color:#0e5c6e; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a8dde8' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); }
+select.sel-indigo { background-color:#3730a3;color:#c7d2fe;border-color:#3730a3; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c7d2fe' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); }
+select.sel-green option, select.sel-amber option, select.sel-blue option, select.sel-teal option, select.sel-indigo option { background:#fff;color:#1a1a1a; }
+
+/* Segment / toggle buttons */
+.seg { display: flex; border: 1px solid #d0d3d9; border-radius: 6px; overflow: hidden; }
+.seg-opt { flex: 1; padding: 9px 12px; font-size: 13px; font-weight: 500; cursor: pointer; text-align: center; border: none; background: #fff; color: #888; transition: background 0.12s, color 0.12s; }
+.seg-opt + .seg-opt { border-left: 1px solid #d0d3d9; }
+.seg-opt.on-blue  { background: #0C447C; color: #B5D4F4; }
+.seg-opt.on-green { background: #085041; color: #9FE1CB; }
+
+/* Applicant rows */
+.applicant-block { margin-top: 4px; }
+.applicant-row { display: flex; align-items: center; gap: 8px; }
+.applicant-row select { flex: 1; min-width: 0; }
+.remove-btn { font-size: 12px; color: #aaa; background: none; border: 1px solid #d0d3d9; border-radius: 5px; padding: 5px 9px; cursor: pointer; white-space: nowrap; transition: color 0.15s, border-color 0.15s; flex-shrink: 0; }
+.remove-btn:hover { color: #c0392b; border-color: #c0392b; }
+.add-applicant-btn { margin-top: 8px; font-size: 13px; color: #0a7c5c; background: none; border: 1px dashed #0a7c5c; border-radius: 6px; padding: 7px 14px; cursor: pointer; width: 100%; transition: background 0.12s; }
+.add-applicant-btn:hover { background: #f0f7f4; }
+.add-applicant-btn:disabled { color: #aaa; border-color: #d0d3d9; cursor: not-allowed; background: none; }
+
+/* Output area */
 .btn-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 1rem; }
 .gen-btn { padding: 12px; background: #1a1a1a; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; color: #fff; cursor: pointer; }
 .gen-btn:hover { background: #333; }
@@ -41,15 +61,9 @@ select.sel-green option, select.sel-amber option, select.sel-blue option { backg
 .subj-copy { font-size: 12px; color: #888; background: #fff; border: 1px solid #d0d3d9; border-radius: 5px; padding: 4px 10px; cursor: pointer; white-space: nowrap; }
 .subj-copy:hover { color: #0a7c5c; border-color: #0a7c5c; }
 .email-box { background: #fff; border: 1px solid #e2e4e8; border-radius: 10px; padding: 2rem; font-size: 14px; line-height: 1.85; color: #1a1a1a; font-family: Georgia, 'Times New Roman', serif; max-width: 600px; }
-.email-box a { color: #185FA5; }
 .copy-btn { margin-top: 10px; width: 100%; padding: 11px; background: #fff; border: 1px solid #d0d3d9; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; color: #1a1a1a; }
 .copy-btn:hover { background: #f4f5f7; }
-.call-type-seg { display: flex; border: 1px solid #d0d3d9; border-radius: 6px; overflow: hidden; }
-.call-opt { flex: 1; padding: 9px 12px; font-size: 13px; font-weight: 500; cursor: pointer; text-align: center; border: none; background: #fff; color: #888; transition: background 0.12s, color 0.12s; }
-.call-opt.on-blue   { background: #0C447C; color: #B5D4F4; }
-.call-opt.on-green  { background: #085041; color: #9FE1CB; }
-.call-opt + .call-opt { border-left: 1px solid #d0d3d9; }
-@media(max-width:520px){ .grid2,.grid3{grid-template-columns:1fr} .btn-row{grid-template-columns:1fr} }
+@media(max-width:520px){ .grid2{grid-template-columns:1fr} .btn-row{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -82,26 +96,58 @@ select.sel-green option, select.sel-amber option, select.sel-blue option { backg
     </div>
   </div>
 
+  <!-- TRANSACTION TYPE -->
+  <div class="card">
+    <div class="card-title">Transaction type</div>
+    <div class="field">
+      <label>What type of transaction is this?</label>
+      <select id="transactionType" onchange="styleSelect(this,'txn')">
+        <option value="">— Select transaction type —</option>
+        <option value="purchase">Purchase</option>
+        <option value="fhb">First Home Buyer (Home Guarantee Scheme)</option>
+        <option value="refinance">Refinance</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- APPLICANT DETAILS -->
+  <div class="card">
+    <div class="card-title">Applicant details</div>
+    <div class="applicant-block" id="applicantBlock"></div>
+    <button class="add-applicant-btn" id="addApplicantBtn" onclick="addApplicant()">+ Add another applicant</button>
+  </div>
+
   <!-- APPOINTMENT -->
   <div class="card">
     <div class="card-title">Appointment details</div>
     <div class="grid2" style="margin-bottom:12px;">
       <div class="field">
         <label>Appointment date</label>
-        <input type="date" id="apptDate"/>
+        <input type="date" id="apptDate" onchange="updateTimezoneHint()"/>
       </div>
       <div class="field">
-        <label>Time</label>
-        <select id="apptTime">
+        <label>Time <span id="tzHint" style="font-weight:400;color:#888;font-size:11px;"></span></label>
+        <select id="apptTime" onchange="updateTimezoneHint()">
           <option value="">— Select time —</option>
         </select>
       </div>
     </div>
+    <div class="field" style="margin-bottom:12px;">
+      <label>Client's timezone</label>
+      <select id="clientTz" onchange="updateTimezoneHint()">
+        <option value="">— Select timezone —</option>
+        <option value="Australia/Sydney">NSW / VIC / TAS / ACT — Sydney/Melbourne time</option>
+        <option value="Australia/Brisbane">QLD — Brisbane time (no daylight saving)</option>
+        <option value="Australia/Adelaide">SA — Adelaide time</option>
+        <option value="Australia/Darwin">NT — Darwin time</option>
+        <option value="Australia/Perth">WA — Perth time</option>
+      </select>
+    </div>
     <div class="field">
       <label style="margin-bottom:6px;">Call type</label>
-      <div class="call-type-seg">
-        <button class="call-opt" id="optVideo" onclick="setCallType('video')">📹 Video call (Microsoft Teams)</button>
-        <button class="call-opt" id="optPhone" onclick="setCallType('phone')">📞 Phone call</button>
+      <div class="seg">
+        <button class="seg-opt" id="optVideo" onclick="setCallType('video')">📹 Video call (Microsoft Teams)</button>
+        <button class="seg-opt" id="optPhone" onclick="setCallType('phone')">📞 Phone call</button>
       </div>
     </div>
   </div>
@@ -122,16 +168,22 @@ select.sel-green option, select.sel-amber option, select.sel-blue option { backg
 
 </div>
 <script>
+// ─── State ──────────────────────────────────────────────────────────────────
 var callType = '';
+var applicants = []; // array of { id, empValue, residency }
+var nextApplicantId = 1;
+var MAX_APPLICANTS = 6;
 
-// Populate time dropdown in 15-min intervals
-(function initTime() {
+// ─── Init ────────────────────────────────────────────────────────────────────
+(function init() {
+  // Time dropdown — 15-min intervals 7am–7pm
   var sel = document.getElementById('apptTime');
   for (var h = 7; h <= 19; h++) {
     for (var m = 0; m < 60; m += 15) {
+      if (h === 19 && m > 0) break;
       var hour12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
       var ampm   = h >= 12 ? 'pm' : 'am';
-      var mins   = m === 0 ? '00' : m;
+      var mins   = m === 0 ? '00' : String(m);
       var label  = hour12 + ':' + mins + ampm;
       var opt    = document.createElement('option');
       opt.value  = label;
@@ -139,65 +191,493 @@ var callType = '';
       sel.appendChild(opt);
     }
   }
-})();
 
-// Pre-fill date to tomorrow
-(function initDate() {
+  // Pre-fill date to tomorrow
   var d = new Date();
   d.setDate(d.getDate() + 1);
-  var yyyy = d.getFullYear();
-  var mm   = String(d.getMonth() + 1).padStart(2, '0');
-  var dd   = String(d.getDate()).padStart(2, '0');
-  document.getElementById('apptDate').value = yyyy + '-' + mm + '-' + dd;
+  document.getElementById('apptDate').value =
+    d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+
+  // Add first applicant row by default
+  addApplicant();
 })();
 
-function setCallType(type) {
-  callType = type;
-  document.getElementById('optVideo').className = 'call-opt' + (type === 'video' ? ' on-blue' : '');
-  document.getElementById('optPhone').className = 'call-opt' + (type === 'phone' ? ' on-green' : '');
+// ─── Applicant management ────────────────────────────────────────────────────
+function addApplicant() {
+  if (applicants.length >= MAX_APPLICANTS) return;
+
+  var id = nextApplicantId++;
+  applicants.push({ id: id, empValue: '', residency: '' });
+  renderApplicants();
 }
 
+function removeApplicant(id) {
+  applicants = applicants.filter(function(a) { return a.id !== id; });
+  // Always keep at least 1
+  if (applicants.length === 0) addApplicant();
+  else renderApplicants();
+}
+
+function renderApplicants() {
+  var block = document.getElementById('applicantBlock');
+  block.innerHTML = '';
+
+  applicants.forEach(function(appt, idx) {
+    var wrapper = document.createElement('div');
+    wrapper.style.cssText = 'margin-bottom:10px;';
+
+    // Label row
+    var lbl = document.createElement('div');
+    lbl.style.cssText = 'font-size:12px;color:#555;font-weight:600;margin-bottom:5px;';
+    lbl.textContent = applicants.length === 1 ? 'Applicant' : 'Applicant ' + (idx + 1);
+
+    // Controls row: emp select + residency select + remove btn
+    var row = document.createElement('div');
+    row.className = 'applicant-row';
+
+    // Employment select
+    var sel = document.createElement('select');
+    sel.id = 'emp_' + appt.id;
+    sel.innerHTML = '<option value="">— Employment type —</option>' +
+      '<option value="payg">Employee (PAYG)</option>' +
+      '<option value="sole">Sole Trader</option>' +
+      '<option value="company">Company</option>';
+    sel.value = appt.empValue;
+    if (appt.empValue) styleEmpSelect(sel, appt.empValue);
+    sel.onchange = (function(a, s) {
+      return function() { a.empValue = s.value; styleEmpSelect(s, s.value); };
+    })(appt, sel);
+
+    // Residency select
+    var res = document.createElement('select');
+    res.id = 'res_' + appt.id;
+    res.innerHTML = '<option value="">— Residency status —</option>' +
+      '<option value="citizen">Australian Citizen</option>' +
+      '<option value="pr">Permanent Resident</option>';
+    res.value = appt.residency;
+    if (appt.residency) styleResSelect(res, appt.residency);
+    res.onchange = (function(a, r) {
+      return function() { a.residency = r.value; styleResSelect(r, r.value); };
+    })(appt, res);
+
+    row.appendChild(sel);
+    row.appendChild(res);
+
+    if (applicants.length > 1) {
+      var rm = document.createElement('button');
+      rm.className = 'remove-btn';
+      rm.textContent = 'Remove';
+      rm.onclick = (function(aid) { return function() { removeApplicant(aid); }; })(appt.id);
+      row.appendChild(rm);
+    }
+
+    wrapper.appendChild(lbl);
+    wrapper.appendChild(row);
+    block.appendChild(wrapper);
+  });
+
+  // Update Add button
+  var btn = document.getElementById('addApplicantBtn');
+  btn.disabled = applicants.length >= MAX_APPLICANTS;
+  btn.textContent = applicants.length >= MAX_APPLICANTS
+    ? '+ Maximum ' + MAX_APPLICANTS + ' applicants reached'
+    : '+ Add another applicant';
+}
+
+function styleEmpSelect(el, val) {
+  el.className = '';
+  if (val === 'payg')    el.className = 'sel-green';
+  if (val === 'sole')    el.className = 'sel-amber';
+  if (val === 'company') el.className = 'sel-blue';
+}
+
+function styleResSelect(el, val) {
+  el.className = '';
+  if (val === 'citizen') el.className = 'sel-teal';
+  if (val === 'pr')      el.className = 'sel-indigo';
+}
+
+function styleSelect(el, kind) {
+  el.className = '';
+  var v = el.value;
+  if (kind === 'txn') {
+    if (v === 'purchase')  el.className = 'sel-teal';
+    if (v === 'fhb')       el.className = 'sel-indigo';
+    if (v === 'refinance') el.className = 'sel-amber';
+  }
+}
+
+// ─── Call type ───────────────────────────────────────────────────────────────
+function setCallType(type) {
+  callType = type;
+  document.getElementById('optVideo').className = 'seg-opt' + (type === 'video' ? ' on-blue' : '');
+  document.getElementById('optPhone').className = 'seg-opt' + (type === 'phone' ? ' on-green' : '');
+}
+
+// ─── Timezone logic (DST-aware via Intl API) ─────────────────────────────────
+var SYDNEY_TZ = 'Australia/Sydney';
+
+// Parse a time label like "9:00am" or "12:30pm" into { h24, minutes }
+function parseTimeLabel(label) {
+  if (!label) return null;
+  var m = label.match(/^(\d+):(\d+)(am|pm)$/i);
+  if (!m) return null;
+  var h = parseInt(m[1]);
+  var mins = parseInt(m[2]);
+  var ampm = m[3].toLowerCase();
+  if (ampm === 'pm' && h !== 12) h += 12;
+  if (ampm === 'am' && h === 12) h = 0;
+  return { h24: h, minutes: mins };
+}
+
+// Get the UTC offset (in minutes) for a given IANA tz on a specific date+time
+function getOffsetMinutes(ianaZone, year, month, day, h24, mins) {
+  // Create a Date representing that wall-clock time in the target zone
+  // We do this by formatting a known UTC time in the target zone and comparing
+  // Use the Intl trick: format a UTC instant in the target tz, find the offset
+  // Strategy: binary-ish — construct a Date, format it in the target tz, see
+  // what local time that gives, adjust to find the UTC instant that equals our wall time.
+
+  // Simpler reliable approach: create a Date as if it's UTC, then use
+  // Intl.DateTimeFormat to find what the target tz says, derive offset.
+  var utcGuess = Date.UTC(year, month - 1, day, h24, mins, 0);
+  var d = new Date(utcGuess);
+
+  var parts = new Intl.DateTimeFormat('en-AU', {
+    timeZone: ianaZone,
+    hour: 'numeric', minute: 'numeric', hour12: false,
+    year: 'numeric', month: 'numeric', day: 'numeric'
+  }).formatToParts(d);
+
+  var pmap = {};
+  parts.forEach(function(p) { pmap[p.type] = p.value; });
+
+  var tzH    = parseInt(pmap.hour);
+  var tzM    = parseInt(pmap.minute);
+  var tzD    = parseInt(pmap.day);
+  var tzMon  = parseInt(pmap.month);
+  var tzY    = parseInt(pmap.year);
+
+  // Compute what UTC time this zone is showing for our utcGuess
+  var shownLocal = Date.UTC(tzY, tzMon - 1, tzD, tzH, tzM, 0);
+
+  // offset = local - utc (in minutes)
+  return Math.round((shownLocal - utcGuess) / 60000);
+}
+
+// Get short timezone abbreviation for a given IANA zone on a date
+function getTzAbbr(ianaZone, year, month, day) {
+  var d = new Date(Date.UTC(year, month - 1, day, 12, 0, 0)); // noon UTC
+  var parts = new Intl.DateTimeFormat('en-AU', {
+    timeZone: ianaZone, timeZoneName: 'short'
+  }).formatToParts(d);
+  var tzPart = parts.find(function(p) { return p.type === 'timeZoneName'; });
+  return tzPart ? tzPart.value : '';
+}
+
+// Convert a wall-clock time in clientTz to Sydney wall-clock time, on a given date
+// Returns { label: "10:30am", same: true/false, sydAbbr, clientAbbr }
+function convertToSydney(clientTz, dateStr, timeLabel) {
+  if (!clientTz || !dateStr || !timeLabel) return null;
+  var parsed = parseTimeLabel(timeLabel);
+  if (!parsed) return null;
+
+  var parts = dateStr.split('-');
+  var year  = parseInt(parts[0]);
+  var month = parseInt(parts[1]);
+  var day   = parseInt(parts[2]);
+
+  // Get offset of client tz and Sydney tz on this specific date
+  var clientOffset = getOffsetMinutes(clientTz, year, month, day, parsed.h24, parsed.minutes);
+  var sydOffset    = getOffsetMinutes(SYDNEY_TZ, year, month, day, parsed.h24, parsed.minutes);
+
+  // Client time in minutes from midnight
+  var clientMins = parsed.h24 * 60 + parsed.minutes;
+  // Convert to UTC minutes then to Sydney minutes
+  var utcMins    = clientMins - clientOffset;
+  var sydMins    = utcMins + sydOffset;
+
+  // Wrap across midnight if needed
+  sydMins = ((sydMins % 1440) + 1440) % 1440;
+
+  var sydH    = Math.floor(sydMins / 60);
+  var sydM    = sydMins % 60;
+  var ampm    = sydH >= 12 ? 'pm' : 'am';
+  var h12     = sydH > 12 ? sydH - 12 : (sydH === 0 ? 12 : sydH);
+  var mStr    = sydM === 0 ? '00' : String(sydM).padStart(2, '0');
+  var sydLabel = h12 + ':' + mStr + ampm;
+
+  var clientAbbr = getTzAbbr(clientTz, year, month, day);
+  var sydAbbr    = getTzAbbr(SYDNEY_TZ, year, month, day);
+
+  var same = (clientOffset === sydOffset);
+
+  return {
+    label: sydLabel,
+    same: same,
+    clientAbbr: clientAbbr,
+    sydAbbr: sydAbbr,
+    diffMins: sydOffset - clientOffset
+  };
+}
+
+// Update the live hint shown next to the Time label
+function updateTimezoneHint() {
+  var hint    = document.getElementById('tzHint');
+  var dateStr = getVal('apptDate');
+  var timeVal = getVal('apptTime');
+  var tz      = getVal('clientTz');
+
+  if (!tz || !dateStr || !timeVal) { hint.textContent = ''; return; }
+
+  var result = convertToSydney(tz, dateStr, timeVal);
+  if (!result) { hint.textContent = ''; return; }
+
+  if (result.same) {
+    hint.textContent = '(' + result.clientAbbr + ' — same as Sydney)';
+    hint.style.color = '#0a7c5c';
+  } else {
+    hint.textContent = '= ' + result.label + ' Sydney time (' + result.sydAbbr + ')';
+    hint.style.color = '#185FA5';
+  }
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+function getVal(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
 
 var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
 function getSmartDayLabel(dateStr) {
   if (!dateStr) return '';
   var parts = dateStr.split('-');
-  var appt  = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
-  var today = new Date(); today.setHours(0,0,0,0);
-  var diffDays = Math.round((appt - today) / 86400000);
-  var dayName  = DAYS[appt.getDay()];
-  if (diffDays === 0) return 'today';
-  if (diffDays === 1) return 'tomorrow';
-  if (diffDays > 1 && diffDays <= 6) return 'this ' + dayName;
-  if (diffDays > 6 && diffDays <= 13) return 'next ' + dayName;
-  // Further out — just say the day name
-  return dayName;
+  var appt  = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  var diff  = Math.round((appt - today) / 86400000);
+  var day   = DAYS[appt.getDay()];
+  if (diff === 0) return 'today';
+  if (diff === 1) return 'tomorrow';
+  if (diff > 1 && diff <= 6)  return 'this ' + day;
+  if (diff > 6 && diff <= 13) return 'next ' + day;
+  return day;
 }
-
-function getVal(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
 
 function fmtDate(dateStr) {
   if (!dateStr) return '';
-  var parts = dateStr.split('-');
-  return parts[2] + '/' + parts[1];
+  var p = dateStr.split('-');
+  return p[2] + '/' + p[1];
 }
 
+// ─── Clear ───────────────────────────────────────────────────────────────────
 function clearAll() {
-  if (!confirm('Clear all fields?')) return;
-  document.getElementById('clientName').value = '';
-  document.getElementById('clientEmail').value = '';
-  document.getElementById('apptDate').value = '';
+  // Use a custom confirm rather than browser confirm() which can be blocked
+  var btn = document.querySelector('.clear-btn');
+  if (btn.dataset.confirming === 'true') {
+    // Second click — actually clear
+    btn.dataset.confirming = 'false';
+    btn.textContent = 'Clear fields';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+    doClear();
+  } else {
+    // First click — ask for confirmation via button text
+    btn.dataset.confirming = 'true';
+    btn.textContent = 'Confirm clear?';
+    btn.style.color = '#c0392b';
+    btn.style.borderColor = '#c0392b';
+    setTimeout(function() {
+      if (btn.dataset.confirming === 'true') {
+        btn.dataset.confirming = 'false';
+        btn.textContent = 'Clear fields';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+      }
+    }, 2500);
+  }
+}
 
-  document.getElementById('apptTime').value = '';
+function doClear() {
+  document.getElementById('clientName').value  = '';
+  document.getElementById('clientEmail').value = '';
+  document.getElementById('apptDate').value    = '';
+  document.getElementById('apptTime').value    = '';
+  var tt = document.getElementById('transactionType');
+  if (tt) { tt.value = ''; tt.className = ''; }
+  var ctz = document.getElementById('clientTz');
+  if (ctz) { ctz.value = ''; }
+  document.getElementById('tzHint').textContent = '';
   callType = '';
   setCallType('');
+  applicants = [];
+  nextApplicantId = 1;
+  addApplicant();
   document.getElementById('outArea').className = 'out';
   document.getElementById('emailOut').innerHTML = '';
   document.getElementById('subjLines').innerHTML = '';
 }
 
+// ─── Document list builder ───────────────────────────────────────────────────
+var EMP_LABEL = { payg: 'Employee (PAYG)', sole: 'Sole Trader', company: 'Company' };
+
+function incomeDocsHtml(emp, label) {
+  var G = '#0a7c5c';
+  var heading = '💼 Income Documents' + (label ? ' — ' + label : '');
+  var items = [];
+  if (emp === 'payg') {
+    items = ['2 most recent payslips'];
+  } else if (emp === 'sole') {
+    items = ['2 most recent Notices of Assessment (NOAs)', '2 most recent Individual Tax Returns'];
+  } else if (emp === 'company') {
+    items = ['2 most recent Notices of Assessment (NOAs)', '2 most recent Individual Tax Returns', '2 most recent Company Tax Returns', '2 most recent Company Financials'];
+  }
+  if (!items.length) return '';
+  var h = '<p style="font-size:13px;font-weight:700;color:' + G + ';margin-bottom:6px;">' + heading + '</p>';
+  h += '<ol style="margin-left:20px;margin-bottom:14px;line-height:1.9;font-size:14px;">';
+  items.forEach(function(item) { h += '<li>' + item + '</li>'; });
+  h += '</ol>';
+  return h;
+}
+
+function buildDocList(appts, txn) {
+  var G = '#0a7c5c';
+  var hasEmp = appts.some(function(a) { return a.empValue; });
+  var hasRes = appts.some(function(a) { return a.residency; });
+  if (!hasEmp && !hasRes && !txn) return '';
+
+  var n = appts.length; // total applicants
+  var isFhb = txn === 'fhb';
+
+  var html = '<p style="margin-bottom:12px;font-size:14px;">To get your application underway, please upload the following documents via the Aussie Mobile App:</p>';
+
+  // ── 1. IDENTIFICATION ──────────────────────────────────────────────────────
+  // Work out what each applicant needs for ID, then consolidate identical sets
+  // ID docs per applicant determined by: residency + fhb flag
+  // citizen + not fhb  → [DL]
+  // citizen + fhb      → [DL, Passport, Medicare]
+  // pr + not fhb       → [DL, Passport, Visa Grant Notice (VEVO)]
+  // pr + fhb           → [DL, Passport, Medicare, Visa Grant Notice (VEVO)]  (passport not doubled)
+
+  var DL       = 'Front and back of Driver\'s Licence';
+  var PASS     = 'Passport';
+  var MEDI     = 'Medicare card';
+  var VEVO     = 'Visa Grant Notice (VEVO)';
+
+  // Build unique ID doc sets and group applicants who share the same set
+  // Key = sorted doc list joined by | for deduplication
+  var idGroups = {}; // key -> { items: [], applicantNums: [] }
+  var idOrder  = [];
+
+  appts.forEach(function(a, idx) {
+    var items = [DL]; // always
+    var isPR  = a.residency === 'pr';
+    if (isPR || isFhb) items.push(PASS);      // PR or FHB needs passport
+    if (isFhb)         items.push(MEDI);      // FHB needs medicare
+    if (isPR)          items.push(VEVO);      // PR needs VEVO
+
+    // Deduplicate items (e.g. PR + FHB shouldn't double-list passport)
+    var seen = {}; var unique = [];
+    items.forEach(function(x) { if (!seen[x]) { seen[x] = true; unique.push(x); } });
+
+    var key = unique.join('|');
+    if (!idGroups[key]) { idGroups[key] = { items: unique, nums: [] }; idOrder.push(key); }
+    idGroups[key].nums.push(idx + 1);
+  });
+
+  html += '<p style="font-size:13px;font-weight:700;color:' + G + ';margin-bottom:6px;">🪪 Identification</p>';
+
+  // If all applicants have identical ID requirements → single list with "(all applicants)" if >1
+  if (idOrder.length === 1) {
+    var grp = idGroups[idOrder[0]];
+    html += '<ol style="margin-left:20px;margin-bottom:14px;line-height:1.9;font-size:14px;">';
+    grp.items.forEach(function(item, i) {
+      var suffix = (i === 0 && n > 1) ? ' <em style="color:#888;font-size:12px;">(all applicants)</em>' : '';
+      html += '<li>' + item + suffix + '</li>';
+    });
+    html += '</ol>';
+  } else {
+    // Different ID requirements per applicant — show labelled sub-sections
+    idOrder.forEach(function(key) {
+      var grp = idGroups[key];
+      var who = n > 1
+        ? (grp.nums.length === n
+            ? '<em style="color:#888;font-size:12px;">(all applicants)</em>'
+            : '<em style="color:#888;font-size:12px;">(' + grp.nums.map(function(x){ return 'Applicant ' + x; }).join(', ') + ')</em>')
+        : '';
+      html += '<p style="font-size:13px;font-weight:500;color:#555;margin-bottom:4px;margin-left:4px;">' + who + '</p>';
+      html += '<ol style="margin-left:20px;margin-bottom:10px;line-height:1.9;font-size:14px;">';
+      grp.items.forEach(function(item) { html += '<li>' + item + '</li>'; });
+      html += '</ol>';
+    });
+    html = html.replace(/margin-bottom:14px;" \/>$/, 'margin-bottom:14px;"/>'); // tidy
+  }
+
+  // ── 2. INCOME DOCS ────────────────────────────────────────────────────────
+  var empTypes = appts.map(function(a) { return a.empValue; });
+  var empGroups = {};
+  var empOrder  = [];
+  empTypes.forEach(function(emp, idx) {
+    if (!emp) return;
+    if (!empGroups[emp]) { empGroups[emp] = []; empOrder.push(emp); }
+    empGroups[emp].push(idx + 1);
+  });
+
+  var multiType = empOrder.length > 1;
+  var totalWithEmp = empTypes.filter(function(e) { return e; }).length;
+
+  empOrder.forEach(function(emp) {
+    var nums = empGroups[emp];
+    var label = null;
+    if (multiType) {
+      // Different types → label each group
+      label = nums.length === 1 ? 'Applicant ' + nums[0] : 'Applicants ' + nums.join(' & ');
+    } else if (n > 1 && totalWithEmp === n) {
+      // All applicants same type → append "(all applicants)"
+      label = 'all applicants';
+    }
+    // Format: if label is "all applicants" we handle it specially
+    var G2 = '#0a7c5c';
+    var heading = '💼 Income Documents' + (label && label !== 'all applicants' ? ' — ' + label : '');
+    var suffix  = (label === 'all applicants') ? ' <em style="color:#888;font-size:12px;">(all applicants)</em>' : '';
+    var items = [];
+    if (emp === 'payg')    items = ['2 most recent payslips'];
+    else if (emp === 'sole')    items = ['2 most recent Notices of Assessment (NOAs)', '2 most recent Individual Tax Returns'];
+    else if (emp === 'company') items = ['2 most recent Notices of Assessment (NOAs)', '2 most recent Individual Tax Returns', '2 most recent Company Tax Returns', '2 most recent Company Financials'];
+    if (!items.length) return;
+    html += '<hr style="border:none;border-top:1px solid #e2e4e8;margin:4px 0 14px;"/>';
+    html += '<p style="font-size:13px;font-weight:700;color:' + G2 + ';margin-bottom:6px;">' + heading + suffix + '</p>';
+    html += '<ol style="margin-left:20px;margin-bottom:14px;line-height:1.9;font-size:14px;">';
+    items.forEach(function(item) { html += '<li>' + item + '</li>'; });
+    html += '</ol>';
+  });
+
+  // ── 3. TRANSACTION DOCS ───────────────────────────────────────────────────
+  if (txn) {
+    html += '<hr style="border:none;border-top:1px solid #e2e4e8;margin:4px 0 14px;"/>';
+    if (txn === 'refinance') {
+      html += '<p style="font-size:13px;font-weight:700;color:' + G + ';margin-bottom:6px;">🏦 Refinance Documents</p>';
+      html += '<ol style="margin-left:20px;margin-bottom:0;line-height:1.9;font-size:14px;">';
+      html += '<li>Screenshot of Home Loan statement, or 1 month\'s Home Loan statement</li>';
+      html += '</ol>';
+    } else if (txn === 'purchase') {
+      html += '<p style="font-size:13px;font-weight:700;color:' + G + ';margin-bottom:6px;">🏡 Purchase Documents</p>';
+      html += '<ol style="margin-left:20px;margin-bottom:0;line-height:1.9;font-size:14px;">';
+      html += '<li>Evidence of deposit — for example: 3 months savings statements, Gift Letter, Shares statement, or a combination of these</li>';
+      html += '</ol>';
+    } else if (txn === 'fhb') {
+      html += '<p style="font-size:13px;font-weight:700;color:' + G + ';margin-bottom:6px;">🏡 First Home Buyer Documents (Home Guarantee Scheme)</p>';
+      html += '<ol style="margin-left:20px;margin-bottom:0;line-height:1.9;font-size:14px;">';
+      html += '<li>Home Buyer Declaration <em style="color:#888;font-size:12px;">(attached to this email)</em></li>';
+      html += '<li>Evidence of deposit — for example: 3 months savings statements, Gift Letter, Shares statement, or a combination of these</li>';
+      html += '</ol>';
+    }
+  }
+
+  return html;
+}
+
+// ─── Generate ────────────────────────────────────────────────────────────────
 function generate() {
   var name     = cap(getVal('clientName')) || 'there';
   var broker   = getVal('brokerName');
@@ -205,19 +685,29 @@ function generate() {
   var appLink  = getVal('appLink');
   var apptDate = getVal('apptDate');
   var apptTime = getVal('apptTime');
+  var txn      = getVal('transactionType');
+  var clientTz = getVal('clientTz');
 
-  if (!callType) { alert('Please select video call or phone call.'); return; }
-  if (!apptTime) { alert('Please select an appointment time.'); return; }
-  if (!apptDate) { alert('Please select an appointment date.'); return; }
+  if (!callType)  { alert('Please select video call or phone call.'); return; }
+  if (!apptTime)  { alert('Please select an appointment time.'); return; }
+  if (!apptDate)  { alert('Please select an appointment date.'); return; }
+  if (!clientTz)  { alert('Please select the client\'s timezone.'); return; }
 
   var dateDisplay = getSmartDayLabel(apptDate) + ' ' + fmtDate(apptDate);
 
-  var apptLine = '';
-  if (callType === 'video') {
-    apptLine = 'A <strong>video call</strong> has been booked for <strong>' + dateDisplay + ' at ' + apptTime + '</strong>. An automated email will be sent to you so you can join the meeting. You can access the meeting through your web browser on your computer — however, if you access the meeting on your phone or tablet you will need to download the <strong>Microsoft Teams app</strong> first.';
-  } else {
-    apptLine = 'A <strong>phone call</strong> has been booked for <strong>' + dateDisplay + ' at ' + apptTime + '</strong>. I will call you on your registered number at that time — please make sure you are available and have good reception.';
+  // Build timezone display string for the email
+  var tzResult  = convertToSydney(clientTz, apptDate, apptTime);
+  var timeInEmail = apptTime;
+  if (tzResult) {
+    timeInEmail += ' ' + tzResult.clientAbbr;
+    if (!tzResult.same) {
+      timeInEmail += ' (' + tzResult.label + ' ' + tzResult.sydAbbr + ')';
+    }
   }
+
+  var apptLine = callType === 'video'
+    ? 'A <strong>video call</strong> has been booked for <strong>' + dateDisplay + ' at ' + timeInEmail + '</strong>. An automated email will be sent to you so you can join the meeting. You can access the meeting through your web browser on your computer — however, if you access the meeting on your phone or tablet you will need to download the <strong>Microsoft Teams app</strong> first.'
+    : 'A <strong>phone call</strong> has been booked for <strong>' + dateDisplay + ' at ' + timeInEmail + '</strong>. I will call you on your registered number at that time — please make sure you are available and have good reception.';
 
   // Subject lines
   var subjects = [
@@ -225,32 +715,29 @@ function generate() {
     'Next steps for your loan, ' + name + ' \uD83D\uDCCB',
     'Your appointment is confirmed — ' + getSmartDayLabel(apptDate) + ' ' + fmtDate(apptDate) + ' at ' + apptTime
   ];
-
   var sl = document.getElementById('subjLines');
   sl.innerHTML = '';
-  for (var si = 0; si < subjects.length; si++) {
-    (function(subj) {
-      var row = document.createElement('div');
-      row.className = 'subj-option';
-      var t = document.createElement('span');
-      t.className = 'subj-text';
-      t.textContent = subj;
-      var btn = document.createElement('button');
-      btn.className = 'subj-copy';
-      btn.textContent = 'Copy';
-      btn.onclick = function() {
-        navigator.clipboard.writeText(subj).then(function() {
-          btn.textContent = 'Copied!';
-          setTimeout(function() { btn.textContent = 'Copy'; }, 1400);
-        });
-      };
-      row.appendChild(t);
-      row.appendChild(btn);
-      sl.appendChild(row);
-    })(subjects[si]);
-  }
+  subjects.forEach(function(subj) {
+    var row = document.createElement('div');
+    row.className = 'subj-option';
+    var t = document.createElement('span');
+    t.className = 'subj-text';
+    t.textContent = subj;
+    var btn = document.createElement('button');
+    btn.className = 'subj-copy';
+    btn.textContent = 'Copy';
+    btn.onclick = function() {
+      navigator.clipboard.writeText(subj).then(function() {
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 1400);
+      });
+    };
+    row.appendChild(t);
+    row.appendChild(btn);
+    sl.appendChild(row);
+  });
 
-  // Build email HTML
+  // Build email
   var G = '#0a7c5c';
   var html = '<p style="margin-bottom:14px;">Hi ' + name + ',</p>';
   html += '<p style="margin-bottom:14px;">Please see the options we spoke about attached.</p>';
@@ -260,8 +747,16 @@ function generate() {
   html += '<p style="font-size:14px;line-height:1.7;">' + apptLine + '</p>';
   html += '</div>';
 
-  // App section
-  html += '<p style="margin-bottom:10px;">Please upload the documents required via the <a href="' + appLink + '" style="color:#185FA5;text-decoration:underline;">Aussie Mobile App</a>. My contact details are also available on the app.</p>';
+  // Document list
+  var docHtml = buildDocList(applicants, txn);
+  if (docHtml) {
+    html += '<div style="background:#f0f7f4;border-left:3px solid ' + G + ';border-radius:4px;padding:14px 16px;margin-bottom:14px;">';
+    html += docHtml;
+    html += '</div>';
+  }
+
+  // App instructions
+  html += '<p style="margin-bottom:10px;">Please upload these documents via the <a href="' + appLink + '" style="color:#185FA5;text-decoration:underline;">Aussie Mobile App</a>. My contact details are also available on the app.</p>';
   html += '<p style="margin-bottom:8px;">Once you have downloaded the app:</p>';
   html += '<ol style="margin-left:20px;margin-bottom:14px;line-height:1.9;font-size:14px;">';
   html += '<li>Log in with your mobile number — everything will sync and you should be able to see me as your broker.</li>';
@@ -271,7 +766,6 @@ function generate() {
   html += '</ol>';
 
   html += '<p style="margin-bottom:16px;">Please let me know if you have any questions!</p>';
-
   var sig = [broker];
   if (phone) sig.push(phone);
   html += '<p style="font-size:14px;color:#333;line-height:1.8;">Kind regards,<br/>' + sig.join('<br/>') + '</p>';
@@ -281,27 +775,61 @@ function generate() {
   document.getElementById('outArea').scrollIntoView({ behavior: 'smooth' });
 }
 
+// ─── Copy email ───────────────────────────────────────────────────────────────
 function copyEmail() {
   var el = document.getElementById('emailOut');
+  var b  = document.querySelector('.copy-btn');
+
+  function markCopied(label) {
+    b.textContent = label || 'Copied!';
+    setTimeout(function() { b.textContent = 'Copy email to clipboard'; }, 1800);
+  }
+
+  // Build rich HTML blob
   var plain = el.innerText || el.textContent;
   var htmlContent = '<div style="font-family:Georgia,serif;font-size:14px;line-height:1.85;max-width:600px;">' + el.innerHTML + '</div>';
-  try {
-    var item = new ClipboardItem({
-      'text/plain': new Blob([plain], { type: 'text/plain' }),
-      'text/html':  new Blob([htmlContent], { type: 'text/html' })
-    });
-    navigator.clipboard.write([item]).then(function() {
-      var b = document.querySelector('.copy-btn');
-      b.textContent = 'Copied!';
-      setTimeout(function() { b.textContent = 'Copy email to clipboard'; }, 1500);
-    });
-  } catch(e) {
-    navigator.clipboard.writeText(plain).then(function() {
-      var b = document.querySelector('.copy-btn');
-      b.textContent = 'Copied (plain text)';
-      setTimeout(function() { b.textContent = 'Copy email to clipboard'; }, 1500);
-    });
+
+  // Try modern ClipboardItem API (rich HTML)
+  if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+    try {
+      var item = new ClipboardItem({
+        'text/plain': new Blob([plain],       { type: 'text/plain' }),
+        'text/html':  new Blob([htmlContent], { type: 'text/html' })
+      });
+      navigator.clipboard.write([item]).then(function() {
+        markCopied('Copied!');
+      }).catch(function() { fallbackCopy(plain, markCopied); });
+      return;
+    } catch(e) { /* fall through */ }
   }
+
+  // Try writeText
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(plain).then(function() {
+      markCopied('Copied (plain text)');
+    }).catch(function() { fallbackCopy(plain, markCopied); });
+    return;
+  }
+
+  // Last resort: execCommand
+  fallbackCopy(plain, markCopied);
+}
+
+function fallbackCopy(text, cb) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity  = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand('copy');
+    cb('Copied (plain text)');
+  } catch(e) {
+    cb('Copy failed — please copy manually');
+  }
+  document.body.removeChild(ta);
 }
 </script>
 </body>
