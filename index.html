@@ -25,6 +25,8 @@
   --blue-light:  #eaf1fb;
   --coral:       #c0392b;
   --coral-light: #fdecea;
+  --beta:        #7c3aed;
+  --beta-light:  #f3eeff;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--navy); min-height: 100vh; }
@@ -103,7 +105,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
   font-size: 32px; color: white; line-height: 1;
 }
 .hero-stat-num span { color: var(--green-mid); }
+.hero-stat-num span.beta { color: #b794f4; }
 .hero-stat-lbl { font-size: 12px; color: rgba(255,255,255,0.4); font-weight: 300; margin-top: 3px; }
+.hero-stat-lbl.beta { color: #b794f4; }
 
 /* ── Main ── */
 .main { max-width: 960px; margin: 0 auto; padding: 2.5rem 2.5rem 5rem; }
@@ -160,6 +164,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
 .ic-blue   { background: var(--blue-light); }
 .ic-coral  { background: var(--coral-light); }
 .ic-slate  { background: #f0f2f4; }
+.ic-beta   { background: var(--beta-light); }
 
 .card-badge {
   font-size: 10px; font-weight: 600; letter-spacing: 0.07em;
@@ -169,6 +174,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
 .badge-live   { background: var(--green-light); color: var(--green); }
 .badge-soon   { background: #f0f1f3; color: #999; }
 .badge-next   { background: #fff8e1; color: #e65100; }
+.badge-beta   { background: var(--beta-light); color: var(--beta); }
 
 .card-title { font-size: 14.5px; font-weight: 600; color: var(--navy); margin-bottom: 6px; line-height: 1.3; }
 .card-desc  { font-size: 12.5px; color: var(--slate); font-weight: 300; line-height: 1.6; margin-bottom: 14px; }
@@ -179,9 +185,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
 
 /* ── Live card ring ── */
 .tool-card.live.featured { box-shadow: 0 0 0 2px var(--green); border-color: transparent; }
-
-/* ── Divider ── */
-.divider { height: 1px; background: var(--border); margin: 2rem 0; }
 
 /* ── Footer ── */
 .footer {
@@ -225,6 +228,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
         <div class="hero-stat-lbl">Live</div>
       </div>
       <div>
+        <div class="hero-stat-num"><span class="beta">1</span></div>
+        <div class="hero-stat-lbl beta">In beta</div>
+      </div>
+      <div>
         <div class="hero-stat-num">7</div>
         <div class="hero-stat-lbl">Coming soon</div>
       </div>
@@ -240,7 +247,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
       <div class="section-icon ic-green">✉️</div>
       <div class="section-label">Email Generators</div>
       <div class="section-line"></div>
-      <div class="section-count">2 live · 1 coming</div>
+      <div class="section-count">2 live · 1 beta · 1 coming</div>
     </div>
     <div class="tool-grid">
 
@@ -269,6 +276,31 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
           <span class="card-arrow">→</span>
         </div>
       </a>
+
+      <a class="tool-card live" href="formal_approval_email_generator.html" target="_blank">
+        <div class="card-top">
+          <div class="card-icon ic-beta">🎉</div>
+          <span class="card-badge badge-beta">Beta</span>
+        </div>
+        <div class="card-title">Formal Approval Email Generator <span style="font-size:11px;font-weight:400;color:#888;">v1</span></div>
+        <div class="card-desc">Congratulations email upon unconditional approval — tailored to contact outcome, time of day, required next steps and survey preference.</div>
+        <div class="card-footer">
+          <span class="card-badge badge-beta">Open tool</span>
+          <span class="card-arrow">→</span>
+        </div>
+      </a>
+
+      <div class="tool-card soon">
+        <div class="card-top">
+          <div class="card-icon ic-green">🏁</div>
+          <span class="card-badge badge-next">Up next</span>
+        </div>
+        <div class="card-title">Settlement Email</div>
+        <div class="card-desc">Post-settlement congratulations email — confirming the loan has settled, what happens next and keeping the client relationship warm.</div>
+        <div class="card-footer">
+          <span class="card-badge badge-next">Up next</span>
+        </div>
+      </div>
 
       <div class="tool-card soon">
         <div class="card-top">
