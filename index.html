@@ -31,17 +31,11 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--navy); min-height: 100vh; }
 
-/* ── Header ── */
 .header {
   background: var(--navy);
   padding: 0 2.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 68px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 68px; position: sticky; top: 0; z-index: 100;
   box-shadow: 0 2px 16px rgba(0,0,0,0.22);
 }
 .logo { display: flex; align-items: center; gap: 14px; }
@@ -50,32 +44,26 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
   background: linear-gradient(135deg, var(--green) 0%, var(--green-mid) 100%);
   border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-family: 'DM Serif Display', serif;
-  font-size: 20px; color: white;
+  font-family: 'DM Serif Display', serif; font-size: 20px; color: white;
 }
 .logo-name {
   font-family: 'DM Serif Display', serif;
-  font-size: 16px; color: white;
-  line-height: 1.2; letter-spacing: -0.2px;
+  font-size: 16px; color: white; line-height: 1.2; letter-spacing: -0.2px;
 }
-.logo-sub { font-size: 11px; color: rgba(255,255,255,0.4); font-weight: 300; letter-spacing: 0.2px; }
 .header-broker { font-size: 13px; color: rgba(255,255,255,0.45); font-weight: 300; }
 
-/* ── Hero ── */
 .hero {
   background: linear-gradient(140deg, var(--navy) 0%, var(--navy-mid) 100%);
   padding: 4rem 2.5rem 3.5rem;
   position: relative; overflow: hidden;
 }
 .hero-glow-1 {
-  position: absolute; top: -80px; right: -40px;
-  width: 380px; height: 380px;
+  position: absolute; top: -80px; right: -40px; width: 380px; height: 380px;
   background: radial-gradient(circle, rgba(10,124,92,0.16) 0%, transparent 65%);
   pointer-events: none;
 }
 .hero-glow-2 {
-  position: absolute; bottom: -60px; left: 15%;
-  width: 260px; height: 260px;
+  position: absolute; bottom: -60px; left: 15%; width: 260px; height: 260px;
   background: radial-gradient(circle, rgba(26,171,130,0.09) 0%, transparent 65%);
   pointer-events: none;
 }
@@ -89,75 +77,45 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
 .hero-title {
   font-family: 'DM Serif Display', serif;
   font-size: clamp(30px, 4.5vw, 48px);
-  color: white; line-height: 1.12; letter-spacing: -0.8px;
-  margin-bottom: 16px;
+  color: white; line-height: 1.12; letter-spacing: -0.8px; margin-bottom: 16px;
 }
 .hero-title em { font-style: italic; color: var(--green-mid); }
 .hero-sub {
   font-size: 15px; color: rgba(255,255,255,0.5);
   font-weight: 300; max-width: 520px; line-height: 1.65; margin-bottom: 2rem;
 }
-.hero-stats {
-  display: flex; gap: 2.5rem; flex-wrap: wrap;
-}
-.hero-stat-num {
-  font-family: 'DM Serif Display', serif;
-  font-size: 32px; color: white; line-height: 1;
-}
+.hero-stats { display: flex; gap: 2.5rem; flex-wrap: wrap; }
+.hero-stat-num { font-family: 'DM Serif Display', serif; font-size: 32px; color: white; line-height: 1; }
 .hero-stat-num span { color: var(--green-mid); }
 .hero-stat-num span.beta { color: #b794f4; }
 .hero-stat-lbl { font-size: 12px; color: rgba(255,255,255,0.4); font-weight: 300; margin-top: 3px; }
 .hero-stat-lbl.beta { color: #b794f4; }
 
-/* ── Main ── */
 .main { max-width: 960px; margin: 0 auto; padding: 2.5rem 2.5rem 5rem; }
 
-/* ── Section ── */
 .section { margin-bottom: 2.5rem; }
-.section-head {
-  display: flex; align-items: center; gap: 12px;
-  margin-bottom: 1rem;
-}
-.section-icon {
-  width: 32px; height: 32px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 15px;
-}
-.section-label {
-  font-size: 13px; font-weight: 600; color: var(--navy); letter-spacing: -0.1px;
-}
+.section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; }
+.section-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+.section-label { font-size: 13px; font-weight: 600; color: var(--navy); letter-spacing: -0.1px; }
 .section-line { flex: 1; height: 1px; background: var(--border); }
 .section-count { font-size: 12px; color: #aaa; font-weight: 300; }
 
-/* ── Grid ── */
 .tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
 
-/* ── Card ── */
 .tool-card {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.4rem;
-  text-decoration: none;
-  display: block;
-  position: relative;
-  overflow: hidden;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.4rem;
+  text-decoration: none; display: block;
+  position: relative; overflow: hidden;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
-.tool-card.live:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 28px rgba(0,0,0,0.1);
-  border-color: transparent;
-}
+.tool-card.live:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,0.1); border-color: transparent; }
 .tool-card.live { cursor: pointer; }
 .tool-card.soon { cursor: default; opacity: 0.65; }
 .tool-card.soon:hover { transform: none; box-shadow: none; }
 
 .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
-.card-icon {
-  width: 42px; height: 42px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center; font-size: 19px;
-}
+.card-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 19px; }
 .ic-green  { background: var(--green-light); }
 .ic-amber  { background: var(--amber-light); }
 .ic-purple { background: var(--purple-light); }
@@ -168,25 +126,19 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
 
 .card-badge {
   font-size: 10px; font-weight: 600; letter-spacing: 0.07em;
-  text-transform: uppercase; padding: 3px 8px; border-radius: 20px;
-  white-space: nowrap;
+  text-transform: uppercase; padding: 3px 8px; border-radius: 20px; white-space: nowrap;
 }
-.badge-live   { background: var(--green-light); color: var(--green); }
-.badge-soon   { background: #f0f1f3; color: #999; }
-.badge-next   { background: #fff8e1; color: #e65100; }
-.badge-beta   { background: var(--beta-light); color: var(--beta); }
+.badge-live { background: var(--green-light); color: var(--green); }
+.badge-soon { background: #f0f1f3; color: #999; }
+.badge-next { background: #fff8e1; color: #e65100; }
+.badge-beta { background: var(--beta-light); color: var(--beta); }
 
 .card-title { font-size: 14.5px; font-weight: 600; color: var(--navy); margin-bottom: 6px; line-height: 1.3; }
 .card-desc  { font-size: 12.5px; color: var(--slate); font-weight: 300; line-height: 1.6; margin-bottom: 14px; }
-
 .card-footer { display: flex; align-items: center; justify-content: space-between; }
 .card-arrow { font-size: 16px; color: #ccc; transition: color 0.15s, transform 0.15s; }
 .tool-card.live:hover .card-arrow { color: var(--green); transform: translateX(3px); }
 
-/* ── Live card ring ── */
-.tool-card.live.featured { box-shadow: 0 0 0 2px var(--green); border-color: transparent; }
-
-/* ── Footer ── */
 .footer {
   text-align: center; padding: 1.5rem 2rem;
   font-size: 12px; color: #b0b8c1;
@@ -228,11 +180,11 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
         <div class="hero-stat-lbl">Live</div>
       </div>
       <div>
-        <div class="hero-stat-num"><span class="beta">1</span></div>
+        <div class="hero-stat-num"><span class="beta">2</span></div>
         <div class="hero-stat-lbl beta">In beta</div>
       </div>
       <div>
-        <div class="hero-stat-num">7</div>
+        <div class="hero-stat-num">6</div>
         <div class="hero-stat-lbl">Coming soon</div>
       </div>
     </div>
@@ -247,7 +199,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
       <div class="section-icon ic-green">✉️</div>
       <div class="section-label">Email Generators</div>
       <div class="section-line"></div>
-      <div class="section-count">2 live · 1 beta · 1 coming</div>
+      <div class="section-count">2 live · 2 beta · 1 coming</div>
     </div>
     <div class="tool-grid">
 
@@ -290,17 +242,18 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
         </div>
       </a>
 
-      <div class="tool-card soon">
+      <a class="tool-card live" href="settlement_email_generator.html" target="_blank">
         <div class="card-top">
-          <div class="card-icon ic-green">🏁</div>
-          <span class="card-badge badge-next">Up next</span>
+          <div class="card-icon ic-beta">🏁</div>
+          <span class="card-badge badge-beta">Beta</span>
         </div>
-        <div class="card-title">Settlement Email</div>
-        <div class="card-desc">Post-settlement congratulations email — confirming the loan has settled, what happens next and keeping the client relationship warm.</div>
+        <div class="card-title">Settlement Email Generator <span style="font-size:11px;font-weight:400;color:#888;">v1</span></div>
+        <div class="card-desc">Post-settlement congratulations email — tailored to contact outcome, time of day and survey preference. Keeps the client relationship warm.</div>
         <div class="card-footer">
-          <span class="card-badge badge-next">Up next</span>
+          <span class="card-badge badge-beta">Open tool</span>
+          <span class="card-arrow">→</span>
         </div>
-      </div>
+      </a>
 
       <div class="tool-card soon">
         <div class="card-top">

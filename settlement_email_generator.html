@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settlement Email Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #161920;
+      --surface-2: #1e2230;
+      --border: #2a2f3f;
+      --accent: #c8a96e;
+      --accent-soft: rgba(200,169,110,0.12);
+      --accent-glow: rgba(200,169,110,0.25);
+      --green: #4caf82;
+      --green-soft: rgba(76,175,130,0.12);
+      --purple: #7c3aed;
+      --purple-soft: rgba(124,58,237,0.12);
+      --purple-glow: rgba(124,58,237,0.25);
+      --text: #e8eaf0;
+      --text-muted: #7c8299;
+      --text-dim: #4a5168;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-weight: 400;
+      min-height: 100vh; line-height: 1.6;
+    }
+
+    nav {
+      padding: 18px 32px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface);
+    }
+    nav a {
+      color: var(--text-muted); text-decoration: none; font-size: 13px;
+      font-weight: 500; letter-spacing: 0.02em;
+      display: flex; align-items: center; gap: 6px; transition: color 0.2s;
+    }
+    nav a:hover { color: var(--accent); }
+    nav .sep { color: var(--text-dim); font-size: 12px; }
+    nav .current { color: var(--text); font-size: 13px; font-weight: 500; }
+    .nav-beta {
+      background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.35);
+      color: #c4a4ff; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 20px; margin-left: 4px;
+    }
+
+    header { padding: 52px 32px 40px; max-width: 780px; margin: 0 auto; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--purple-soft); border: 1px solid rgba(124,58,237,0.3);
+      color: #c4a4ff; font-size: 11px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 4px 10px; border-radius: 20px; margin-bottom: 18px;
+    }
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(28px, 4vw, 40px); font-weight: 700;
+      color: var(--text); line-height: 1.2; margin-bottom: 10px;
+    }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--text-muted); font-size: 15px; max-width: 520px; }
+
+    .layout {
+      max-width: 780px; margin: 0 auto;
+      padding: 0 32px 80px; display: flex; flex-direction: column; gap: 24px;
+    }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px;
+    }
+    .card-title {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+    }
+    .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+    label {
+      display: block; font-size: 12px; font-weight: 600;
+      letter-spacing: 0.04em; color: var(--text-muted);
+      text-transform: uppercase; margin-bottom: 7px;
+    }
+    input[type="text"], select {
+      width: 100%; background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 11px 14px;
+      color: var(--text); font-family: 'DM Sans', sans-serif;
+      font-size: 14px; transition: border-color 0.2s, box-shadow 0.2s; outline: none;
+    }
+    input[type="text"]:focus, select:focus {
+      border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    input[type="text"]::placeholder { color: var(--text-dim); }
+    select { cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237c8299' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      padding-right: 36px;
+    }
+    select option { background: #1e2230; }
+
+    /* Auto time indicator */
+    .time-indicator {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 12px 16px;
+    }
+    .time-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green); flex-shrink: 0;
+      box-shadow: 0 0 6px rgba(76,175,130,0.6);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    .time-text { font-size: 14px; color: var(--text); }
+    .time-text span { color: var(--accent); font-weight: 600; }
+    .time-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    .toggle-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .toggle-btn {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 18px;
+      color: var(--text-muted); font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.18s;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .toggle-btn:hover { border-color: var(--accent); color: var(--text); }
+    .toggle-btn.active {
+      background: var(--accent-soft); border-color: var(--accent);
+      color: var(--accent); font-weight: 600;
+    }
+
+    .survey-row { display: flex; align-items: center; gap: 14px; }
+    .switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0; background: var(--surface-2);
+      border: 1px solid var(--border); border-radius: 24px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .slider::before {
+      content: ''; position: absolute; width: 16px; height: 16px;
+      background: var(--text-muted); border-radius: 50%;
+      top: 3px; left: 3px; transition: all 0.2s;
+    }
+    .switch input:checked + .slider { background: var(--accent-soft); border-color: var(--accent); }
+    .switch input:checked + .slider::before { background: var(--accent); transform: translateX(20px); }
+    .survey-label { font-size: 14px; color: var(--text); }
+    .survey-label small { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Journey (dark UI) */
+    .journey-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px 28px;
+    }
+    .journey-title {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 22px; display: flex; align-items: center; gap: 8px;
+    }
+    .journey-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .journey-track { display: flex; align-items: flex-start; overflow-x: auto; padding-bottom: 4px; }
+    .journey-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 80px; position: relative; }
+    .journey-step:not(:last-child)::after {
+      content: ''; position: absolute; top: 15px; left: 50%;
+      width: 100%; height: 2px; background: var(--border); z-index: 0;
+    }
+    .journey-step.done:not(:last-child)::after { background: var(--accent); }
+    .journey-node {
+      width: 30px; height: 30px; border-radius: 50%;
+      border: 2px solid var(--border); background: var(--surface-2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; position: relative; z-index: 1;
+    }
+    .journey-step.done .journey-node { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+    .journey-step.active .journey-node {
+      border-color: var(--green); background: rgba(76,175,130,0.15);
+      box-shadow: 0 0 12px rgba(76,175,130,0.4);
+    }
+    .journey-step.future .journey-node { border-color: var(--border); background: var(--surface-2); color: var(--text-dim); }
+    .journey-label { font-size: 10.5px; text-align: center; margin-top: 8px; line-height: 1.3; max-width: 70px; color: var(--text-muted); }
+    .journey-step.done .journey-label { color: var(--accent); }
+    .journey-step.active .journey-label { color: var(--green); font-weight: 600; }
+    .journey-step.future .journey-label { color: var(--text-dim); }
+
+    .generate-btn {
+      width: 100%; background: linear-gradient(135deg, var(--purple) 0%, #6d28d9 100%);
+      border: none; border-radius: var(--radius); padding: 16px; color: #fff;
+      font-family: 'DM Sans', sans-serif; font-size: 15px;
+      font-weight: 700; letter-spacing: 0.03em; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      gap: 9px; transition: all 0.2s;
+      box-shadow: 0 4px 24px var(--purple-glow);
+    }
+    .generate-btn:hover {
+      transform: translateY(-1px); box-shadow: 0 8px 32px var(--purple-glow);
+      filter: brightness(1.1);
+    }
+
+    .clear-btn {
+      width: 100%; background: transparent; border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 13px; color: var(--text-muted);
+      font-family: 'DM Sans', sans-serif; font-size: 14px;
+      font-weight: 500; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; transition: all 0.2s; margin-top: -8px;
+    }
+    .clear-btn:hover { border-color: #e05c5c; color: #e05c5c; background: rgba(224,92,92,0.06); }
+
+    #output-section { display: none; }
+
+    .output-title {
+      font-family: 'Playfair Display', serif; font-size: 20px; color: var(--text); margin-bottom: 16px;
+    }
+    .copy-btn {
+      width: 100%; margin-top: 12px; background: var(--surface-2);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 13px 16px; color: var(--text-muted);
+      font-family: 'DM Sans', sans-serif; font-size: 14px;
+      font-weight: 500; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      gap: 7px; transition: all 0.18s;
+    }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .copy-btn.copied { border-color: var(--green); color: var(--green); background: var(--green-soft); }
+
+    /* Subject lines */
+    .subject-lines { display: flex; flex-direction: column; gap: 8px; }
+    .subject-pill {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 14px;
+      font-size: 13px; color: var(--text); cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; transition: all 0.18s;
+    }
+    .subject-pill:hover { border-color: var(--accent); color: var(--accent); }
+    .subject-pill .copy-icon { font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
+    .subject-pill:hover .copy-icon { color: var(--accent); }
+
+    /* ── EMAIL PREVIEW ── */
+    #email-preview { background: #ffffff; border-radius: var(--radius); overflow: hidden; }
+    .email-top-bar { background: #1a1f2e; padding: 14px 24px; display: flex; align-items: center; gap: 8px; }
+    .email-top-bar span { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ff5f57; }
+    .dot-yellow { background: #febc2e; }
+    .dot-green-bar { background: #28c840; }
+    .email-body { padding: 36px 40px; color: #1a1a2e; font-size: 15px; line-height: 1.75; font-family: 'DM Sans', sans-serif; }
+    .email-greeting { font-size: 18px; font-weight: 600; color: #1a1a2e; margin-bottom: 16px; }
+    .email-para { margin-bottom: 16px; }
+
+    .email-settled {
+      background: linear-gradient(135deg, #f3eeff, #ede5ff);
+      border-left: 4px solid #7c3aed; border-radius: 0 8px 8px 0;
+      padding: 18px 22px; margin: 20px 0; font-weight: 600;
+      color: #3b1c7a; font-size: 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .email-warmth {
+      background: #f0f9f4; border: 1px solid #c8e6d8;
+      border-radius: 8px; padding: 16px 18px; margin: 20px 0;
+      color: #1a4a30; font-size: 14px;
+    }
+
+    .email-team {
+      background: #f0f4ff; border: 1px solid #c8d0f0;
+      border-radius: 8px; padding: 16px 18px; margin: 20px 0;
+      color: #1a1a4a; font-size: 14px;
+    }
+
+    .email-referral {
+      background: #fff8ee; border-left: 4px solid #c8a96e;
+      border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 20px 0;
+      color: #5a3e0a; font-size: 14px;
+    }
+
+    .email-survey {
+      background: #fff0f6; border: 1px solid #f0c0d8;
+      border-radius: 8px; padding: 16px 18px; margin: 20px 0;
+      font-size: 14px; color: #4a1a2e;
+    }
+
+    .email-sign-off {
+      margin-top: 24px; padding-top: 20px;
+      border-top: 2px solid #e8ecf5; font-size: 14px; color: #4a4f6a;
+    }
+    .email-sign-off strong { font-size: 16px; color: #1a1a2e; font-weight: 700; }
+
+    /* Journey inside email (light) */
+    .email-journey {
+      margin: 24px 0; background: #f7f8fc;
+      border: 1px solid #e0e4f0; border-radius: 10px; padding: 20px 18px 16px;
+    }
+    .email-journey-title {
+      font-size: 12px; font-weight: 700; color: #4a4f6a;
+      letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 18px;
+    }
+    .email-journey-track { display: flex; align-items: flex-start; }
+    .email-journey-step { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; }
+    .email-journey-step:not(:last-child)::after {
+      content: ''; position: absolute; top: 14px; left: 50%;
+      width: 100%; height: 2px; background: #e0e4f0; z-index: 0;
+    }
+    .email-journey-step.ej-done:not(:last-child)::after { background: #c8a96e; }
+    .email-journey-node {
+      width: 28px; height: 28px; border-radius: 50%; border: 2px solid #e0e4f0;
+      background: #fff; display: flex; align-items: center; justify-content: center;
+      font-size: 11px; position: relative; z-index: 1;
+    }
+    .email-journey-step.ej-done .email-journey-node { border-color: #c8a96e; background: #fff8ee; color: #c8a96e; }
+    .email-journey-step.ej-active .email-journey-node {
+      border-color: #7c3aed; background: #f3eeff;
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.18);
+    }
+    .email-journey-step.ej-future .email-journey-node { border-color: #e0e4f0; background: #f7f8fc; color: #c0c4d0; }
+    .email-journey-label {
+      font-size: 9.5px; text-align: center; margin-top: 7px;
+      line-height: 1.3; max-width: 60px; color: #7c8299;
+    }
+    .email-journey-step.ej-done .email-journey-label { color: #c8a96e; font-weight: 600; }
+    .email-journey-step.ej-active .email-journey-label { color: #5b21b6; font-weight: 700; }
+    .email-journey-step.ej-future .email-journey-label { color: #b0b4c4; }
+
+    @media (max-width: 600px) {
+      nav, header, .layout { padding-left: 18px; padding-right: 18px; }
+      header { padding-top: 32px; }
+      .email-body { padding: 24px 20px; }
+      .email-journey-label { font-size: 8.5px; max-width: 44px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="https://aussiecoppolelli.github.io/broker-toolkit/index.html">← Dashboard</a>
+  <span class="sep">·</span>
+  <span class="current">Settlement Email Generator</span>
+  <span class="nav-beta">Beta</span>
+</nav>
+
+<header>
+  <div class="badge">🏁 Email Generator</div>
+  <h1>Settlement <span>Email</span> Generator</h1>
+  <p>Post-settlement congratulations — tailored to how you reached the client and whether to include a survey nudge.</p>
+</header>
+
+<div class="layout">
+
+  <!-- CLIENT DETAILS -->
+  <div class="card">
+    <div class="card-title">👤 Client Details</div>
+    <div class="field">
+      <label>Client First Name</label>
+      <input type="text" id="client-name" placeholder="e.g. Sarah" oninput="autoCapitalise(this)" />
+    </div>
+    <div class="field">
+      <label>Loan Type <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
+      <input type="text" id="loan-type" placeholder="e.g. home loan, refinance, investment loan" />
+    </div>
+  </div>
+
+  <!-- CONTACT OUTCOME -->
+  <div class="card">
+    <div class="card-title">📞 Contact Outcome</div>
+    <div class="field">
+      <label>Did you speak with the client?</label>
+      <div class="toggle-group" id="contact-group">
+        <button class="toggle-btn active" data-val="spoke" onclick="setToggle('contact-group', this)">
+          ✅ Yes — spoke to them
+        </button>
+        <button class="toggle-btn" data-val="missed" onclick="setToggle('contact-group', this)">
+          📵 No — couldn't get through
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTO TIME OF DAY -->
+  <div class="card">
+    <div class="card-title">🕐 Time of Day</div>
+    <div class="time-indicator">
+      <div class="time-dot"></div>
+      <div>
+        <div class="time-text">Auto-detected: <span id="time-display">—</span></div>
+        <div class="time-sub">Greeting will update automatically based on your local time</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SURVEY TOGGLE -->
+  <div class="card">
+    <div class="card-title">⭐ Feedback Survey</div>
+    <div class="survey-row">
+      <label class="switch">
+        <input type="checkbox" id="include-survey" checked />
+        <span class="slider"></span>
+      </label>
+      <div class="survey-label">
+        Include survey request
+        <small>Asks client to complete the 3-question "How are we doing so far?" email</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- JOURNEY TIMELINE (input side) -->
+  <div class="journey-card">
+    <div class="journey-title">🗺️ Client Journey — What This Email Represents</div>
+    <div class="journey-track" id="journey-track-input">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+
+  <button class="generate-btn" onclick="generateEmail()">✦ Generate Email</button>
+  <button class="clear-btn" onclick="clearFields()">↺ Clear Fields</button>
+
+  <!-- OUTPUT -->
+  <div id="output-section">
+    <div class="output-title">Generated Email</div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">✉️ Suggested Subject Lines</div>
+      <div class="subject-lines" id="subject-lines"></div>
+    </div>
+
+    <div id="email-preview">
+      <div class="email-top-bar">
+        <span class="dot-red"></span>
+        <span class="dot-yellow"></span>
+        <span class="dot-green-bar"></span>
+      </div>
+      <div class="email-body" id="email-body"></div>
+    </div>
+
+    <button class="copy-btn" id="copy-btn" onclick="copyEmail()">📋 Copy email to clipboard</button>
+  </div>
+
+</div>
+
+<script>
+  const JOURNEY_STEPS = [
+    { label: 'Initial\nConsult',   icon: '🤝' },
+    { label: 'Video\nCall',        icon: '📹' },
+    { label: 'Loan\nSubmission',   icon: '📤' },
+    { label: 'Formal\nApproval',   icon: '🎉' },
+    { label: 'Settlement',         icon: '🏁' },
+    { label: '1 Month\nCheck-in',  icon: '📅' },
+    { label: '1 Year\nCheck-in',   icon: '🏡' },
+  ];
+  const ACTIVE_STEP = 4; // Settlement
+
+  function renderJourneyTrack(containerId, activeIdx) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = JOURNEY_STEPS.map((s, i) => {
+      const stateClass = i < activeIdx ? 'done' : i === activeIdx ? 'active' : 'future';
+      const icon = i < activeIdx ? '✓' : s.icon;
+      return `<div class="journey-step ${stateClass}">
+        <div class="journey-node">${icon}</div>
+        <div class="journey-label">${s.label.replace('\n','<br/>')}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function buildEmailJourney(activeIdx) {
+    const nodes = JOURNEY_STEPS.map((s, i) => {
+      const stateClass = i < activeIdx ? 'ej-done' : i === activeIdx ? 'ej-active' : 'ej-future';
+      const icon = i < activeIdx ? '✓' : s.icon;
+      return `<div class="email-journey-step ${stateClass}">
+        <div class="email-journey-node">${icon}</div>
+        <div class="email-journey-label">${s.label.replace('\n','<br/>')}</div>
+      </div>`;
+    }).join('');
+    return `<div class="email-journey">
+      <div class="email-journey-title">📍 Your Home Loan Journey</div>
+      <div class="email-journey-track">${nodes}</div>
+    </div>`;
+  }
+
+  function getTimeOfDay() {
+    const h = new Date().getHours();
+    if (h >= 5 && h < 12) return 'Morning';
+    if (h >= 12 && h < 17) return 'Afternoon';
+    return 'Evening';
+  }
+
+  function initTime() {
+    document.getElementById('time-display').textContent = getTimeOfDay();
+  }
+
+  function autoCapitalise(input) {
+    const val = input.value;
+    if (val.length > 0) input.value = val.charAt(0).toUpperCase() + val.slice(1);
+  }
+
+  function setToggle(groupId, btn) {
+    document.querySelectorAll(`#${groupId} .toggle-btn`).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function getToggle(groupId) {
+    const active = document.querySelector(`#${groupId} .toggle-btn.active`);
+    return active ? active.dataset.val : null;
+  }
+
+  function generateEmail() {
+    const name = document.getElementById('client-name').value.trim() || 'there';
+    const loanRaw = document.getElementById('loan-type').value.trim();
+    const loanPhrase = loanRaw || 'loan';
+    const contact = getToggle('contact-group');
+    const time = getTimeOfDay();
+    const includeSurvey = document.getElementById('include-survey').checked;
+
+    const greeting = `Good ${time}, ${name}.`;
+
+    const opening = contact === 'spoke'
+      ? 'Thank you so much for your time on the phone just now.'
+      : 'I hope you are well — I did try to give you a call but was unfortunately unable to get through.';
+
+    const surveyHtml = includeSurvey ? `<div class="email-survey">
+      <strong style="display:block; margin-bottom:6px; color:#7a0a3a;">⭐ One small favour</strong>
+      You would have received an email with the subject line <em>"How are we doing so far?"</em> (it may be in your junk or spam folder). When you have a spare moment, could I ask that you follow the link in that email and complete the short 3-question, star-rated survey?<br/><br/>
+      Your feedback is genuinely appreciated — and it also contributes to my monthly performance metrics, so your support truly means a lot. 🙏
+    </div>` : '';
+
+    const journeyHtml = buildEmailJourney(ACTIVE_STEP);
+
+    const emailHtml = `
+      <div class="email-greeting">${greeting}</div>
+      <p class="email-para">${opening}</p>
+
+      <div class="email-settled">🏁 Congratulations — your ${loanPhrase} has officially settled!</div>
+
+      <p class="email-para">I just wanted to take a moment to personally reach out and say a sincere thank you for working with me. It has been an absolute pleasure, and I'm so glad we could get this across the line for you.</p>
+
+      <div class="email-warmth">
+        <strong style="display:block; margin-bottom:6px;">💚 What Does This Mean?</strong>
+        Your loan is now active and your new lender has everything in place. Any direct debits or repayments will begin as per your loan agreement — if you have any questions about your first repayment, don't hesitate to reach out.
+      </div>
+
+      ${surveyHtml}
+
+      <div class="email-team">
+        <strong style="display:block; margin-bottom:6px;">🤝 We're Always Here</strong>
+        Even though your ${loanPhrase} has settled, please know we are always only a phone call or email away. I work alongside a dedicated team of Relationship Managers who will be in touch with you down the track — they can assist with any questions or future home loan needs. That said, I'm also always personally available to you, so please never hesitate to reach out directly.
+      </div>
+
+      <div class="email-referral">
+        <strong>💛 Know Someone Who Could Use Our Help?</strong><br/>
+        If you have any friends or family who might need assistance with a home loan, I'd love it if you kept me in mind. I'm always open to new clients and genuinely appreciate any referrals.
+      </div>
+
+      ${journeyHtml}
+
+      <div class="email-sign-off">
+        <p style="margin-bottom:12px;">Thank you again, ${name} — all the best, and I hope to work with you again in the future!</p>
+        <strong>Joshua Coppolelli</strong>
+        <span style="display:block; color:#888; font-size:13px; margin-top:2px;">Mortgage Broker · Aussie Home Loans</span>
+      </div>`;
+
+    document.getElementById('email-body').innerHTML = emailHtml;
+
+    const firstName = name === 'there' ? '' : name;
+    const subjects = [
+      `🏁 Your ${loanPhrase.charAt(0).toUpperCase() + loanPhrase.slice(1)} Has Settled${firstName ? ', ' + firstName : ''}!`,
+      `Congratulations${firstName ? ' ' + firstName : ''} — Settlement Complete!`,
+      `You're All Settled — Thank You for Working With Me`,
+    ];
+    document.getElementById('subject-lines').innerHTML = subjects.map(s =>
+      `<div class="subject-pill" onclick="copySubject(this, '${s.replace(/'/g,"\\'")}')">
+        <span>${s}</span><span class="copy-icon">Copy ↗</span>
+      </div>`).join('');
+
+    const out = document.getElementById('output-section');
+    out.style.display = 'block';
+    setTimeout(() => out.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '📋 Copy email to clipboard';
+    btn.className = 'copy-btn';
+  }
+
+  function copyEmail() {
+    const text = document.getElementById('email-body').innerText.trim();
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = '✅ Copied!';
+      btn.className = 'copy-btn copied';
+      setTimeout(() => {
+        btn.textContent = '📋 Copy email to clipboard';
+        btn.className = 'copy-btn';
+      }, 2500);
+    });
+  }
+
+  function copySubject(el, subject) {
+    navigator.clipboard.writeText(subject).then(() => {
+      const icon = el.querySelector('.copy-icon');
+      icon.textContent = '✅ Copied';
+      setTimeout(() => icon.textContent = 'Copy ↗', 2000);
+    });
+  }
+
+  function clearFields() {
+    document.getElementById('client-name').value = '';
+    document.getElementById('loan-type').value = '';
+    document.querySelectorAll('#contact-group .toggle-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('#contact-group .toggle-btn[data-val="spoke"]').classList.add('active');
+    document.getElementById('include-survey').checked = true;
+    document.getElementById('output-section').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Init
+  initTime();
+  renderJourneyTrack('journey-track-input', ACTIVE_STEP);
+</script>
+</body>
+</html>
