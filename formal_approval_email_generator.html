@@ -14,16 +14,16 @@
       --radius: 12px; --radius-sm: 8px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 400; min-height: 100vh; line-height: 1.6; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; line-height: 1.6; }
     nav { padding: 18px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: var(--surface); }
-    nav a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: color 0.2s; }
+    nav a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; }
     nav a:hover { color: var(--accent); }
     nav .sep { color: var(--text-dim); font-size: 12px; }
     nav .current { color: var(--text); font-size: 13px; font-weight: 500; }
     .nav-beta { background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.35); color: #c4a4ff; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; margin-left: 4px; }
     header { padding: 52px 32px 40px; max-width: 780px; margin: 0 auto; }
     .badge { display: inline-flex; align-items: center; gap: 6px; background: var(--green-soft); border: 1px solid rgba(76,175,130,0.3); color: var(--green); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; margin-bottom: 18px; }
-    header h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px, 4vw, 40px); font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 10px; }
+    header h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px,4vw,40px); font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 10px; }
     header h1 span { color: var(--accent); }
     header p { color: var(--text-muted); font-size: 15px; max-width: 520px; }
     .time-pill { display: inline-flex; align-items: center; gap: 7px; background: var(--accent-soft); border: 1px solid rgba(200,169,110,0.3); color: var(--accent); font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 20px; margin-top: 14px; }
@@ -31,12 +31,11 @@
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
     .card-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
     .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-    /* UI Timeline */
     .timeline { display: flex; align-items: flex-start; overflow: hidden; }
     .timeline-step { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; min-width: 0; }
     .timeline-step.done::after { content: ''; position: absolute; top: 15px; left: calc(50% + 16px); right: calc(-50% + 16px); height: 2px; background: var(--accent); z-index: 0; }
-    .timeline-step.active::after, .timeline-step.future:not(.tl-end)::after { content: ''; position: absolute; top: 15px; left: calc(50% + 16px); right: calc(-50% + 16px); height: 2px; background: repeating-linear-gradient(to right, var(--border) 0px, var(--border) 5px, transparent 5px, transparent 9px); z-index: 0; }
-    .timeline-step.last-milestone::after { right: -20px; background: repeating-linear-gradient(to right, var(--border) 0px, var(--border) 5px, transparent 5px, transparent 9px); }
+    .timeline-step.active::after, .timeline-step.future:not(.tl-end)::after { content: ''; position: absolute; top: 15px; left: calc(50% + 16px); right: calc(-50% + 16px); height: 2px; background: repeating-linear-gradient(to right,var(--border) 0,var(--border) 5px,transparent 5px,transparent 9px); z-index: 0; }
+    .timeline-step.last-milestone::after { right: -10px; background: repeating-linear-gradient(to right,var(--border) 0,var(--border) 5px,transparent 5px,transparent 9px); }
     .timeline-dot { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; position: relative; z-index: 1; flex-shrink: 0; color: var(--text-dim); }
     .timeline-step.done .timeline-dot { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
     .timeline-step.active .timeline-dot { background: var(--accent); border-color: var(--accent); color: #0d0f14; box-shadow: 0 0 0 4px var(--accent-glow); }
@@ -45,8 +44,6 @@
     .timeline-step.done .timeline-label { color: var(--accent); }
     .timeline-step.active .timeline-label { color: var(--accent); font-weight: 700; }
     .timeline-step.future .timeline-label { opacity: 0.45; }
-    .timeline-tail { flex-shrink: 0; width: 40px; height: 2px; margin-top: 15px; background: repeating-linear-gradient(to right, var(--border) 0px, var(--border) 5px, transparent 5px, transparent 9px); }
-    /* Form */
     .field { margin-bottom: 16px; }
     .field:last-child { margin-bottom: 0; }
     label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 7px; }
@@ -54,7 +51,7 @@
     input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
     input[type="text"]::placeholder { color: var(--text-dim); }
     .toggle-group { display: flex; gap: 8px; flex-wrap: wrap; }
-    .toggle-btn { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 18px; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.18s; display: flex; align-items: center; gap: 7px; }
+    .toggle-btn { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 18px; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.18s; }
     .toggle-btn:hover { border-color: var(--accent); color: var(--text); }
     .toggle-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
     .survey-row { display: flex; align-items: center; gap: 14px; }
@@ -77,7 +74,6 @@
     .checkbox-item .check-label small { color: var(--text-muted); font-size: 12px; }
     .generate-btn { width: 100%; background: var(--accent); border: none; border-radius: var(--radius); padding: 16px; color: #0d0f14; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.03em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 9px; transition: all 0.2s; box-shadow: 0 4px 24px var(--accent-glow); }
     .generate-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 32px var(--accent-glow); filter: brightness(1.07); }
-    .generate-btn:active { transform: translateY(0); }
     .clear-btn { width: 100%; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); padding: 13px; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; margin-top: -8px; }
     .clear-btn:hover { border-color: #e05c5c; color: #e05c5c; background: rgba(224,92,92,0.06); }
     #output-section { display: none; }
@@ -95,11 +91,7 @@
     .subject-pill:hover { border-color: var(--accent); color: var(--accent); }
     .subject-pill .copy-icon { font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
     .subject-pill:hover .copy-icon { color: var(--accent); }
-    @media (max-width: 600px) {
-      nav, header, .layout { padding-left: 18px; padding-right: 18px; }
-      header { padding-top: 32px; }
-      #email-body { padding: 24px 20px; }
-    }
+    @media (max-width: 600px) { nav, header, .layout { padding-left: 18px; padding-right: 18px; } header { padding-top: 32px; } #email-body { padding: 24px 20px; } }
   </style>
 </head>
 <body>
@@ -135,8 +127,8 @@
     <div class="field">
       <label>Did you speak with the client?</label>
       <div class="toggle-group" id="contact-group">
-        <button class="toggle-btn active" data-val="spoke" onclick="setToggle('contact-group', this)">Yes — spoke to them</button>
-        <button class="toggle-btn" data-val="voicemail" onclick="setToggle('contact-group', this)">No — left a voicemail</button>
+        <button class="toggle-btn active" data-val="spoke" onclick="setToggle('contact-group',this)">Yes — spoke to them</button>
+        <button class="toggle-btn" data-val="voicemail" onclick="setToggle('contact-group',this)">No — left a voicemail</button>
       </div>
     </div>
   </div>
@@ -181,35 +173,39 @@
 
 <script>
   const MILESTONES = [
-    { label: 'Initial\nConsult',  abbr: 'IC' },
-    { label: 'Video\nCall',       abbr: 'VC' },
-    { label: 'Loan\nSubmission',  abbr: 'LS' },
-    { label: 'Formal\nApproval',  abbr: 'FA' },
-    { label: 'Settlement',        abbr: 'ST' },
-    { label: '1 Month\nCheck-In', abbr: '1M' },
-    { label: '1 Year\nCheck-In',  abbr: '1Y' },
+    { label:'Initial\nConsult',  abbr:'IC', emoji:null },
+    { label:'Video\nCall',       abbr:'VC', emoji:null },
+    { label:'Loan\nSubmission',  abbr:'LS', emoji:null },
+    { label:'Formal\nApproval',  abbr:'FA', emoji:'🎉' },
+    { label:'Settlement',        abbr:'ST', emoji:'🏁' },
+    { label:'1 Month\nCheck-In', abbr:'1M', emoji:'📅' },
+    { label:'1 Year\nCheck-In',  abbr:'1Y', emoji:'🏠' },
   ];
-  const ACTIVE = 3;
+  const ACTIVE = 3; // Formal Approval
 
+  /* ── Browser UI timeline (flexbox is fine here) ── */
   function buildUITimeline() {
     const wrap = document.getElementById('ui-timeline');
     let html = '';
-    MILESTONES.forEach((m, i) => {
+    MILESTONES.forEach((m,i) => {
       const isLast = i === MILESTONES.length - 1;
       let cls = i < ACTIVE ? 'done' : i === ACTIVE ? 'active' : 'future';
       if (isLast) cls += ' last-milestone tl-end';
-      const dot = i < ACTIVE ? '&#10003;' : m.abbr;
-      html += `<div class="timeline-step ${cls}"><div class="timeline-dot">${dot}</div><div class="timeline-label">${m.label.replace('\n','<br/>')}</div></div>`;
+      html += `<div class="timeline-step ${cls}">
+        <div class="timeline-dot" style="${(i >= ACTIVE && m.emoji) ? 'font-size:15px;' : ''}">${i < ACTIVE ? '&#10003;' : (m.emoji || m.abbr)}</div>
+        <div class="timeline-label">${m.label.replace('\n','<br/>')}</div>
+      </div>`;
     });
-    html += `<div class="timeline-tail"></div>`;
     wrap.innerHTML = html;
   }
 
-  // ── EMAIL TIMELINE: table-based + trailing dashed line after last milestone ──
-  // Key fixes for Outlook:
-  //   1. All coloured cells use both bgcolor attribute AND background-color in style
-  //   2. A connector cell is added AFTER the last milestone too (the "tail"), so
-  //      the dashed line continues past 1 Year Check-In with no ellipsis
+  /* ── Outlook-safe table timeline ─────────────────────────────────────────
+     Structure: one wide table, two rows.
+       Row 1 (dots + connectors): [dot td] [connector td] [dot td] … [dot td] [trailing-line td]
+       Row 2 (labels):            [label td] [spacer td]  [label td] …                           
+     The trailing-line td after the final dot extends the dashed line to the
+     container edge — replacing the old ellipsis approach entirely.
+  ──────────────────────────────────────────────────────────────────────── */
   function emailTimelineHTML() {
     const DOT_W = 28;
     let dotRow = '', labelRow = '';
@@ -217,56 +213,126 @@
     MILESTONES.forEach(function(m, i) {
       const isDone   = i < ACTIVE;
       const isActive = i === ACTIVE;
+      const isLast   = i === MILESTONES.length - 1;
       const isFuture = i > ACTIVE;
 
-      const dotBg    = isDone ? '#fdf5e8' : isActive ? '#c8a96e' : '#f0f1f5';
-      const dotBdr   = isDone ? '#c8a96e' : isActive ? '#b8860a' : '#d0d4e0';
-      const dotColor = isDone ? '#c8a96e' : isActive ? '#0d0f14' : '#9ca3af';
-      const dotText  = isDone ? '&#10003;' : m.abbr;
-      const cellOp   = isFuture ? 'opacity:0.5;filter:alpha(opacity=50);' : '';
+      const dotBg  = isDone ? '#fdf5e8' : isActive ? '#fdf5e8' : '#f0f1f5';
+      const dotBdr = isDone ? '#c8a96e' : isActive ? '#c8a96e' : '#d0d4e0';
+      const dotClr = isDone ? '#c8a96e' : isActive ? '#c8a96e' : '#9ca3af';
+      const ring   = isActive ? 'box-shadow:0 0 0 3px rgba(200,169,110,0.3);' : '';
+      const txt      = isDone ? '&#10003;' : (m.emoji || m.abbr);
+      const dotFSize = (!isDone && m.emoji) ? '15px' : '11px';
+      const fade   = isFuture ? 'opacity:0.45;' : '';
 
-      // Dot cell
-      dotRow += `<td width="${DOT_W}" align="center" valign="middle" style="padding:0;width:${DOT_W}px;${cellOp}">` +
-        `<table cellpadding="0" cellspacing="0" border="0" align="center"><tr>` +
-        `<td width="${DOT_W}" height="${DOT_W}" align="center" valign="middle" bgcolor="${dotBg}" ` +
-        `style="width:${DOT_W}px;height:${DOT_W}px;border-radius:50%;background-color:${dotBg};` +
-        `border:2px solid ${dotBdr};font-family:Arial,sans-serif;font-size:11px;font-weight:700;` +
-        `color:${dotColor};text-align:center;vertical-align:middle;">${dotText}</td>` +
-        `</tr></table></td>`;
+      /* dot cell */
+      dotRow +=
+        `<td width="${DOT_W}" align="center" valign="middle" style="padding:0;${fade}">` +
+          `<table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;"><tr>` +
+            `<td width="${DOT_W}" height="${DOT_W}" align="center" valign="middle" bgcolor="${dotBg}" ` +
+              `style="width:${DOT_W}px;height:${DOT_W}px;border-radius:50%;background-color:${dotBg};` +
+              `border:2px solid ${dotBdr};${ring}font-family:Arial,sans-serif;font-size:${dotFSize};` +
+              `font-weight:700;color:${dotClr};text-align:center;vertical-align:middle;">${txt}</td>` +
+          `</tr></table>` +
+        `</td>`;
 
-      // Label cell
-      const labelColor  = isDone ? '#c8a96e' : isActive ? '#b8860a' : '#9ca3af';
-      const labelWeight = isActive ? '700' : '500';
-      labelRow += `<td width="${DOT_W}" align="center" valign="top" style="padding:5px 0 0;width:${DOT_W}px;${cellOp}">` +
-        `<span style="font-size:8.5px;color:${labelColor};font-weight:${labelWeight};` +
-        `font-family:Arial,sans-serif;line-height:1.3;display:block;text-align:center;">${m.label.replace('\n','<br/>')}</span></td>`;
+      /* label cell */
+      const lClr = isDone ? '#c8a96e' : isActive ? '#b8860a' : '#9ca3af';
+      const lWt  = isActive ? '700' : '500';
+      labelRow +=
+        `<td width="${DOT_W}" align="center" valign="top" style="padding:5px 0 0;${fade}">` +
+          `<span style="font-size:8.5px;color:${lClr};font-weight:${lWt};font-family:Arial,` +
+          `sans-serif;line-height:1.3;display:block;text-align:center;">` +
+          `${m.label.replace('\n','<br/>')}</span>` +
+        `</td>`;
 
-      // Connector after EVERY step including the last one (tail — no ellipsis, just more dashed line)
-      const connBg = isDone ? '#c8a96e' : '#d0d4e0';
-      dotRow   += `<td valign="middle" style="padding:0;">` +
-        `<table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>` +
-        `<td height="2" bgcolor="${connBg}" style="height:2px;background-color:${connBg};font-size:0;line-height:0;">&nbsp;</td>` +
-        `</tr></table></td>`;
-      labelRow += `<td style="padding:0;"></td>`;
+      /* connector or trailing line */
+      if (!isLast) {
+        /* normal inter-step connector */
+        const cBg = isDone ? '#c8a96e' : '#d0d4e0';
+        dotRow   += `<td valign="middle" style="padding:0;">` +
+          `<table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>` +
+            `<td height="2" bgcolor="${cBg}" style="height:2px;background-color:${cBg};font-size:0;line-height:0;">&nbsp;</td>` +
+          `</tr></table></td>`;
+        labelRow += `<td style="padding:0;"></td>`;
+      } else {
+        /* trailing dashed line after the last dot — fills remaining width */
+        dotRow   += `<td valign="middle" style="padding:0;">` +
+          `<table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>` +
+            `<td height="2" bgcolor="#d0d4e0" style="height:2px;background-color:#d0d4e0;font-size:0;line-height:0;">&nbsp;</td>` +
+          `</tr></table></td>`;
+        labelRow += `<td style="padding:0;"></td>`;
+      }
     });
 
-    return `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;border-collapse:collapse;">` +
-      `<tr><td bgcolor="#f7f8fc" style="background-color:#f7f8fc;border:1px solid #e0e4f0;border-radius:10px;padding:20px 16px 18px;">` +
-      `<p style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6b7280;text-align:center;margin:0 0 16px;font-family:Arial,sans-serif;">YOUR JOURNEY SO FAR</p>` +
-      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">` +
-      `<tr>${dotRow}</tr><tr>${labelRow}</tr>` +
-      `</table></td></tr></table>`;
+    return (
+      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;border-collapse:collapse;">` +
+        `<tr><td bgcolor="#f7f8fc" style="background-color:#f7f8fc;border:1px solid #e0e4f0;border-radius:10px;padding:20px 16px 18px;">` +
+          `<p style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6b7280;` +
+            `text-align:center;margin:0 0 16px;font-family:Arial,sans-serif;">📍 YOUR HOME LOAN JOURNEY</p>` +
+          `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">` +
+            `<tr>${dotRow}</tr>` +
+            `<tr>${labelRow}</tr>` +
+          `</table>` +
+        `</td></tr>` +
+      `</table>`
+    );
+  }
+
+  /* ── Outlook-safe coloured block (table + bgcolor) ──────────────────────
+     borderSide: 'left' | 'all' | 'none'
+  ──────────────────────────────────────────────────────────────────────── */
+  function block(bg, borderSide, borderColor, content) {
+    let outerStyle = `border-collapse:collapse;margin:16px 0;width:100%;`;
+    let innerStyle = `background-color:${bg};padding:14px 18px;font-family:Arial,Helvetica,sans-serif;border-radius:8px;`;
+
+    if (borderSide === 'left') {
+      /* Outlook doesn't honour border-left on a td directly, so we use a
+         narrow coloured td beside the content td */
+      return (
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${outerStyle}">` +
+          `<tr>` +
+            `<td width="4" bgcolor="${borderColor}" style="width:4px;background-color:${borderColor};border-radius:4px 0 0 4px;font-size:0;line-height:0;">&nbsp;</td>` +
+            `<td bgcolor="${bg}" style="${innerStyle}border-radius:0 8px 8px 0;">${content}</td>` +
+          `</tr>` +
+        `</table>`
+      );
+    }
+    if (borderSide === 'all') {
+      return (
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${outerStyle}border:1px solid ${borderColor};border-radius:8px;">` +
+          `<tr><td bgcolor="${bg}" style="${innerStyle}">${content}</td></tr>` +
+        `</table>`
+      );
+    }
+    /* none */
+    return (
+      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${outerStyle}">` +
+        `<tr><td bgcolor="${bg}" style="${innerStyle}">${content}</td></tr>` +
+      `</table>`
+    );
+  }
+
+  /* ── Step number badge (table-based circle) ── */
+  function stepBadge(num) {
+    return (
+      `<table cellpadding="0" cellspacing="0" border="0" style="display:inline-table;margin-right:8px;"><tr>` +
+        `<td width="26" height="26" align="center" valign="middle" bgcolor="#c8a96e" ` +
+          `style="width:26px;height:26px;min-width:26px;min-height:26px;border-radius:50%;` +
+          `background-color:#c8a96e;font-family:Arial,sans-serif;font-size:12px;font-weight:700;` +
+          `color:#1a1a2e;text-align:center;vertical-align:middle;line-height:26px;padding:0;">${num}</td>` +
+      `</tr></table>`
+    );
   }
 
   function getTimeOfDay() { const h = new Date().getHours(); return h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening'; }
   function updateTimePill() {
-    const t = getTimeOfDay();
-    const ico = { Morning:'🌅', Afternoon:'☀️', Evening:'🌙' };
+    const t = getTimeOfDay(), ico = { Morning:'🌅', Afternoon:'☀️', Evening:'🌙' };
     document.getElementById('time-pill').textContent = `${ico[t]} Auto-detected: Good ${t}`;
   }
   function autoCapitalise(el) { if (el.value.length) el.value = el.value[0].toUpperCase() + el.value.slice(1); }
   function setToggle(gid, btn) { document.querySelectorAll(`#${gid} .toggle-btn`).forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
   function getToggle(gid) { const a = document.querySelector(`#${gid} .toggle-btn.active`); return a ? a.dataset.val : null; }
+
   function clearFields() {
     document.getElementById('client-name').value = '';
     document.querySelector('#contact-group .toggle-btn[data-val="spoke"]').click();
@@ -274,7 +340,7 @@
     document.getElementById('include-discharge').checked = true;
     document.getElementById('include-survey').checked = true;
     document.getElementById('output-section').style.display = 'none';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top:0, behavior:'smooth' });
   }
 
   function generateEmail() {
@@ -283,98 +349,73 @@
     const time    = getTimeOfDay();
     const inclCoc = document.getElementById('include-coc').checked;
     const inclDis = document.getElementById('include-discharge').checked;
-    const inclSurv = document.getElementById('include-survey').checked;
+    const inclSrv = document.getElementById('include-survey').checked;
 
     const opening = contact === 'spoke'
       ? 'Thank you for your time on the phone just then.'
       : 'I hope you are doing well. I just tried to call — unfortunately I was unable to get through and have left you a voicemail.';
 
-    // Step blocks — table-based so bgcolor renders in Outlook
-    let stepsHtml = '', stepCount = 0;
+    /* next steps */
+    let stepsHtml = '', stepN = 0;
     if (inclCoc) {
-      stepCount++;
-      stepsHtml += `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;border-collapse:collapse;"><tr>
-        <td bgcolor="#f7f8fc" style="background-color:#f7f8fc;border:1px solid #e0e4f0;border-radius:8px;padding:14px 18px;font-family:Arial,sans-serif;">
-          <table cellpadding="0" cellspacing="0" border="0" width="100%">
-            <tr>
-              <td valign="top" width="30" style="padding-right:8px;padding-bottom:6px;">
-                <table cellpadding="0" cellspacing="0" border="0"><tr>
-                  <td width="22" height="22" align="center" valign="middle" bgcolor="#1a1f2e" style="width:22px;height:22px;border-radius:50%;background-color:#1a1f2e;font-size:11px;font-weight:700;color:#c8a96e;font-family:Arial,sans-serif;text-align:center;vertical-align:middle;">${stepCount}</td>
-                </tr></table>
-              </td>
-              <td valign="top" style="font-weight:700;color:#1a1a2e;font-size:14px;font-family:Arial,sans-serif;padding-bottom:6px;">Certificate of Currency (Home &amp; Contents Insurance)</td>
-            </tr>
-            <tr><td colspan="2" style="color:#4a4f6a;font-size:14px;font-family:Arial,sans-serif;">
-              We'll need an updated insurance policy with the new lender listed — this is your Certificate of Currency, which is simply proof that your property is insured.<br/><br/>
-              <strong style="color:#1d5fad;">Need cover or looking for a better rate?</strong> As an Aussie Home Loans client, you have access to exclusive discounted insurance rates through our partnership with <strong>Allianz</strong>. Just reply to this email or give me a call and I can arrange a quote.
-            </td></tr>
-          </table>
-        </td></tr></table>`;
+      stepN++;
+      stepsHtml += block('#f7f8fc','all','#e0e4f0',
+        `<p style="font-weight:700;color:#1a1a2e;font-family:Arial,sans-serif;font-size:14px;margin:0 0 8px;">🛡️ Certificate of Currency (Home &amp; Contents Insurance)</p>` +
+        `<p style="color:#4a4f6a;font-size:14px;margin:0 0 0;font-family:Arial,sans-serif;">We'll need an updated insurance policy with the new lender listed — this is your Certificate of Currency, which is simply proof that your property is insured.</p>` +
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:10px 0 0;">` +
+          `<tr><td bgcolor="#e8f2ff" style="background-color:#e8f2ff;border:1px solid #b8d0f0;border-radius:6px;padding:10px 14px;font-family:Arial,sans-serif;font-size:14px;color:#1558b0;">` +
+            `<strong style="color:#1558b0;">Need cover or looking for a better rate?</strong> As an Aussie Home Loans client, you have access to exclusive discounted insurance rates through our partnership with <strong style="color:#1558b0;">Allianz</strong>. Just reply to this email or give me a call and I can arrange a quote.` +
+          `</td></tr>` +
+        `</table>`
+      );
     }
     if (inclDis) {
-      stepCount++;
-      stepsHtml += `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;border-collapse:collapse;"><tr>
-        <td bgcolor="#f7f8fc" style="background-color:#f7f8fc;border:1px solid #e0e4f0;border-radius:8px;padding:14px 18px;font-family:Arial,sans-serif;">
-          <table cellpadding="0" cellspacing="0" border="0" width="100%">
-            <tr>
-              <td valign="top" width="30" style="padding-right:8px;padding-bottom:6px;">
-                <table cellpadding="0" cellspacing="0" border="0"><tr>
-                  <td width="22" height="22" align="center" valign="middle" bgcolor="#1a1f2e" style="width:22px;height:22px;border-radius:50%;background-color:#1a1f2e;font-size:11px;font-weight:700;color:#c8a96e;font-family:Arial,sans-serif;text-align:center;vertical-align:middle;">${stepCount}</td>
-                </tr></table>
-              </td>
-              <td valign="top" style="font-weight:700;color:#1a1a2e;font-size:14px;font-family:Arial,sans-serif;padding-bottom:6px;">Discharge Authority</td>
-            </tr>
-            <tr><td colspan="2" style="color:#4a4f6a;font-size:14px;font-family:Arial,sans-serif;">
-              This notifies your current lender that you intend to close your account with them and change lenders. Don't worry — I'll walk you through this step personally when the time comes.
-            </td></tr>
-          </table>
-        </td></tr></table>`;
+      stepN++;
+      stepsHtml += block('#f7f8fc','all','#e0e4f0',
+        `<p style="font-weight:700;color:#1a1a2e;font-family:Arial,sans-serif;font-size:14px;margin:0 0 8px;">✍️ Discharge Authority</p>` +
+        `<p style="color:#4a4f6a;font-size:14px;margin:0;font-family:Arial,sans-serif;">This notifies your current lender that you intend to close your account with them and change lenders. Don't worry — I'll walk you through this step personally when the time comes.</p>`
+      );
     }
 
-    const surveyBlock = inclSurv ? `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0;border-collapse:collapse;"><tr>
-      <td bgcolor="#fff0f6" style="background-color:#fff0f6;border:1px solid #f0c0d8;border-radius:8px;padding:16px 18px;font-size:14px;color:#4a1a2e;font-family:Arial,sans-serif;">
-        <strong style="display:block;margin-bottom:6px;color:#7a0a3a;">One Small Favour</strong>
-        You would've received an email with the subject line <em>"How are we doing so far?"</em> (check your junk/spam folder if you can't find it). When you have a spare moment, I'd really appreciate it if you could click the link inside and complete the short 3-question, star-rated survey.<br/><br/>
-        Your feedback means a lot — and it also contributes to my monthly performance metrics, so your support is genuinely appreciated.
-      </td></tr></table>` : '';
+    const congratsBanner = block('#edf7f1','left','#4caf82',
+      `<span style="font-weight:600;color:#1a4a30;font-size:16px;font-family:Arial,sans-serif;">🎉 Congratulations on your unconditional approval!</span>`
+    );
 
-    const html = `<div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;font-size:15px;line-height:1.75;padding:0;">
-      <p style="font-size:18px;font-weight:600;margin:0 0 16px;font-family:Arial,sans-serif;">Good ${time}, ${name}.</p>
-      <p style="margin:0 0 16px;font-family:Arial,sans-serif;">${opening}</p>
+    const docsBlock = block('#fff8ee','left','#c8a96e',
+      `<strong style="color:#5a3e0a;font-family:Arial,sans-serif;font-size:14px;">📄 Loan Documents</strong><br/>` +
+      `<span style="color:#5a3e0a;font-size:14px;font-family:Arial,sans-serif;">Loan documents have been requested to be issued <strong>electronically</strong>. These typically take <strong>48–72 hours</strong> to be generated and sent through to you, so please keep an eye on your inbox.</span>`
+    );
 
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0;border-collapse:collapse;"><tr>
-        <td bgcolor="#e8f5f0" style="background-color:#e8f5f0;border-left:4px solid #4caf82;border-radius:0 8px 8px 0;padding:16px 20px;font-weight:600;color:#1a4a30;font-size:16px;font-family:Arial,sans-serif;">
-          Congratulations on your unconditional approval!
-        </td></tr></table>
+    const settlementsBlock = block('#f0f4ff','all','#c8d0f0',
+      `<strong style="display:block;margin-bottom:6px;color:#1a1a4a;font-family:Arial,sans-serif;font-size:14px;">🤝 Meet My Settlements Team</strong>` +
+      `<span style="color:#1a1a4a;font-size:14px;font-family:Arial,sans-serif;">I have a dedicated settlements team who assist me with the settlement of your loan. They will reach out to you — usually within a day or two — to introduce themselves and walk you through the above steps in more detail.</span>`
+    );
 
-      <p style="margin:0 0 16px;font-family:Arial,sans-serif;">This is a huge milestone — your home loan has been formally approved by the lender. Here's what happens from here.</p>
+    const surveyBlock = inclSrv ? block('#fff0f6','all','#f0c0d8',
+      `<strong style="display:block;margin-bottom:6px;color:#7a0a3a;font-family:Arial,sans-serif;font-size:14px;">🙏 One Small Favour</strong>` +
+      `<span style="color:#4a1a2e;font-size:14px;font-family:Arial,sans-serif;">You would've received an email with the subject line <em>"How are we doing so far?"</em> (check your junk/spam folder if you can't find it). When you have a spare moment, I'd really appreciate it if you could click the link inside and complete the short 3-question, star-rated survey.<br/><br/>Your feedback means a lot — and it also contributes to my monthly performance metrics, so your support is genuinely appreciated.</span>`
+    ) : '';
 
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0;border-collapse:collapse;"><tr>
-        <td bgcolor="#fff8ee" style="background-color:#fff8ee;border-left:4px solid #c8a96e;border-radius:0 8px 8px 0;padding:14px 18px;color:#5a3e0a;font-size:14px;font-family:Arial,sans-serif;">
-          <strong>Loan Documents</strong><br/>
-          Loan documents have been requested to be issued <strong>electronically</strong>. These typically take <strong>48–72 hours</strong> to be generated and sent through to you, so please keep an eye on your inbox.
-        </td></tr></table>
-
-      ${(inclCoc || inclDis) ? `<p style="font-weight:700;color:#1a1a2e;margin:20px 0 12px;font-size:15px;font-family:Arial,sans-serif;">In addition to signing the loan documents, we'll also need the following:</p>${stepsHtml}` : ''}
-
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0;border-collapse:collapse;"><tr>
-        <td bgcolor="#f0f4ff" style="background-color:#f0f4ff;border:1px solid #c8d0f0;border-radius:8px;padding:16px 18px;color:#1a1a4a;font-size:14px;font-family:Arial,sans-serif;">
-          <strong style="display:block;margin-bottom:6px;">Meet My Settlements Team</strong>
-          I have a dedicated settlements team who assist me with the settlement of your loan. They will reach out to you — usually within a day or two — to introduce themselves and walk you through the above steps in more detail.
-        </td></tr></table>
-
-      <p style="margin:0 0 16px;font-family:Arial,sans-serif;">I'll still be involved throughout this process and remain available to you at any time. If you have any questions or concerns along the way, please don't hesitate to reach out.</p>
-
-      ${surveyBlock}
-      ${emailTimelineHTML()}
-
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;border-collapse:collapse;"><tr>
-        <td style="border-top:2px solid #e8ecf5;padding-top:20px;font-size:14px;color:#4a4f6a;font-family:Arial,sans-serif;">
-          <p style="margin:0 0 12px;">Thank you again — this is a big moment and it's been a pleasure working with you to get here. Speak soon!</p>
-          <strong style="font-size:16px;color:#1a1a2e;display:block;">Joshua Coppolelli</strong>
-          <span style="font-size:13px;color:#888;display:block;margin-top:2px;">Mortgage Broker · Aussie Home Loans</span>
-        </td></tr></table>
-    </div>`;
+    const html =
+      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;font-size:15px;line-height:1.75;"><tr><td style="padding:0;">` +
+      `<p style="font-size:18px;font-weight:600;margin:0 0 16px;">Good ${time}, ${name}.</p>` +
+      `<p style="margin:0 0 16px;">${opening}</p>` +
+      congratsBanner +
+      `<p style="margin:0 0 16px;">This is a huge milestone — your home loan has been formally approved by the lender. Here's what happens from here.</p>` +
+      docsBlock +
+      ((inclCoc||inclDis) ? `<p style="font-weight:700;color:#1a1a2e;margin:20px 0 4px;font-size:15px;font-family:Arial,sans-serif;">In addition to signing the loan documents, we'll also need the following:</p>${stepsHtml}` : '') +
+      settlementsBlock +
+      `<p style="margin:16px 0;">I'll still be involved throughout this process and remain available to you at any time. If you have any questions or concerns along the way, please don't hesitate to reach out.</p>` +
+      surveyBlock +
+      emailTimelineHTML() +
+      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:24px;">` +
+        `<tr><td style="border-top:2px solid #e8ecf5;padding-top:20px;font-size:14px;color:#4a4f6a;font-family:Arial,sans-serif;">` +
+          `<p style="margin:0 0 12px;">Thank you again — this is a big moment and it's been a pleasure working with you to get here. Speak soon!</p>` +
+          `<strong style="font-size:16px;color:#1a1a2e;display:block;">Joshua Coppolelli</strong>` +
+          `<span style="font-size:13px;color:#888;display:block;margin-top:2px;">Mortgage Broker · Aussie Home Loans</span>` +
+        `</td></tr>` +
+      `</table>` +
+      `</td></tr></table>`;
 
     document.getElementById('email-body').innerHTML = html;
 
@@ -383,17 +424,15 @@
       `Unconditional Approval — Your Next Steps`,
       `Congratulations ${name} — You're Officially Approved!`,
     ];
-    document.getElementById('subject-lines').innerHTML = subjects.map(s=>`
-      <div class="subject-pill" onclick="copySubject(this,'${s.replace(/'/g,"\\'")}')">
-        <span>${s}</span><span class="copy-icon">Copy ↗</span>
-      </div>`).join('');
+    document.getElementById('subject-lines').innerHTML = subjects.map(s =>
+      `<div class="subject-pill" onclick="copySubject(this,'${s.replace(/'/g,"\\'")}')"><span>${s}</span><span class="copy-icon">Copy ↗</span></div>`
+    ).join('');
 
     const out = document.getElementById('output-section');
     out.style.display = 'block';
     setTimeout(()=>out.scrollIntoView({behavior:'smooth',block:'start'}),80);
-    const btn = document.getElementById('copy-btn');
-    btn.textContent = 'Copy email to clipboard';
-    btn.className = 'copy-btn';
+    document.getElementById('copy-btn').textContent = 'Copy email to clipboard';
+    document.getElementById('copy-btn').className = 'copy-btn';
   }
 
   async function copyEmail() {
@@ -401,8 +440,8 @@
     const btn = document.getElementById('copy-btn');
     let success = false;
     try {
-      const fullHTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head><body style="font-family:Arial,Helvetica,sans-serif;">${emailBody.innerHTML}</body></html>`;
-      await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([fullHTML], { type: 'text/html' }) })]);
+      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head><body style="font-family:Arial,Helvetica,sans-serif;">${emailBody.innerHTML}</body></html>`;
+      await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'})})]);
       success = true;
     } catch(e) {}
     if (!success) {
@@ -417,14 +456,14 @@
     }
     btn.textContent = success ? 'Copied!' : 'Please select & copy the email above';
     btn.className = success ? 'copy-btn copied' : 'copy-btn';
-    setTimeout(() => { btn.textContent = 'Copy email to clipboard'; btn.className = 'copy-btn'; }, 2500);
+    setTimeout(()=>{ btn.textContent='Copy email to clipboard'; btn.className='copy-btn'; }, 2500);
   }
 
   function copySubject(el, subject) {
     navigator.clipboard.writeText(subject).then(()=>{
-      const orig = el.querySelector('.copy-icon').textContent;
-      el.querySelector('.copy-icon').textContent = 'Copied';
-      setTimeout(()=>el.querySelector('.copy-icon').textContent=orig, 2000);
+      const ic = el.querySelector('.copy-icon');
+      ic.textContent = 'Copied';
+      setTimeout(()=>ic.textContent='Copy ↗', 2000);
     });
   }
 

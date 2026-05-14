@@ -309,14 +309,33 @@
       ? 'Thank you so much for your time on the phone just now.'
       : 'I hope you are doing well — I did try to give you a call but was unfortunately unable to get through.';
 
-    /* Congratulations banner — dark green */
-    const congratsBanner =
-      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:16px 0;border-radius:10px;">` +
-        `<tr><td bgcolor="#1a3a2a" align="center" style="background-color:#1a3a2a;border-radius:10px;padding:28px;text-align:center;">` +
-          `<p style="font-size:22px;font-weight:700;color:#ffffff;font-family:Georgia,serif;margin:0 0 8px;"><font color="#ffffff">🎉 Congratulations — Your ${loanCap} Has Settled!</font></p>` +
-          `<p style="font-size:13px;color:#a8c8b8;margin:0;font-family:Arial,sans-serif;"><font color="#a8c8b8">You've reached the finish line. It has been a genuine pleasure getting here with you.</font></p>` +
-        `</td></tr>` +
-      `</table>`;
+    /* Congratulations banner — rendered as a canvas image so Outlook can never
+       interfere with text colours regardless of inherited styles. */
+    const congratsBanner = (function() {
+      const W = 1200, H = 210, R = 20;
+      const c = document.createElement('canvas');
+      c.width = W; c.height = H;
+      const x = c.getContext('2d');
+      // rounded dark-green background
+      x.fillStyle = '#1a3a2a';
+      x.beginPath();
+      x.moveTo(R,0); x.lineTo(W-R,0); x.arcTo(W,0,W,R,R);
+      x.lineTo(W,H-R); x.arcTo(W,H,W-R,H,R);
+      x.lineTo(R,H); x.arcTo(0,H,0,H-R,R);
+      x.lineTo(0,R); x.arcTo(0,0,R,0,R);
+      x.closePath(); x.fill();
+      // title
+      x.fillStyle = '#ffffff';
+      x.font = 'bold 46px Georgia, serif';
+      x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+      x.fillText(`\uD83C\uDF89 Congratulations \u2014 Your ${loanCap} Has Settled!`, W/2, 108);
+      // subtitle
+      x.fillStyle = '#a8c8b8';
+      x.font = '28px Arial, sans-serif';
+      x.fillText("You've reached the finish line. It has been a genuine pleasure getting here with you.", W/2, 160);
+      const src = c.toDataURL('image/png');
+      return `<img src="${src}" width="100%" style="display:block;border-radius:10px;margin:16px 0;" alt="Congratulations \u2014 Your ${loanCap} Has Settled!" />`;
+    })();
 
     const whatsNextBlock = block('#fff8ee','left','#c8a96e',
       `<strong style="color:#5a3e0a;font-family:Arial,sans-serif;font-size:14px;">🔜 What Happens Next?</strong><br/>` +
