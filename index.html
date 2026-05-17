@@ -139,7 +139,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
 .card-arrow { font-size: 16px; color: #ccc; transition: color 0.15s, transform 0.15s; }
 .tool-card.live:hover .card-arrow { color: var(--green); transform: translateX(3px); }
 
-/* Chronological step indicator */
 .step-pill {
   display: inline-flex; align-items: center; gap: 5px;
   font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
@@ -188,7 +187,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
     <p class="hero-sub">Personalised email generators, client calculators and document tools — built specifically for how you work.</p>
     <div class="hero-stats">
       <div>
-        <div class="hero-stat-num"><span>2</span></div>
+        <div class="hero-stat-num"><span>4</span></div>
         <div class="hero-stat-lbl">Live</div>
       </div>
       <div>
@@ -196,7 +195,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
         <div class="hero-stat-lbl beta">In beta</div>
       </div>
       <div>
-        <div class="hero-stat-num">8</div>
+        <div class="hero-stat-num">7</div>
         <div class="hero-stat-lbl">Coming soon</div>
       </div>
     </div>
@@ -211,11 +210,11 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
       <div class="section-icon ic-green">✉️</div>
       <div class="section-label">Email Generators</div>
       <div class="section-line"></div>
-      <div class="section-count">2 live · 2 beta · 4 coming</div>
+      <div class="section-count">4 live · 2 beta · 1 coming</div>
     </div>
     <div class="tool-grid">
 
-      <!-- 1. Post Contact Follow Up -->
+      <!-- Step 1: Post Contact Follow Up — Live -->
       <a class="tool-card live" href="post_contact_email_generator.html" target="_blank">
         <div class="card-top">
           <div class="card-icon ic-amber">📬</div>
@@ -230,65 +229,67 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
         </div>
       </a>
 
-      <!-- 2. Loan Submission -->
-      <div class="tool-card soon">
+      <!-- Step 2: Loan Submission — Beta -->
+      <a class="tool-card live" href="loan_submission_email_generator.html" target="_blank">
         <div class="card-top">
           <div class="card-icon ic-blue">📤</div>
-          <span class="card-badge badge-soon">Coming soon</span>
+          <span class="card-badge badge-beta">Beta</span>
         </div>
         <div class="step-pill">Step 2 · Submission</div>
-        <div class="card-title">Loan Submission Email</div>
+        <div class="card-title">Loan Submission Email Generator <span style="font-size:11px;font-weight:400;color:#888;">v1</span></div>
         <div class="card-desc">Notify clients their application has been submitted — covering what happens next, expected timelines and what to watch out for.</div>
         <div class="card-footer">
-          <span class="card-badge badge-soon">Coming soon</span>
+          <span class="card-badge badge-beta">Open tool</span>
+          <span class="card-arrow">→</span>
         </div>
-      </div>
+      </a>
 
-      <!-- 3. Formal Approval -->
+      <!-- Step 3: Formal Approval — Live -->
       <a class="tool-card live" href="formal_approval_email_generator.html" target="_blank">
         <div class="card-top">
-          <div class="card-icon ic-beta">🎉</div>
-          <span class="card-badge badge-beta">Beta</span>
+          <div class="card-icon ic-green">🎉</div>
+          <span class="card-badge badge-live">Live</span>
         </div>
         <div class="step-pill">Step 3 · Approval</div>
         <div class="card-title">Formal Approval Email Generator <span style="font-size:11px;font-weight:400;color:#888;">v1</span></div>
         <div class="card-desc">Congratulations email upon unconditional approval — tailored to contact outcome, time of day, required next steps and survey preference.</div>
         <div class="card-footer">
-          <span class="card-badge badge-beta">Open tool</span>
+          <span class="card-badge badge-live">Open tool</span>
           <span class="card-arrow">→</span>
         </div>
       </a>
 
-      <!-- 4. Settlement -->
+      <!-- Step 4: Settlement — Live -->
       <a class="tool-card live" href="settlement_email_generator.html" target="_blank">
         <div class="card-top">
-          <div class="card-icon ic-beta">🏁</div>
-          <span class="card-badge badge-beta">Beta</span>
+          <div class="card-icon ic-green">🏁</div>
+          <span class="card-badge badge-live">Live</span>
         </div>
         <div class="step-pill">Step 4 · Settlement</div>
         <div class="card-title">Settlement Email Generator <span style="font-size:11px;font-weight:400;color:#888;">v1</span></div>
         <div class="card-desc">Post-settlement congratulations email — tailored to contact outcome, time of day and survey preference. Keeps the client relationship warm.</div>
         <div class="card-footer">
+          <span class="card-badge badge-live">Open tool</span>
+          <span class="card-arrow">→</span>
+        </div>
+      </a>
+
+      <!-- Step 5: 1 Month Check-In — Beta -->
+      <a class="tool-card live" href="1_month_checkin_email_generator.html" target="_blank">
+        <div class="card-top">
+          <div class="card-icon ic-green">📅</div>
+          <span class="card-badge badge-beta">Beta</span>
+        </div>
+        <div class="step-pill">Step 5 · 1 month post-settlement</div>
+        <div class="card-title">1-Month Check-In Email Generator <span style="font-size:11px;font-weight:400;color:#888;">v1</span></div>
+        <div class="card-desc">A warm check-in one month after settlement — making sure the client has settled in, answering any early questions and reinforcing your ongoing support.</div>
+        <div class="card-footer">
           <span class="card-badge badge-beta">Open tool</span>
           <span class="card-arrow">→</span>
         </div>
       </a>
 
-      <!-- 5. 1 Month Check-In -->
-      <div class="tool-card soon">
-        <div class="card-top">
-          <div class="card-icon ic-green">📅</div>
-          <span class="card-badge badge-soon">Coming soon</span>
-        </div>
-        <div class="step-pill">Step 5 · 1 month post-settlement</div>
-        <div class="card-title">1-Month Check-In Email</div>
-        <div class="card-desc">A warm check-in one month after settlement — making sure the client has settled in, answering any early questions and reinforcing your ongoing support.</div>
-        <div class="card-footer">
-          <span class="card-badge badge-soon">Coming soon</span>
-        </div>
-      </div>
-
-      <!-- 6. 1 Year Check-In -->
+      <!-- Step 6: 1 Year Anniversary — Live -->
       <a class="tool-card live" href="anniversary_email_generator.html" target="_blank">
         <div class="card-top">
           <div class="card-icon ic-green">🏡</div>
@@ -303,7 +304,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--n
         </div>
       </a>
 
-      <!-- Client Closed Lost -->
+      <!-- Client Closed Lost — Coming Soon -->
       <div class="tool-card soon">
         <div class="card-top">
           <div class="card-icon ic-coral">🚪</div>
