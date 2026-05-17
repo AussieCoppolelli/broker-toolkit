@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loan Submission Email Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0f14; --surface: #161920; --surface-2: #1e2230; --border: #2a2f3f;
+      --accent: #c8a96e; --accent-soft: rgba(200,169,110,0.12); --accent-glow: rgba(200,169,110,0.25);
+      --green: #4caf82; --green-soft: rgba(76,175,130,0.12);
+      --text: #e8eaf0; --text-muted: #7c8299; --text-dim: #4a5168;
+      --radius: 12px; --radius-sm: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; line-height: 1.6; }
+    nav { padding: 18px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: var(--surface); }
+    nav a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; }
+    nav a:hover { color: var(--accent); }
+    nav .sep { color: var(--text-dim); font-size: 12px; }
+    nav .current { color: var(--text); font-size: 13px; font-weight: 500; }
+    .nav-beta { background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.35); color: #c4a4ff; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; margin-left: 4px; }
+    header { padding: 52px 32px 40px; max-width: 780px; margin: 0 auto; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; background: var(--green-soft); border: 1px solid rgba(76,175,130,0.3); color: var(--green); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; margin-bottom: 18px; }
+    header h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px,4vw,40px); font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 10px; }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--text-muted); font-size: 15px; max-width: 520px; }
+    .time-pill { display: inline-flex; align-items: center; gap: 7px; background: var(--accent-soft); border: 1px solid rgba(200,169,110,0.3); color: var(--accent); font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 20px; margin-top: 14px; }
+    .layout { max-width: 780px; margin: 0 auto; padding: 0 32px 80px; display: flex; flex-direction: column; gap: 24px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
+    .card-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+    .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .timeline { display: flex; align-items: flex-start; overflow: hidden; }
+    .timeline-step { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; min-width: 0; }
+    .timeline-step.done::after { content: ''; position: absolute; top: 15px; left: calc(50% + 16px); right: calc(-50% + 16px); height: 2px; background: var(--accent); z-index: 0; }
+    .timeline-step.active::after, .timeline-step.future:not(.tl-end)::after { content: ''; position: absolute; top: 15px; left: calc(50% + 16px); right: calc(-50% + 16px); height: 2px; background: repeating-linear-gradient(to right,var(--border) 0,var(--border) 5px,transparent 5px,transparent 9px); z-index: 0; }
+    .timeline-step.last-milestone::after { right: -10px; background: repeating-linear-gradient(to right,var(--border) 0,var(--border) 5px,transparent 5px,transparent 9px); }
+    .timeline-dot { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; position: relative; z-index: 1; flex-shrink: 0; color: var(--text-dim); }
+    .timeline-step.done .timeline-dot { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+    .timeline-step.active .timeline-dot { background: var(--accent); border-color: var(--accent); color: #0d0f14; box-shadow: 0 0 0 4px var(--accent-glow); }
+    .timeline-step.future .timeline-dot { opacity: 0.45; }
+    .timeline-label { font-size: 10px; color: var(--text-dim); margin-top: 8px; text-align: center; line-height: 1.3; font-weight: 500; }
+    .timeline-step.done .timeline-label { color: var(--accent); }
+    .timeline-step.active .timeline-label { color: var(--accent); font-weight: 700; }
+    .timeline-step.future .timeline-label { opacity: 0.45; }
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+    label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 7px; }
+    input[type="text"] { width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 11px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
+    input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    input[type="text"]::placeholder { color: var(--text-dim); }
+    .survey-row { display: flex; align-items: center; gap: 14px; }
+    .switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; inset: 0; background: var(--surface-2); border: 1px solid var(--border); border-radius: 24px; cursor: pointer; transition: all 0.2s; }
+    .slider::before { content: ''; position: absolute; width: 16px; height: 16px; background: var(--text-muted); border-radius: 50%; top: 3px; left: 3px; transition: all 0.2s; }
+    .switch input:checked + .slider { background: var(--accent-soft); border-color: var(--accent); }
+    .switch input:checked + .slider::before { background: var(--accent); transform: translateX(20px); }
+    .survey-label { font-size: 14px; color: var(--text); }
+    .survey-label small { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .generate-btn { width: 100%; background: var(--accent); border: none; border-radius: var(--radius); padding: 16px; color: #0d0f14; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.03em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 9px; transition: all 0.2s; box-shadow: 0 4px 24px var(--accent-glow); }
+    .generate-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 32px var(--accent-glow); filter: brightness(1.07); }
+    .clear-btn { width: 100%; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); padding: 13px; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; margin-top: -8px; }
+    .clear-btn:hover { border-color: #e05c5c; color: #e05c5c; background: rgba(224,92,92,0.06); }
+    #output-section { display: none; }
+    .output-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--text); margin-bottom: 16px; }
+    .copy-btn { width: 100%; margin-top: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 13px 16px; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: all 0.18s; }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .copy-btn.copied { border-color: var(--green); color: var(--green); background: var(--green-soft); }
+    #email-preview { background: #ffffff; border-radius: var(--radius); overflow: hidden; }
+    .email-top-bar { background: #1a1f2e; padding: 14px 24px; display: flex; align-items: center; gap: 8px; }
+    .email-top-bar span { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ff5f57; } .dot-yellow { background: #febc2e; } .dot-green { background: #28c840; }
+    #email-body { padding: 36px 40px; }
+    .subject-lines { display: flex; flex-direction: column; gap: 8px; }
+    .subject-pill { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; transition: all 0.18s; }
+    .subject-pill:hover { border-color: var(--accent); color: var(--accent); }
+    .subject-pill .copy-icon { font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
+    .subject-pill:hover .copy-icon { color: var(--accent); }
+    @media (max-width: 600px) { nav, header, .layout { padding-left: 18px; padding-right: 18px; } header { padding-top: 32px; } #email-body { padding: 24px 20px; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="https://aussiecoppolelli.github.io/broker-toolkit/index.html">← Dashboard</a>
+  <span class="sep">·</span>
+  <span class="current">Loan Submission Email Generator</span>
+  <span class="nav-beta">Beta</span>
+</nav>
+
+<header>
+  <div class="badge">Beta v1</div>
+  <h1>Loan <span>Submission</span> Email Generator</h1>
+  <p>Notify your client their application is in — set clear expectations for what comes next.</p>
+  <div class="time-pill" id="time-pill">Detecting time...</div>
+</header>
+
+<div class="layout">
+  <div class="card">
+    <div class="card-title">Client Journey — Where We Are</div>
+    <div class="timeline" id="ui-timeline"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Client Details</div>
+    <div class="field">
+      <label>Client First Name</label>
+      <input type="text" id="client-name" placeholder="e.g. Sarah" oninput="autoCapitalise(this)" />
+    </div>
+    <div class="field">
+      <label>Loan Type <span style="text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span></label>
+      <input type="text" id="loan-type" placeholder="e.g. home loan, refinance, investment loan" />
+    </div>
+    <div class="field">
+      <label>Lender Name <span style="text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span></label>
+      <input type="text" id="lender-name" placeholder="e.g. ANZ, CBA, Westpac" oninput="autoCapitalise(this)" />
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Feedback Survey</div>
+    <div class="survey-row">
+      <label class="switch"><input type="checkbox" id="include-survey" checked /><span class="slider"></span></label>
+      <div class="survey-label">Include survey request<small>Asks client to complete the "How are we doing so far?" survey</small></div>
+    </div>
+  </div>
+
+  <button class="generate-btn" onclick="generateEmail()">Generate Email</button>
+  <button class="clear-btn" onclick="clearFields()">Clear Fields</button>
+
+  <div id="output-section">
+    <div class="output-title">Generated Email</div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Suggested Subject Lines</div>
+      <div class="subject-lines" id="subject-lines"></div>
+    </div>
+    <div id="email-preview">
+      <div class="email-top-bar"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+      <div id="email-body"></div>
+    </div>
+    <button class="copy-btn" id="copy-btn" onclick="copyEmail()">Copy email to clipboard</button>
+  </div>
+</div>
+
+<script>
+  const MILESTONES = [
+    { label:'Initial\nConsult',  abbr:'IC', emoji:null },
+    { label:'Video\nCall',       abbr:'VC', emoji:null },
+    { label:'Loan\nSubmission',  abbr:'LS', emoji:'📋' },
+    { label:'Formal\nApproval',  abbr:'FA', emoji:null },
+    { label:'Settlement',        abbr:'ST', emoji:'🏁' },
+    { label:'1 Month\nCheck-In', abbr:'1M', emoji:'📅' },
+    { label:'1 Year\nCheck-In',  abbr:'1Y', emoji:'🏠' },
+  ];
+  const ACTIVE = 2; // Loan Submission
+
+  /* ── Browser UI timeline ── */
+  function buildUITimeline() {
+    const wrap = document.getElementById('ui-timeline');
+    let html = '';
+    MILESTONES.forEach((m, i) => {
+      const isLast = i === MILESTONES.length - 1;
+      let cls = i < ACTIVE ? 'done' : i === ACTIVE ? 'active' : 'future';
+      if (isLast) cls += ' last-milestone tl-end';
+      html += `<div class="timeline-step ${cls}">
+        <div class="timeline-dot" style="${(i >= ACTIVE && m.emoji) ? 'font-size:15px;' : ''}">${i < ACTIVE ? '&#10003;' : (m.emoji || m.abbr)}</div>
+        <div class="timeline-label">${m.label.replace('\n', '<br/>')}</div>
+      </div>`;
+    });
+    wrap.innerHTML = html;
+  }
+
+  /* ── Outlook-safe table timeline ── */
+  function emailTimelineHTML() {
+    const DOT_W = 28;
+    let dotRow = '', labelRow = '';
+
+    MILESTONES.forEach(function(m, i) {
+      const isDone   = i < ACTIVE;
+      const isActive = i === ACTIVE;
+      const isLast   = i === MILESTONES.length - 1;
+      const isFuture = i > ACTIVE;
+
+      const dotBg  = isDone ? '#fdf5e8' : isActive ? '#fdf5e8' : '#f0f1f5';
+      const dotBdr = isDone ? '#c8a96e' : isActive ? '#c8a96e' : '#d0d4e0';
+      const dotClr = isDone ? '#c8a96e' : isActive ? '#c8a96e' : '#9ca3af';
+      const ring   = isActive ? 'box-shadow:0 0 0 3px rgba(200,169,110,0.3);' : '';
+      const txt    = isDone ? '&#10003;' : (m.emoji || m.abbr);
+      const dotFSize = (!isDone && m.emoji) ? '15px' : '11px';
+      const fade   = isFuture ? 'opacity:0.45;' : '';
+
+      dotRow +=
+        `<td width="${DOT_W}" align="center" valign="middle" style="padding:0;${fade}">` +
+          `<table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;"><tr>` +
+            `<td width="${DOT_W}" height="${DOT_W}" align="center" valign="middle" bgcolor="${dotBg}" ` +
+              `style="width:${DOT_W}px;height:${DOT_W}px;border-radius:50%;background-color:${dotBg};` +
+              `border:2px solid ${dotBdr};${ring}font-family:Arial,sans-serif;font-size:${dotFSize};` +
+              `font-weight:700;color:${dotClr};text-align:center;vertical-align:middle;">${txt}</td>` +
+          `</tr></table>` +
+        `</td>`;
+
+      const lClr = isDone ? '#c8a96e' : isActive ? '#b8860a' : '#9ca3af';
+      const lWt  = isActive ? '700' : '500';
+      labelRow +=
+        `<td width="${DOT_W}" align="center" valign="top" style="padding:5px 0 0;${fade}">` +
+          `<span style="font-size:8.5px;color:${lClr};font-weight:${lWt};font-family:Arial,sans-serif;line-height:1.3;display:block;text-align:center;">` +
+          `${m.label.replace('\n', '<br/>')}</span>` +
+        `</td>`;
+
+      if (!isLast) {
+        const cBg = isDone ? '#c8a96e' : '#d0d4e0';
+        dotRow   += `<td valign="middle" style="padding:0;"><table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td height="2" bgcolor="${cBg}" style="height:2px;background-color:${cBg};font-size:0;line-height:0;">&nbsp;</td></tr></table></td>`;
+        labelRow += `<td style="padding:0;"></td>`;
+      } else {
+        dotRow   += `<td valign="middle" style="padding:0;"><table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td height="2" bgcolor="#d0d4e0" style="height:2px;background-color:#d0d4e0;font-size:0;line-height:0;">&nbsp;</td></tr></table></td>`;
+        labelRow += `<td style="padding:0;"></td>`;
+      }
+    });
+
+    return (
+      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;border-collapse:collapse;">` +
+        `<tr><td bgcolor="#f7f8fc" style="background-color:#f7f8fc;border:1px solid #e0e4f0;border-radius:10px;padding:20px 16px 18px;">` +
+          `<p style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6b7280;text-align:center;margin:0 0 16px;font-family:Arial,sans-serif;">📍 YOUR HOME LOAN JOURNEY</p>` +
+          `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">` +
+            `<tr>${dotRow}</tr>` +
+            `<tr>${labelRow}</tr>` +
+          `</table>` +
+        `</td></tr>` +
+      `</table>`
+    );
+  }
+
+  /* ── Outlook-safe coloured block ── */
+  function block(bg, borderSide, borderColor, content) {
+    const inner = `background-color:${bg};padding:14px 18px;font-family:Arial,Helvetica,sans-serif;border-radius:8px;`;
+    if (borderSide === 'left') {
+      return (
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:16px 0;">` +
+          `<tr>` +
+            `<td width="4" bgcolor="${borderColor}" style="width:4px;background-color:${borderColor};border-radius:4px 0 0 4px;font-size:0;line-height:0;">&nbsp;</td>` +
+            `<td bgcolor="${bg}" style="${inner}border-radius:0 8px 8px 0;">${content}</td>` +
+          `</tr>` +
+        `</table>`
+      );
+    }
+    return (
+      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:16px 0;border:1px solid ${borderColor};border-radius:8px;">` +
+        `<tr><td bgcolor="${bg}" style="${inner}">${content}</td></tr>` +
+      `</table>`
+    );
+  }
+
+  function getTimeOfDay() { const h = new Date().getHours(); return h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening'; }
+  function updateTimePill() {
+    const t = getTimeOfDay(), ico = { Morning:'🌅', Afternoon:'☀️', Evening:'🌙' };
+    document.getElementById('time-pill').textContent = `${ico[t]} Auto-detected: Good ${t}`;
+  }
+  function autoCapitalise(el) { if (el.value.length) el.value = el.value[0].toUpperCase() + el.value.slice(1); }
+
+  function clearFields() {
+    document.getElementById('client-name').value = '';
+    document.getElementById('loan-type').value = '';
+    document.getElementById('lender-name').value = '';
+    document.getElementById('include-survey').checked = true;
+    document.getElementById('output-section').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function generateEmail() {
+    const name      = document.getElementById('client-name').value.trim() || 'there';
+    const loanRaw   = document.getElementById('loan-type').value.trim();
+    const loan      = loanRaw || 'loan';
+    const loanCap   = loanRaw ? loanRaw[0].toUpperCase() + loanRaw.slice(1) : 'Loan';
+    const lenderRaw = document.getElementById('lender-name').value.trim();
+    const lender    = lenderRaw ? lenderRaw : 'the lender';
+    const lenderCap = lenderRaw ? lenderRaw[0].toUpperCase() + lenderRaw.slice(1) : 'the lender';
+    const time      = getTimeOfDay();
+    const survey    = document.getElementById('include-survey').checked;
+
+    /* ── Canvas banner — dark navy, white text, Outlook-proof ── */
+    const submissionBanner = (function() {
+      const W = 1200, H = 210, R = 20;
+      const c = document.createElement('canvas');
+      c.width = W; c.height = H;
+      const x = c.getContext('2d');
+      x.fillStyle = '#1a2440';
+      x.beginPath();
+      x.moveTo(R,0); x.lineTo(W-R,0); x.arcTo(W,0,W,R,R);
+      x.lineTo(W,H-R); x.arcTo(W,H,W-R,H,R);
+      x.lineTo(R,H); x.arcTo(0,H,0,H-R,R);
+      x.lineTo(0,R); x.arcTo(0,0,R,0,R);
+      x.closePath(); x.fill();
+      x.fillStyle = '#ffffff';
+      x.font = 'bold 44px Georgia, serif';
+      x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+      const title = lenderRaw
+        ? `\uD83D\uDCCB Your ${loanCap} Has Been Submitted to ${lenderCap}!`
+        : `\uD83D\uDCCB Your ${loanCap} Application Is in the Lender\u2019s Hands!`;
+      x.fillText(title, W/2, 105);
+      x.fillStyle = '#8fa8d8';
+      x.font = '28px Arial, sans-serif';
+      x.fillText("We\u2019ve lodged your application \u2014 here\u2019s what to expect from here.", W/2, 158);
+      const src = c.toDataURL('image/png');
+      return `<img src="${src}" width="100%" style="display:block;border-radius:10px;margin:16px 0;" alt="Your ${loanCap} application has been submitted!" />`;
+    })();
+
+    const whatsNowBlock = block('#fff8ee', 'left', '#c8a96e',
+      `<strong style="color:#5a3e0a;font-family:Arial,sans-serif;font-size:14px;">🔍 What Happens Now?</strong><br/>` +
+      `<span style="color:#5a3e0a;font-size:14px;font-family:Arial,sans-serif;">` +
+      `${lenderCap === 'the lender' ? 'The lender' : lenderCap}'s credit team will now assess your application against their lending criteria — reviewing your income, liabilities, expenses, and the property itself. ` +
+      `You don't need to do anything at this stage. I'll be keeping a close eye on things and will update you as soon as we have movement.</span>`
+    );
+
+    const slaBlock = block('#f0f4ff', 'all', '#c8d0f0',
+      `<strong style="display:block;margin-bottom:8px;color:#1a1a4a;font-family:Arial,sans-serif;font-size:14px;">⏱️ How Long Will It Take?</strong>` +
+      `<span style="color:#1a1a4a;font-size:14px;font-family:Arial,sans-serif;">` +
+      `Most lenders assess applications within <strong style="color:#1a1a4a;">3–10 business days</strong>, though this can vary depending on the lender, the complexity of your application, and how busy their credit team is at the time. ` +
+      `Some lenders are faster, particularly if you're using a lender with a digital-first process. I'll keep you posted along the way — no news is usually good news, but I'll always reach out if something comes up.</span>`
+    );
+
+    const docsBlock = block('#fffbf0', 'all', '#e8d8a0',
+      `<strong style="display:block;margin-bottom:8px;color:#4a3800;font-family:Arial,sans-serif;font-size:14px;">📎 We May Need Further Information</strong>` +
+      `<span style="color:#4a3800;font-size:14px;font-family:Arial,sans-serif;">` +
+      `Occasionally, lenders request additional documentation during assessment — things like updated payslips, bank statements, or clarification on certain items. ` +
+      `If this happens, I'll reach out to you straight away so we can respond quickly and keep things moving. The faster we turn these around, the better.</span>`
+    );
+
+    const surveyBlock = survey ? block('#fff0f6', 'all', '#f0c0d8',
+      `<strong style="display:block;margin-bottom:6px;color:#7a0a3a;font-family:Arial,sans-serif;font-size:14px;">🙏 One Small Favour</strong>` +
+      `<span style="color:#4a1a2e;font-size:14px;font-family:Arial,sans-serif;">You would've received an email with the subject line <em>"How are we doing so far?"</em> (check your junk/spam folder if you can't find it). When you have a spare moment, I'd really appreciate it if you could click the link inside and complete the short 3-question, star-rated survey.<br/><br/>Your feedback genuinely means a lot — and it also contributes to my monthly performance metrics, so your support goes a long way.</span>`
+    ) : '';
+
+    const html =
+      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;font-size:15px;line-height:1.75;"><tr><td style="padding:0;">` +
+      `<p style="font-size:18px;font-weight:600;margin:0 0 16px;font-family:Arial,sans-serif;">Good ${time}, ${name}.</p>` +
+      `<p style="margin:0 0 16px;font-family:Arial,sans-serif;">I wanted to send through a quick update — your ${loan} application has been formally submitted to ${lender} on your behalf. This is a big step and I'm excited to see it through with you!</p>` +
+      submissionBanner +
+      `<p style="margin:0 0 16px;font-family:Arial,sans-serif;">From here, we move into the assessment phase. The hard work of putting the application together is done — now we wait for the lender's credit team to do their thing.</p>` +
+      whatsNowBlock +
+      slaBlock +
+      docsBlock +
+      `<p style="margin:16px 0;font-family:Arial,sans-serif;">If you have any questions in the meantime, please don't hesitate to reach out — I'm always happy to chat through where things are at.</p>` +
+      surveyBlock +
+      emailTimelineHTML() +
+      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:24px;">` +
+        `<tr><td style="border-top:2px solid #e8ecf5;padding-top:20px;font-size:14px;color:#4a4f6a;font-family:Arial,sans-serif;">` +
+          `<p style="margin:0 0 14px;font-family:Arial,sans-serif;">Speak soon, ${name} — we're on the right track!</p>` +
+          `<strong style="font-size:16px;color:#1a1a2e;font-weight:700;display:block;font-family:Arial,sans-serif;">Joshua Coppolelli</strong>` +
+          `<span style="font-size:13px;color:#888;display:block;margin-top:2px;font-family:Arial,sans-serif;">Mortgage Broker · Aussie Home Loans</span>` +
+          `<span style="font-size:13px;color:#666;display:block;margin-top:6px;font-family:Arial,sans-serif;">📱 0426 275 799 &nbsp;·&nbsp; ☎️ 02 7256 9675</span>` +
+          `<a href="https://www.aussie.com.au/mobile-app/connect-with-me/?brokerid=c56979bb-d130-8920-afe2-1a279a847012&utm_source=app-prl" style="font-size:13px;color:#c8a96e;display:block;margin-top:6px;font-family:Arial,sans-serif;text-decoration:none;">📅 Book a time to chat</a>` +
+        `</td></tr>` +
+      `</table>` +
+      `</td></tr></table>`;
+
+    document.getElementById('email-body').innerHTML = html;
+
+    const lLabel = loanRaw ? loanCap : 'Home Loan';
+    const lenderLabel = lenderRaw ? ` to ${lenderCap}` : '';
+    const subjects = [
+      `Your ${lLabel} Application Has Been Submitted${lenderLabel}, ${name}!`,
+      `Application Lodged — Here\u2019s What to Expect Next`,
+      `Your Loan Is Now with the Lender — Timeline & Next Steps`,
+    ];
+    document.getElementById('subject-lines').innerHTML = subjects.map(s =>
+      `<div class="subject-pill" onclick="copySubject(this,'${s.replace(/'/g, "\\'")}')"><span>${s}</span><span class="copy-icon">Copy ↗</span></div>`
+    ).join('');
+
+    const out = document.getElementById('output-section');
+    out.style.display = 'block';
+    setTimeout(() => out.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+    document.getElementById('copy-btn').textContent = 'Copy email to clipboard';
+    document.getElementById('copy-btn').className = 'copy-btn';
+  }
+
+  async function copyEmail() {
+    const emailBody = document.getElementById('email-body');
+    const btn = document.getElementById('copy-btn');
+    let success = false;
+    try {
+      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head><body style="font-family:Arial,Helvetica,sans-serif;">${emailBody.innerHTML}</body></html>`;
+      await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }) })]);
+      success = true;
+    } catch(e) {}
+    if (!success) {
+      try {
+        const range = document.createRange();
+        range.selectNodeContents(emailBody);
+        const sel = window.getSelection();
+        sel.removeAllRanges(); sel.addRange(range);
+        success = document.execCommand('copy');
+        sel.removeAllRanges();
+      } catch(e) {}
+    }
+    btn.textContent = success ? 'Copied!' : 'Please select & copy the email above';
+    btn.className = success ? 'copy-btn copied' : 'copy-btn';
+    setTimeout(() => { btn.textContent = 'Copy email to clipboard'; btn.className = 'copy-btn'; }, 2500);
+  }
+
+  function copySubject(el, subject) {
+    navigator.clipboard.writeText(subject).then(() => {
+      const ic = el.querySelector('.copy-icon');
+      ic.textContent = 'Copied';
+      setTimeout(() => ic.textContent = 'Copy ↗', 2000);
+    });
+  }
+
+  buildUITimeline();
+  updateTimePill();
+</script>
+</body>
+</html>
