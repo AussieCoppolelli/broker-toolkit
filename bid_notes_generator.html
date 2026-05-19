@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BID Notes Generator</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f5f7; color: #1a1a1a; min-height: 100vh; padding: 2rem 1rem; }
+.page { max-width: 720px; margin: 0 auto; }
+
+.header { margin-bottom: 1.5rem; display: flex; align-items: center; gap: 14px; }
+.back-btn { font-size: 13px; color: #888; text-decoration: none; background: #fff; border: 1px solid #e2e4e8; border-radius: 6px; padding: 6px 12px; transition: color 0.15s; }
+.back-btn:hover { color: #0a7c5c; border-color: #0a7c5c; }
+.header-text h1 { font-size: 20px; font-weight: 600; }
+.header-text p { font-size: 13px; color: #666; margin-top: 2px; }
+
+.card { background: #fff; border: 1px solid #e2e4e8; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+.card-title { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+.step-num { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: #1a1a1a; color: #fff; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 12px; color: #555; font-weight: 500; }
+
+textarea {
+  width: 100%; padding: 10px; border: 1px solid #d0d3d9; border-radius: 6px;
+  resize: vertical; line-height: 1.6; color: #1a1a1a; background: #fff; outline: none;
+  transition: border-color 0.15s;
+}
+textarea:focus { border-color: #3b7dd8; box-shadow: 0 0 0 3px rgba(59,125,216,0.1); }
+#pasteArea { font-size: 12.5px; font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; }
+#extraNotes { font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+.parse-btn {
+  margin-top: 10px; width: 100%; padding: 11px; background: #1a1a1a; border: none;
+  border-radius: 8px; font-size: 14px; font-weight: 600; color: #fff; cursor: pointer;
+}
+.parse-btn:hover { background: #333; }
+
+/* Parsed options */
+.option-row {
+  background: #f9fafb; border: 1px solid #e2e4e8; border-radius: 8px;
+  padding: 10px 14px; margin-bottom: 8px; display: flex; align-items: center;
+  justify-content: space-between; gap: 12px;
+}
+.option-row:last-child { margin-bottom: 0; }
+.option-row.selected-row { background: #f0f7f4; border-color: #0a7c5c; }
+.option-info { flex: 1; min-width: 0; }
+.option-lender { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.option-details { font-size: 12px; color: #777; margin-top: 3px; }
+.option-rate { font-size: 20px; font-weight: 700; text-align: right; flex-shrink: 0; }
+.rate-lowest      { color: #0a7c5c; }
+.rate-competitive { color: #185FA5; }
+.rate-premium     { color: #b45309; }
+.rate-unknown     { color: #aaa; }
+.selected-badge { font-size: 11px; font-weight: 700; color: #0a7c5c; background: #dcfce7; border-radius: 4px; padding: 2px 7px; }
+.rate-tag { font-size: 11px; font-weight: 600; color: #888; }
+
+.alert-box { background: #fef3c7; border: 1px solid #d97706; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #92400e; margin-bottom: 12px; }
+.err-box   { background: #fef2f2; border: 1px solid #f87171; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #991b1b; margin-bottom: 12px; }
+
+.parsed-date { font-size: 12px; color: #666; margin-bottom: 10px; }
+.legend { display: flex; gap: 16px; font-size: 12px; color: #888; margin-bottom: 12px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* Reason checkboxes */
+.reason-group { margin-bottom: 18px; }
+.reason-group-label { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+.reason-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.reason-item {
+  display: flex; align-items: flex-start; gap: 9px; cursor: pointer;
+  background: #f9fafb; border: 1px solid #e2e4e8; border-radius: 7px;
+  padding: 8px 10px; transition: background 0.1s, border-color 0.1s;
+  -webkit-user-select: none; user-select: none;
+}
+.reason-item:hover { background: #f0f7f4; border-color: #b8ddd3; }
+.reason-item input[type="checkbox"] { display: none; }
+.reason-check {
+  width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid #d0d3d9;
+  background: #fff; flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.1s, border-color 0.1s;
+}
+.reason-item input:checked ~ .reason-check { background: #0a7c5c; border-color: #0a7c5c; }
+.reason-item input:checked ~ .reason-check::after {
+  content: ''; display: block; width: 4px; height: 7px;
+  border: 2px solid #fff; border-top: none; border-left: none;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+.reason-item input:checked ~ .reason-text { color: #0a7c5c; font-weight: 500; }
+.reason-text { font-size: 13px; color: #444; line-height: 1.35; }
+.reason-item.auto-ticked { border-color: #b8ddd3; background: #f0f7f4; }
+
+/* Btn row */
+.btn-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 1rem; }
+.gen-btn { padding: 12px; background: #1a1a1a; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; color: #fff; cursor: pointer; }
+.gen-btn:hover { background: #333; }
+.clear-btn { padding: 12px 18px; background: #fff; border: 1px solid #d0d3d9; border-radius: 8px; font-size: 14px; font-weight: 500; color: #888; cursor: pointer; white-space: nowrap; }
+.clear-btn:hover { color: #c0392b; border-color: #c0392b; }
+
+/* Output */
+.out-card {
+  background: #fff; border: 1px solid #e2e4e8; border-radius: 10px;
+  padding: 1.5rem; margin-bottom: 1rem; font-size: 14px; line-height: 1.85;
+  white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #1a1a1a;
+}
+.copy-btn { width: 100%; padding: 11px; background: #fff; border: 1px solid #d0d3d9; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; color: #1a1a1a; }
+.copy-btn:hover { background: #f4f5f7; }
+
+.hidden { display: none !important; }
+
+@media(max-width:560px) {
+  .btn-row { grid-template-columns: 1fr; }
+  .option-row { flex-direction: column; align-items: flex-start; }
+  .option-rate { font-size: 16px; }
+  .reason-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <a class="back-btn" href="index.html">&#8592; Dashboard</a>
+    <div class="header-text">
+      <h1>BID Notes Generator</h1>
+      <p>Best Interests Duty compliance notes from comparison text</p>
+    </div>
+  </div>
+
+  <!-- Step 1 -->
+  <div class="card">
+    <div class="card-title"><span class="step-num">1</span>Paste comparison text</div>
+    <div class="field">
+      <label>Paste your lender comparison summary below</label>
+      <textarea id="pasteArea" rows="13" placeholder="Summary of compared and selected products as of 19/05/2026&#10;The customer was presented with the below options:&#10;&#10;Macquarie&#10;$203,500, 24yr term, 5.84% variable rate, P&amp;I, Redraw, Offset&#10;HSBC&#10;$203,500, 24yr term, 5.99% variable rate, P&amp;I, Redraw, Offset&#10;Bankwest&#10;$203,500, 24yr term, 6.19% variable rate, P&amp;I, Redraw, Offset&#10;The selected option was:&#10;&#10;HSBC&#10;$203,500, 24yr term, 5.99% variable rate, P&amp;I, Redraw, Offset"></textarea>
+    </div>
+    <button class="parse-btn" onclick="parseComparison()">Parse comparison &rarr;</button>
+  </div>
+
+  <!-- Step 2: Parsed confirmation -->
+  <div class="card hidden" id="parsedCard">
+    <div class="card-title"><span class="step-num">2</span>Confirm parsed data</div>
+    <div id="alertArea"></div>
+    <div class="parsed-date" id="parsedDate"></div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#0a7c5c"></div> Lowest rate</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#185FA5"></div> Competitive (within 0.10%)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#b45309"></div> Rate premium (&gt;0.10%)</div>
+    </div>
+    <div id="optionsList"></div>
+  </div>
+
+  <!-- Step 3: Reason checkboxes -->
+  <div class="card hidden" id="reasonsCard">
+    <div class="card-title">
+      <span class="step-num">3</span>
+      Reasons for selecting
+      <span id="reasonsFor" style="font-weight:600;text-transform:none;letter-spacing:0;color:#0a7c5c;font-size:12px;"></span>
+    </div>
+    <p style="font-size:12px;color:#888;margin-bottom:16px;line-height:1.5;">Tick all that apply. Rate-based suggestions are pre-ticked &mdash; adjust as needed before generating.</p>
+
+    <div class="reason-group">
+      <div class="reason-group-label">Rate &amp; Cost</div>
+      <div class="reason-grid">
+        <label class="reason-item" id="ri_lowest_rate"><input type="checkbox" id="r_lowest_rate"/><span class="reason-check"></span><span class="reason-text">Lowest rate of options compared</span></label>
+        <label class="reason-item" id="ri_competitive_rate"><input type="checkbox" id="r_competitive_rate"/><span class="reason-check"></span><span class="reason-text">Competitive rate (within 0.10% of lowest)</span></label>
+        <label class="reason-item" id="ri_no_fees"><input type="checkbox" id="r_no_fees"/><span class="reason-check"></span><span class="reason-text">No ongoing monthly fees</span></label>
+        <label class="reason-item" id="ri_low_fees"><input type="checkbox" id="r_low_fees"/><span class="reason-check"></span><span class="reason-text">Lower fees than alternatives</span></label>
+        <label class="reason-item" id="ri_cashback"><input type="checkbox" id="r_cashback"/><span class="reason-check"></span><span class="reason-text">Cashback offer</span></label>
+      </div>
+    </div>
+
+    <div class="reason-group">
+      <div class="reason-group-label">Credit &amp; Serviceability</div>
+      <div class="reason-grid">
+        <label class="reason-item" id="ri_higher_borrowing"><input type="checkbox" id="r_higher_borrowing"/><span class="reason-check"></span><span class="reason-text">Higher borrowing capacity / serviceability</span></label>
+        <label class="reason-item" id="ri_income_flex"><input type="checkbox" id="r_income_flex"/><span class="reason-check"></span><span class="reason-text">Flexible income assessment (complex / self-employed)</span></label>
+        <label class="reason-item" id="ri_altdoc"><input type="checkbox" id="r_altdoc"/><span class="reason-check"></span><span class="reason-text">Alt-doc / low-doc lending capability</span></label>
+        <label class="reason-item" id="ri_credit_policy"><input type="checkbox" id="r_credit_policy"/><span class="reason-check"></span><span class="reason-text">More flexible credit policy</span></label>
+        <label class="reason-item" id="ri_valuation"><input type="checkbox" id="r_valuation"/><span class="reason-check"></span><span class="reason-text">Higher property valuation outcome</span></label>
+        <label class="reason-item" id="ri_lmi_waiver"><input type="checkbox" id="r_lmi_waiver"/><span class="reason-check"></span><span class="reason-text">LMI waiver (profession / LVR eligible)</span></label>
+        <label class="reason-item" id="ri_adverse_credit"><input type="checkbox" id="r_adverse_credit"/><span class="reason-check"></span><span class="reason-text">Accepts adverse credit history</span></label>
+      </div>
+    </div>
+
+    <div class="reason-group">
+      <div class="reason-group-label">Speed &amp; Service</div>
+      <div class="reason-grid">
+        <label class="reason-item" id="ri_fast_sla"><input type="checkbox" id="r_fast_sla"/><span class="reason-check"></span><span class="reason-text">Fast SLA / turnaround time</span></label>
+        <label class="reason-item" id="ri_broker_support"><input type="checkbox" id="r_broker_support"/><span class="reason-check"></span><span class="reason-text">Strong broker support / BDM channel</span></label>
+        <label class="reason-item" id="ri_digital"><input type="checkbox" id="r_digital"/><span class="reason-check"></span><span class="reason-text">Strong digital banking platform</span></label>
+      </div>
+    </div>
+
+    <div class="reason-group" style="margin-bottom:0;">
+      <div class="reason-group-label">Relationship &amp; Other</div>
+      <div class="reason-grid">
+        <label class="reason-item" id="ri_existing_rel"><input type="checkbox" id="r_existing_rel"/><span class="reason-check"></span><span class="reason-text">Existing client banking relationship</span></label>
+        <label class="reason-item" id="ri_intl_rel"><input type="checkbox" id="r_intl_rel"/><span class="reason-check"></span><span class="reason-text">International banking relationship</span></label>
+        <label class="reason-item" id="ri_client_pref"><input type="checkbox" id="r_client_pref"/><span class="reason-check"></span><span class="reason-text">Client's preferred lender</span></label>
+        <label class="reason-item" id="ri_shared_equity"><input type="checkbox" id="r_shared_equity"/><span class="reason-check"></span><span class="reason-text">Shared equity / low-deposit pathway</span></label>
+        <label class="reason-item" id="ri_package"><input type="checkbox" id="r_package"/><span class="reason-check"></span><span class="reason-text">Package benefits (offset, cards, insurance)</span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4: Extra notes -->
+  <div class="card hidden" id="extraCard">
+    <div class="card-title"><span class="step-num">4</span>Additional notes <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#aaa;">(optional)</span></div>
+    <div class="field">
+      <label>Any specific detail that doesn't fit the checkboxes &mdash; e.g. exact valuation figures, specific income type, SLA deadline</label>
+      <textarea id="extraNotes" rows="3" placeholder="e.g. ANZ AVM returned $680k vs $610k at Macquarie, keeping the client below 80% LVR and avoiding LMI entirely."></textarea>
+    </div>
+  </div>
+
+  <!-- Generate -->
+  <div class="btn-row hidden" id="genRow">
+    <button class="gen-btn" onclick="generateBID()">Generate BID notes</button>
+    <button class="clear-btn" onclick="clearAll()">Clear</button>
+  </div>
+
+  <!-- Output -->
+  <div class="hidden" id="outArea">
+    <div class="out-card" id="bidOut"></div>
+    <button class="copy-btn" onclick="copyBID()">Copy to clipboard</button>
+  </div>
+
+</div>
+<script>
+// ─── Lender name aliases (for normalisation only) ─────────────────────────────
+var LENDER_ALIASES = {
+  'ANZ':              ['anz'],
+  'Macquarie Bank':   ['macquarie', 'macq', 'macquarie bank'],
+  'Commonwealth Bank':['cba', 'commonwealth bank', 'commbank', 'commonwealth'],
+  'Westpac':          ['westpac', 'wbc'],
+  'St.George Bank':   ['st george', 'st.george', 'stgeorge', 'st. george'],
+  'Bank of Melbourne':['bank of melbourne', 'bom'],
+  'BankSA':           ['banksa', 'bank sa'],
+  'ING':              ['ing'],
+  'MyState Bank':     ['mystate', 'my state', 'mystate bank'],
+  'HSBC':             ['hsbc', 'hsbc australia'],
+  'Suncorp Bank':     ['suncorp', 'suncorp bank'],
+  'AMP Bank':         ['amp', 'amp bank'],
+  'Brighte':          ['brighte'],
+  'Ownhome':          ['own home', 'ownhome', 'own home loans'],
+  'Bankwest':         ['bankwest'],
+  'Firstmac':         ['firstmac', 'first mac'],
+  'GSB':              ['gsb'],
+  'Liberty Financial':['liberty', 'liberty financial'],
+  'Pepper Money':     ['pepper', 'pepper money'],
+  'NAB':              ['nab', 'national australia bank'],
+};
+
+// ─── Reason sentences ──────────────────────────────────────────────────────────
+var REASON_TEXT = {
+  lowest_rate:      'offered the most competitive interest rate of the options presented',
+  competitive_rate: 'offered a competitive interest rate, within 0.10% of the lowest rate in the comparison',
+  no_fees:          'charges no ongoing monthly fees, reducing the total cost of borrowing',
+  low_fees:         'carries lower fees than the alternative options considered',
+  cashback:         'offered a cashback incentive, providing additional upfront value to the client',
+  higher_borrowing: 'provided a higher borrowing capacity than the other lenders assessed, meeting the client\'s required loan amount',
+  income_flex:      'offered more flexible income assessment, particularly relevant given the client\'s employment structure',
+  altdoc:           'supports alt-doc and low-doc lending, accommodating the client\'s documentation requirements',
+  credit_policy:    'applied a more flexible credit policy suited to the client\'s circumstances',
+  valuation:        'produced a higher property valuation outcome than competing lenders, improving the client\'s LVR position',
+  lmi_waiver:       'offered an LMI waiver applicable to the client\'s profession or LVR, representing a significant cost saving',
+  adverse_credit:   'accepted the client\'s credit history where other lenders were unable to assist',
+  fast_sla:         'provided a faster turnaround and SLA than the other options, meeting the client\'s timeline requirements',
+  broker_support:   'offered strong broker support and BDM channel access, supporting a smooth and efficient application process',
+  digital:          'offers a strong digital banking platform, providing the client with convenient day-to-day account management',
+  existing_rel:     'aligned with the client\'s existing banking relationship, minimising disruption and simplifying the transition',
+  intl_rel:         'aligned with the client\'s international banking relationship, providing continuity across their financial arrangements',
+  client_pref:      'was the client\'s preferred lender, having been considered alongside all options presented',
+  shared_equity:    'offered a shared equity pathway, enabling the client to enter the market with a lower deposit without incurring LMI',
+  package:          'provided package benefits including offset, card and/or insurance features suited to the client\'s broader financial needs',
+};
+
+// ─── State ─────────────────────────────────────────────────────────────────────
+var parsedOptions  = [];
+var parsedSelected = null;
+var parsedDate     = '';
+
+// ─── Lender name normalisation ─────────────────────────────────────────────────
+function normaliseLenderName(raw) {
+  if (!raw) return raw;
+  var lower = raw.toLowerCase().trim();
+  for (var full in LENDER_ALIASES) {
+    var aliases = LENDER_ALIASES[full];
+    for (var i = 0; i < aliases.length; i++) {
+      if (lower === aliases[i]) return full;
+    }
+  }
+  for (var full in LENDER_ALIASES) {
+    var aliases = LENDER_ALIASES[full];
+    for (var i = 0; i < aliases.length; i++) {
+      if (lower.includes(aliases[i]) || aliases[i].includes(lower)) return full;
+    }
+  }
+  return raw;
+}
+
+// ─── Parser helpers ─────────────────────────────────────────────────────────────
+function isDetailLine(line) {
+  return /\$[\d,]+/.test(line) && /%/.test(line);
+}
+function isBoilerplateLine(line) {
+  return /^(summary of|the customer was|the selected option was|selected option)/i.test(line);
+}
+function cleanLine(line) {
+  return line.replace(/^[\s*\-\u2022]+/, '').replace(/^\d+\.\s*/, '').trim();
+}
+function parseSection(lines) {
+  var results = [];
+  var i = 0;
+  while (i < lines.length) {
+    var line = cleanLine(lines[i]);
+    if (!line || isBoilerplateLine(line)) { i++; continue; }
+    if (isDetailLine(line)) { i++; continue; }
+    var lenderName = line;
+    var detailStr = null;
+    var j = i + 1;
+    while (j < lines.length) {
+      var nextLine = cleanLine(lines[j]);
+      if (!nextLine) { j++; continue; }
+      if (isDetailLine(nextLine)) { detailStr = nextLine; i = j + 1; break; }
+      else { i = j; break; }
+    }
+    if (j >= lines.length) i = j;
+    if (detailStr) results.push({ lender: lenderName, detailStr: detailStr });
+  }
+  return results;
+}
+
+// ─── Parse comparison text ──────────────────────────────────────────────────────
+function parseComparison() {
+  var text = document.getElementById('pasteArea').value.trim();
+  if (!text) { showErr('Please paste your comparison text first.'); return; }
+
+  parsedOptions = []; parsedSelected = null; parsedDate = '';
+  document.getElementById('alertArea').innerHTML = '';
+
+  var dateMatch = text.match(/as of\s+(\d{1,2}\/\d{1,2}\/\d{4})/i);
+  if (dateMatch) parsedDate = dateMatch[1];
+
+  var splitIdx = text.search(/the selected option was\s*:/i);
+  var optSection = splitIdx > -1 ? text.slice(0, splitIdx) : text;
+  var selSection = splitIdx > -1 ? text.slice(splitIdx) : '';
+
+  parseSection(optSection.split('\n')).forEach(function(p) {
+    parsedOptions.push(makeOption(p.lender, p.detailStr));
+  });
+
+  if (selSection) {
+    var selPairs = parseSection(selSection.split('\n'));
+    if (selPairs.length) parsedSelected = makeOption(selPairs[0].lender, selPairs[0].detailStr);
+  }
+
+  if (parsedSelected && parsedSelected.lender && parsedOptions.length) {
+    var match = parsedOptions.find(function(o) { return lenderMatch(o.lender, parsedSelected.lender); });
+    if (match) parsedSelected = JSON.parse(JSON.stringify(match));
+  }
+
+  if (!parsedOptions.length) {
+    showErr('Could not parse any options. The tool expects a lender name on one line followed by loan details ($amount, Xyr term, X.XX% ...) on the next line.');
+    return;
+  }
+
+  renderParsed();
+  setDefaultReasons();
+
+  ['parsedCard','reasonsCard','extraCard','genRow'].forEach(function(id) {
+    document.getElementById(id).classList.remove('hidden');
+  });
+  document.getElementById('parsedCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+function makeOption(lender, detailStr) {
+  var o = {
+    lender: normaliseLenderName(lender || ''),
+    rawLender: lender || '',
+    rawDetail: detailStr || '',
+    amount:'', term:'', rate:null, rateType:'', repayment:'', features:[]
+  };
+  if (!detailStr) return o;
+  var amtM = detailStr.match(/\$([\d,]+)/);
+  if (amtM) o.amount = '$' + amtM[1];
+  var termM = detailStr.match(/(\d+)\s*yr/i);
+  if (termM) o.term = termM[1] + 'yr term';
+  var rateM = detailStr.match(/([\d.]+)%/);
+  if (rateM) o.rate = parseFloat(rateM[1]);
+  if (/variable/i.test(detailStr)) o.rateType = 'variable rate';
+  else if (/fixed/i.test(detailStr)) o.rateType = 'fixed rate';
+  if (/\bP&I\b/i.test(detailStr)) o.repayment = 'P&I';
+  else if (/\bIO\b|\binterest[\s-]?only\b/i.test(detailStr)) o.repayment = 'IO';
+  ['Offset','Redraw','Construction','Package','Cashback','Guarantor'].forEach(function(f) {
+    if (new RegExp(f,'i').test(detailStr)) o.features.push(f);
+  });
+  return o;
+}
+
+function formatOptionLine(opt) {
+  // Reconstruct a clean detail string from parsed fields
+  var parts = [];
+  if (opt.amount) parts.push(opt.amount);
+  if (opt.term) parts.push(opt.term);
+  if (opt.rate !== null) parts.push(opt.rate.toFixed(2) + '%');
+  if (opt.rateType) parts.push(opt.rateType);
+  if (opt.repayment) parts.push(opt.repayment);
+  if (opt.features.length) opt.features.forEach(function(f){ parts.push(f); });
+  return parts.join(', ');
+}
+
+function lenderMatch(a, b) {
+  if (!a || !b) return false;
+  var la = a.toLowerCase().trim(), lb = b.toLowerCase().trim();
+  if (la === lb) return true;
+  if (la.includes(lb) || lb.includes(la)) return true;
+  return false;
+}
+
+// ─── Render parsed options ──────────────────────────────────────────────────────
+function renderParsed() {
+  document.getElementById('parsedDate').textContent = parsedDate ? 'Comparison date: ' + parsedDate : '';
+
+  var rates   = parsedOptions.map(function(o){ return o.rate; }).filter(function(r){ return r !== null; });
+  var minRate = rates.length ? Math.min.apply(null, rates) : null;
+  var list    = document.getElementById('optionsList');
+  list.innerHTML = '';
+
+  parsedOptions.forEach(function(opt) {
+    var isSel = parsedSelected && lenderMatch(opt.lender, parsedSelected.lender);
+    var rateDiff = (opt.rate !== null && minRate !== null) ? +(opt.rate - minRate).toFixed(3) : null;
+    var rateClass = 'rate-unknown', rateTag = '';
+    if (rateDiff !== null) {
+      if (rateDiff === 0)        { rateClass = 'rate-lowest';      rateTag = 'Lowest'; }
+      else if (rateDiff <= 0.10) { rateClass = 'rate-competitive'; rateTag = '+' + Math.round(rateDiff*100) + 'bp'; }
+      else                       { rateClass = 'rate-premium';     rateTag = '+' + Math.round(rateDiff*100) + 'bp'; }
+    }
+    var parts = [opt.amount, opt.term, opt.rateType, opt.repayment].filter(Boolean);
+    if (opt.features.length) parts.push(opt.features.join(', '));
+
+    var row = document.createElement('div');
+    row.className = 'option-row' + (isSel ? ' selected-row' : '');
+    row.innerHTML =
+      '<div class="option-info">' +
+        '<div class="option-lender">' + esc(opt.lender) + (isSel ? '<span class="selected-badge">&#10003; Selected</span>' : '') + '</div>' +
+        '<div class="option-details">' + esc(parts.join(' \u00b7 ') || '\u2014') + '</div>' +
+      '</div>' +
+      '<div style="text-align:right;">' +
+        '<div class="option-rate ' + rateClass + '">' + (opt.rate !== null ? opt.rate.toFixed(2) + '%' : '\u2014') + '</div>' +
+        (rateTag ? '<div class="rate-tag">' + esc(rateTag) + '</div>' : '') +
+      '</div>';
+    list.appendChild(row);
+  });
+
+  if (!parsedSelected || !parsedSelected.lender) {
+    document.getElementById('alertArea').innerHTML =
+      '<div class="alert-box">&#9888; Could not automatically detect the selected lender. Check the output and edit as needed.</div>';
+  }
+
+  var lbl = document.getElementById('reasonsFor');
+  lbl.textContent = parsedSelected && parsedSelected.lender ? parsedSelected.lender : '';
+}
+
+// ─── Pre-tick reasons based on rate position ────────────────────────────────────
+function setDefaultReasons() {
+  document.querySelectorAll('#reasonsCard input[type=checkbox]').forEach(function(cb) {
+    cb.checked = false;
+    var ri = document.getElementById('ri_' + cb.id.replace('r_', ''));
+    if (ri) ri.classList.remove('auto-ticked');
+  });
+
+  if (!parsedSelected) return;
+
+  var rates      = parsedOptions.map(function(o){ return o.rate; }).filter(function(r){ return r !== null; });
+  var minRate    = rates.length ? Math.min.apply(null, rates) : null;
+  var selRate    = parsedSelected.rate;
+  var rateDiffBp = (selRate !== null && minRate !== null) ? Math.round((selRate - minRate) * 100) : null;
+
+  var toTick = [];
+  if (rateDiffBp !== null) {
+    if (rateDiffBp === 0)      toTick.push('lowest_rate');
+    else if (rateDiffBp <= 10) toTick.push('competitive_rate');
+  }
+
+  toTick.forEach(function(key) {
+    var cb = document.getElementById('r_' + key);
+    var ri = document.getElementById('ri_' + key);
+    if (cb) cb.checked = true;
+    if (ri) ri.classList.add('auto-ticked');
+  });
+}
+
+function showErr(msg) {
+  document.getElementById('parsedCard').classList.remove('hidden');
+  document.getElementById('alertArea').innerHTML = '<div class="err-box">&#9888; ' + esc(msg) + '</div>';
+  document.getElementById('optionsList').innerHTML = '';
+  document.getElementById('parsedDate').textContent = '';
+}
+
+// ─── Generate BID notes ─────────────────────────────────────────────────────────
+function generateBID() {
+  if (!parsedOptions.length) { alert('Please parse a valid comparison first.'); return; }
+
+  var sel   = parsedSelected || {};
+  var n     = parsedOptions.length;
+  var extra = document.getElementById('extraNotes').value.trim();
+  var selName = sel.lender || '[Selected lender]';
+
+  // Collect ticked reasons
+  var ticked = [];
+  document.querySelectorAll('#reasonsCard input[type=checkbox]:checked').forEach(function(cb) {
+    ticked.push(cb.id.replace('r_', ''));
+  });
+
+  // Rate context
+  var rates      = parsedOptions.map(function(o){ return o.rate; }).filter(function(r){ return r !== null; });
+  var minRate    = rates.length ? Math.min.apply(null, rates) : null;
+  var selRate    = sel.rate;
+  var rateDiffBp = (selRate !== null && minRate !== null) ? Math.round((selRate - minRate) * 100) : null;
+  var cheapest   = parsedOptions.find(function(o){ return o.rate === minRate && !lenderMatch(o.lender, selName); });
+
+  // ── HEADER: replaces "BID Notes" ───────────────────────────────────────────
+  var header = 'Summary of compared and selected products' + (parsedDate ? ' as of ' + parsedDate : '');
+
+  // ── COMPARED OPTIONS TABLE ──────────────────────────────────────────────────
+  var nWords = ['one','two','three','four','five','six','seven','eight','nine','ten'];
+  var nWord  = (n <= 10) ? nWords[n-1] : String(n);
+  var nSent  = (nWord.charAt(0).toUpperCase() + nWord.slice(1)) + ' lender' + (n !== 1 ? 's were' : ' was') + ' compared.';
+
+  var optionsBlock = [];
+  optionsBlock.push('The customer was presented with the following options:');
+  optionsBlock.push('');
+  parsedOptions.forEach(function(opt, idx) {
+    var isSel = lenderMatch(opt.lender, selName);
+    var detail = formatOptionLine(opt);
+    optionsBlock.push((idx + 1) + '. ' + opt.lender + (isSel ? ' [SELECTED]' : ''));
+    optionsBlock.push('   ' + detail);
+  });
+
+  // ── LOAN STRUCTURE ──────────────────────────────────────────────────────────
+  var structureParts = [];
+  if (sel.repayment === 'P&I') {
+    structureParts.push('Principal and interest (P&I) repayments were recommended to ensure the client reduces their loan balance from day one, minimising total interest payable over the life of the loan and building equity as quickly as possible.');
+  } else if (sel.repayment === 'IO') {
+    structureParts.push('Interest only (IO) repayments were recommended to reduce the minimum monthly commitment during the IO period, preserving cash flow flexibility in line with the client\'s circumstances and objectives.');
+  }
+  if (sel.rateType === 'variable rate') {
+    structureParts.push('A variable rate was recommended to provide repayment flexibility \u2014 allowing additional repayments without penalty, access to surplus funds, and the ability to benefit from any future reductions in the official cash rate.');
+  } else if (sel.rateType === 'fixed rate') {
+    structureParts.push('A fixed rate was recommended to provide certainty of repayments over the fixed term, protecting the client from potential rate increases and supporting accurate financial planning.');
+  }
+  var hasOffset = sel.features && sel.features.indexOf('Offset') !== -1;
+  var hasRedraw = sel.features && sel.features.indexOf('Redraw') !== -1;
+  if (hasOffset) {
+    structureParts.push('An offset account was recommended to reduce daily interest charged on the loan \u2014 funds held in the offset directly reduce the effective loan balance used for interest calculation, lowering total interest payable without restricting access to those funds.');
+  }
+  if (hasRedraw && !hasOffset) {
+    structureParts.push('A redraw facility was included to allow the client to access any additional repayments made, providing liquidity while reducing the outstanding loan balance and generating interest savings.');
+  }
+  var structureText = structureParts.join(' ') || '[Loan structure details not detected \u2014 please add manually.]';
+
+  // ── LENDER SELECTION ────────────────────────────────────────────────────────
+  var rateIntro = '';
+  if (rateDiffBp !== null) {
+    if (rateDiffBp === 0) {
+      rateIntro = selName + ' offered the most competitive interest rate of the options presented (' + selRate.toFixed(2) + '% p.a. ' + (sel.rateType || 'variable') + ').';
+    } else if (rateDiffBp <= 10) {
+      rateIntro = selName + '\'s rate of ' + selRate.toFixed(2) + '% p.a. (' + (sel.rateType || 'variable') + ') was competitive, sitting ' + rateDiffBp + 'bp above the lowest rate in the comparison' + (cheapest ? ' (' + cheapest.lender + ' at ' + minRate.toFixed(2) + '% p.a.)' : '') + '.';
+    } else {
+      rateIntro = 'While ' + selName + '\'s rate of ' + selRate.toFixed(2) + '% p.a. (' + (sel.rateType || 'variable') + ') was not the lowest of the options compared' + (cheapest ? ' \u2014 ' + cheapest.lender + ' offered ' + minRate.toFixed(2) + '% p.a.' : '') + ', ' + selName + ' was recommended for the following reasons.';
+    }
+  } else {
+    rateIntro = selName + ' was recommended as the most suitable option for this client.';
+  }
+
+  // Reason bullet lines
+  var reasonKeys = ticked.filter(function(k) {
+    if ((k === 'lowest_rate' || k === 'competitive_rate') && rateDiffBp !== null && rateDiffBp <= 10) return false;
+    return true;
+  });
+  var reasonLines = reasonKeys.map(function(k) {
+    return REASON_TEXT[k] ? '- ' + selName + ' ' + REASON_TEXT[k] + '.' : null;
+  }).filter(Boolean);
+
+  // ── Assemble ────────────────────────────────────────────────────────────────
+  var out = [];
+  out.push(header);
+  out.push('');
+  optionsBlock.forEach(function(l){ out.push(l); });
+  out.push('');
+  out.push('LOAN STRUCTURE');
+  out.push(structureText);
+  out.push('');
+  out.push('LENDER SELECTION \u2014 ' + selName.toUpperCase());
+  out.push(nSent + ' ' + rateIntro);
+  if (reasonLines.length) {
+    out.push('');
+    reasonLines.forEach(function(l){ out.push(l); });
+  }
+  if (extra) {
+    out.push('');
+    out.push('ADDITIONAL NOTES');
+    out.push(extra);
+  }
+
+  document.getElementById('bidOut').textContent = out.join('\n');
+  document.getElementById('outArea').classList.remove('hidden');
+  document.getElementById('outArea').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ─── Copy ──────────────────────────────────────────────────────────────────────
+function copyBID() {
+  var text = document.getElementById('bidOut').textContent;
+  var btn  = document.querySelector('.copy-btn');
+  function mark(l) { btn.textContent = l; setTimeout(function(){ btn.textContent='Copy to clipboard'; }, 1800); }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function(){ mark('Copied!'); }).catch(function(){ fbCopy(text,mark); });
+  } else { fbCopy(text,mark); }
+}
+function fbCopy(text, cb) {
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try { document.execCommand('copy'); cb('Copied!'); } catch(e) { cb('Copy failed \u2014 please copy manually'); }
+  document.body.removeChild(ta);
+}
+
+// ─── Clear ─────────────────────────────────────────────────────────────────────
+function clearAll() {
+  var btn = document.querySelector('.clear-btn');
+  if (btn.dataset.confirming === 'true') {
+    btn.dataset.confirming = 'false'; btn.textContent = 'Clear'; btn.style.color = ''; btn.style.borderColor = '';
+    doClear();
+  } else {
+    btn.dataset.confirming = 'true'; btn.textContent = 'Confirm clear?'; btn.style.color = '#c0392b'; btn.style.borderColor = '#c0392b';
+    setTimeout(function(){
+      if (btn.dataset.confirming === 'true') { btn.dataset.confirming='false'; btn.textContent='Clear'; btn.style.color=''; btn.style.borderColor=''; }
+    }, 2500);
+  }
+}
+function doClear() {
+  document.getElementById('pasteArea').value = '';
+  document.getElementById('extraNotes').value = '';
+  document.getElementById('bidOut').textContent = '';
+  document.getElementById('alertArea').innerHTML = '';
+  document.getElementById('optionsList').innerHTML = '';
+  document.getElementById('parsedDate').textContent = '';
+  document.getElementById('reasonsFor').textContent = '';
+  document.querySelectorAll('#reasonsCard input[type=checkbox]').forEach(function(cb){
+    cb.checked = false;
+    var ri = document.getElementById('ri_' + cb.id.replace('r_',''));
+    if (ri) ri.classList.remove('auto-ticked');
+  });
+  ['parsedCard','reasonsCard','extraCard','genRow','outArea'].forEach(function(id){
+    document.getElementById(id).classList.add('hidden');
+  });
+  parsedOptions=[]; parsedSelected=null; parsedDate='';
+}
+
+// ─── Util ──────────────────────────────────────────────────────────────────────
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+</body>
+</html>
