@@ -600,15 +600,18 @@ function emailTimelineHTML() {
     var lClr = isDone ? '#c8a96e' : isActive ? '#b8860a' : '#9ca3af';
     var lWt  = isActive ? '700' : '500';
 
-    // Dot cell — <div> used for border-radius because td border-radius is unreliable cross-browser
+    // Dot cell — inner table + td for border-radius (matches 1 Month generator; Outlook-safe)
     dotRow +=
       '<td width="' + DOT_W + '" align="center" valign="middle" style="padding:0;' + fade + '">' +
-        '<div style="width:' + DOT_W + 'px;height:' + DOT_W + 'px;border-radius:50%;' +
+        '<table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;"><tr>' +
+          '<td width="' + DOT_W + '" height="' + DOT_W + '" align="center" valign="middle" bgcolor="' + dotBg + '" ' +
+            'style="width:' + DOT_W + 'px;height:' + DOT_W + 'px;border-radius:50%;' +
             'background-color:' + dotBg + ';border:2px solid ' + dotBdr + ';' + ring +
-            'display:inline-flex;align-items:center;justify-content:center;' +
-            'text-align:center;margin:0 auto;">' +
-          innerContent +
-        '</div>' +
+            'font-family:Arial,sans-serif;font-size:' + dotFSize + ';' +
+            'font-weight:700;color:' + dotClr + ';text-align:center;vertical-align:middle;">' +
+            (isDone ? '&#10003;' : (m.emoji || m.abbr)) +
+          '</td>' +
+        '</tr></table>' +
       '</td>';
 
     // Label cell
@@ -713,35 +716,52 @@ function generate() {
     sl.appendChild(row);
   });
 
-  // Build email body
+  // Build email body — outer table ensures full-width on paste into Outlook
   var G   = '#0a7c5c';
-  var html = '<p style="margin-bottom:14px;">Hi ' + name + ',</p>';
-  html += '<p style="margin-bottom:14px;">Please see the options we spoke about attached.</p>';
+  var html =
+    '<table cellpadding="0" cellspacing="0" border="0" width="100%" ' +
+      'style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;font-size:15px;line-height:1.75;">' +
+    '<tr><td style="padding:0;">';
 
-  // Appointment block
-  html += '<div style="background:#f0f7f4;border-left:3px solid ' + G + ';border-radius:4px;padding:12px 16px;margin-bottom:14px;">';
-  html += '<p style="font-size:14px;line-height:1.7;">' + apptLine + '</p>';
-  html += '</div>';
+  html += '<p style="font-size:15px;margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;">Hi ' + name + ',</p>';
+  html += '<p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;">Please see the options we spoke about attached.</p>';
 
-  // Document list
+  // Appointment block — table with left border (Outlook-safe)
+  html +=
+    '<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:0 0 14px;">' +
+      '<tr>' +
+        '<td width="4" bgcolor="' + G + '" style="width:4px;background-color:' + G + ';border-radius:4px 0 0 4px;font-size:0;line-height:0;">&nbsp;</td>' +
+        '<td bgcolor="#f0f7f4" style="background-color:#f0f7f4;padding:12px 16px;border-radius:0 4px 4px 0;">' +
+          '<p style="font-size:14px;line-height:1.7;margin:0;font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;">' + apptLine + '</p>' +
+        '</td>' +
+      '</tr>' +
+    '</table>';
+
+  // Document list — table with left border (Outlook-safe)
   var docHtml = buildDocList(applicants, txn);
   if (docHtml) {
-    html += '<div style="background:#f0f7f4;border-left:3px solid ' + G + ';border-radius:4px;padding:14px 16px;margin-bottom:14px;">';
-    html += docHtml;
-    html += '</div>';
+    html +=
+      '<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:0 0 14px;">' +
+        '<tr>' +
+          '<td width="4" bgcolor="' + G + '" style="width:4px;background-color:' + G + ';border-radius:4px 0 0 4px;font-size:0;line-height:0;">&nbsp;</td>' +
+          '<td bgcolor="#f0f7f4" style="background-color:#f0f7f4;padding:14px 16px;border-radius:0 4px 4px 0;">' +
+            docHtml +
+          '</td>' +
+        '</tr>' +
+      '</table>';
   }
 
   // App upload instructions
-  html += '<p style="margin-bottom:10px;">Please upload these documents via the <a href="' + appLink + '" style="color:#185FA5;text-decoration:underline;">Aussie Mobile App</a>. My contact details are also available on the app.</p>';
-  html += '<p style="margin-bottom:8px;">Once you have downloaded the app:</p>';
-  html += '<ol style="margin-left:20px;margin-bottom:14px;line-height:1.9;font-size:14px;">';
+  html += '<p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;">Please upload these documents via the <a href="' + appLink + '" style="color:#185FA5;text-decoration:underline;">Aussie Mobile App</a>. My contact details are also available on the app.</p>';
+  html += '<p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;">Once you have downloaded the app:</p>';
+  html += '<ol style="margin-left:20px;margin-bottom:14px;line-height:1.9;font-size:14px;font-family:Arial,Helvetica,sans-serif;">';
   html += '<li>Log in with your mobile number — everything will sync and you should be able to see me as your broker.</li>';
   html += '<li>Head to the <strong>"Finances"</strong> tab (second from the left).</li>';
   html += '<li>Under the <strong>Applications</strong> header, click the <strong>"Continue"</strong> button.</li>';
   html += '<li>Upload your documents.</li>';
   html += '</ol>';
 
-  html += '<p style="margin-bottom:16px;">Please let me know if you have any questions!</p>';
+  html += '<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;">Please let me know if you have any questions!</p>';
 
   // ── Milestone journey timeline ──
   html += emailTimelineHTML();
@@ -749,7 +769,16 @@ function generate() {
   // ── Signature ──
   var sig = [broker];
   if (phone) sig.push(phone);
-  html += '<p style="font-size:14px;color:#333;line-height:1.8;">Kind regards,<br/>' + sig.join('<br/>') + '</p>';
+  html +=
+    '<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:8px;">' +
+      '<tr><td style="border-top:2px solid #e8ecf5;padding-top:16px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#4a4f6a;">' +
+        '<p style="margin:0 0 4px;font-family:Arial,Helvetica,sans-serif;">Kind regards,</p>' +
+        '<strong style="font-size:15px;color:#1a1a2e;font-weight:700;display:block;">' + sig[0] + '</strong>' +
+        (sig[1] ? '<span style="font-size:13px;color:#666;display:block;margin-top:4px;">' + sig[1] + '</span>' : '') +
+      '</td></tr>' +
+    '</table>';
+
+  html += '</td></tr></table>';
 
   document.getElementById('emailOut').innerHTML = html;
   document.getElementById('outArea').className = 'out show';
@@ -767,7 +796,7 @@ function copyEmail() {
   }
 
   var plain       = el.innerText || el.textContent;
-  var htmlContent = '<div style="font-family:Georgia,serif;font-size:14px;line-height:1.85;max-width:600px;">' + el.innerHTML + '</div>';
+  var htmlContent = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.75;">' + el.innerHTML + '</div>';
 
   if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
     try {
