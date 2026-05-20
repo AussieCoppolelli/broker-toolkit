@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pre-Approval Email Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0f14; --surface: #161920; --surface-2: #1e2230; --border: #2a2f3f;
+      --accent: #c8a96e; --accent-soft: rgba(200,169,110,0.12); --accent-glow: rgba(200,169,110,0.25);
+      --green: #4caf82; --green-soft: rgba(76,175,130,0.12);
+      --blue: #4a9ff5; --blue-soft: rgba(74,159,245,0.12);
+      --text: #e8eaf0; --text-muted: #7c8299; --text-dim: #4a5168;
+      --radius: 12px; --radius-sm: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; line-height: 1.6; }
+    nav { padding: 18px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: var(--surface); }
+    nav a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; }
+    nav a:hover { color: var(--accent); }
+    nav .sep { color: var(--text-dim); font-size: 12px; }
+    nav .current { color: var(--text); font-size: 13px; font-weight: 500; }
+    .nav-beta { background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.35); color: #c4a4ff; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; margin-left: 4px; }
+    header { padding: 52px 32px 40px; max-width: 780px; margin: 0 auto; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; background: var(--blue-soft); border: 1px solid rgba(74,159,245,0.3); color: var(--blue); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; margin-bottom: 18px; }
+    header h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px,4vw,40px); font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 10px; }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--text-muted); font-size: 15px; max-width: 540px; }
+    .time-pill { display: inline-flex; align-items: center; gap: 7px; background: var(--accent-soft); border: 1px solid rgba(200,169,110,0.3); color: var(--accent); font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 20px; margin-top: 14px; }
+    .layout { max-width: 780px; margin: 0 auto; padding: 0 32px 80px; display: flex; flex-direction: column; gap: 24px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
+    .card-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+    .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    /* UI Timeline */
+    .timeline { display: flex; align-items: flex-start; overflow: hidden; }
+    .timeline-step { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; min-width: 0; }
+    .timeline-step.done::after { content: ''; position: absolute; top: 15px; left: calc(50% + 16px); right: calc(-50% + 16px); height: 2px; background: var(--accent); z-index: 0; }
+    .timeline-step.active::after, .timeline-step.future:not(.tl-end)::after { content: ''; position: absolute; top: 15px; left: calc(50% + 16px); right: calc(-50% + 16px); height: 2px; background: repeating-linear-gradient(to right,var(--border) 0,var(--border) 5px,transparent 5px,transparent 9px); z-index: 0; }
+    .timeline-step.last-milestone::after { right: -10px; }
+    .timeline-dot { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; position: relative; z-index: 1; flex-shrink: 0; color: var(--text-dim); }
+    .timeline-step.done .timeline-dot { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+    /* Active step: dashed border = conditional/temporary */
+    .timeline-step.active .timeline-dot { background: var(--accent-soft); border: 2.5px dashed var(--accent); color: var(--accent); box-shadow: 0 0 0 4px var(--accent-glow); font-size: 15px; }
+    .timeline-step.future .timeline-dot { opacity: 0.45; }
+    .timeline-label { font-size: 10px; color: var(--text-dim); margin-top: 8px; text-align: center; line-height: 1.3; font-weight: 500; }
+    .timeline-step.done .timeline-label { color: var(--accent); }
+    .timeline-step.active .timeline-label { color: var(--accent); font-weight: 700; }
+    .timeline-step.future .timeline-label { opacity: 0.45; }
+    .timeline-note { margin-top: 14px; font-size: 12px; color: var(--text-dim); display: flex; align-items: flex-start; gap: 7px; line-height: 1.5; }
+    .timeline-note .note-icon { color: var(--accent); flex-shrink: 0; margin-top: 1px; }
+    /* Form */
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .field-row.three-col { grid-template-columns: 1fr 1fr 1fr; }
+    .field-row:last-child { margin-bottom: 0; }
+    label { display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 7px; min-height: 20px; }
+    .label-opt { font-size: 10px; color: var(--text-dim); text-transform: none; letter-spacing: 0; font-weight: 400; white-space: nowrap; }
+    input[type="text"] { width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 11px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
+    input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    input[type="text"]::placeholder { color: var(--text-dim); }
+    .toggle-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .toggle-btn { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 18px; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.18s; }
+    .toggle-btn:hover { border-color: var(--accent); color: var(--text); }
+    .toggle-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+    .survey-row { display: flex; align-items: center; gap: 14px; }
+    .switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; inset: 0; background: var(--surface-2); border: 1px solid var(--border); border-radius: 24px; cursor: pointer; transition: all 0.2s; }
+    .slider::before { content: ''; position: absolute; width: 16px; height: 16px; background: var(--text-muted); border-radius: 50%; top: 3px; left: 3px; transition: all 0.2s; }
+    .switch input:checked + .slider { background: var(--accent-soft); border-color: var(--accent); }
+    .switch input:checked + .slider::before { background: var(--accent); transform: translateX(20px); }
+    .survey-label { font-size: 14px; color: var(--text); }
+    .survey-label small { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .checkbox-group { display: flex; flex-direction: column; gap: 8px; }
+    .checkbox-item { display: block; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; cursor: pointer; transition: all 0.18s; }
+    .checkbox-item:hover { border-color: var(--accent); }
+    .checkbox-item input[type="checkbox"] { display: none; }
+    .check-title-row { display: flex; align-items: center; gap: 10px; }
+    .checkbox-item .check-box { width: 17px; height: 17px; border: 1.5px solid var(--border); border-radius: 4px; flex-shrink: 0; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+    .checkbox-item input:checked ~ .check-label .check-box { background: var(--accent); border-color: var(--accent); }
+    .checkbox-item input:checked ~ .check-label .check-box::after { content: '✓'; font-size: 11px; color: #0d0f14; font-weight: 700; line-height: 1; }
+    .checkbox-item .check-label { display: block; }
+    .checkbox-item .check-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; }
+    .checkbox-item small { display: block; font-size: 11.5px; color: var(--text-muted); font-weight: 400; margin-top: 3px; padding-left: 27px; }
+    /* COS always-on indicator */
+    .always-on-item { display: flex; align-items: flex-start; gap: 10px; background: var(--accent-soft); border: 1px solid rgba(200,169,110,0.3); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px; }
+    .always-on-badge { background: var(--accent); color: #0d0f14; font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 7px; border-radius: 10px; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+    .always-on-label { font-size: 13px; color: var(--text); line-height: 1.4; }
+    .always-on-label small { color: var(--text-muted); font-size: 12px; display: block; margin-top: 2px; }
+    /* Buttons */
+    .generate-btn { width: 100%; background: var(--accent); border: none; border-radius: var(--radius); padding: 16px; color: #0d0f14; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.03em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 9px; transition: all 0.2s; box-shadow: 0 4px 24px var(--accent-glow); }
+    .generate-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 32px var(--accent-glow); filter: brightness(1.07); }
+    .clear-btn { width: 100%; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); padding: 13px; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; margin-top: -8px; }
+    .clear-btn:hover { border-color: #e05c5c; color: #e05c5c; background: rgba(224,92,92,0.06); }
+    #output-section { display: none; }
+    .output-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--text); margin-bottom: 16px; }
+    .copy-btn { width: 100%; margin-top: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 13px 16px; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: all 0.18s; }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .copy-btn.copied { border-color: var(--green); color: var(--green); background: var(--green-soft); }
+    #email-preview { background: #ffffff; border-radius: var(--radius); overflow: hidden; }
+    .email-top-bar { background: #1a1f2e; padding: 14px 24px; display: flex; align-items: center; gap: 8px; }
+    .email-top-bar span { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ff5f57; } .dot-yellow { background: #febc2e; } .dot-green { background: #28c840; }
+    #email-body { padding: 36px 40px; }
+    .subject-lines { display: flex; flex-direction: column; gap: 8px; }
+    .subject-pill { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; transition: all 0.18s; }
+    .subject-pill:hover { border-color: var(--accent); color: var(--accent); }
+    .subject-pill .copy-icon { font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
+    .subject-pill:hover .copy-icon { color: var(--accent); }
+    @media (max-width: 600px) {
+      nav, header, .layout { padding-left: 18px; padding-right: 18px; }
+      header { padding-top: 32px; }
+      #email-body { padding: 24px 20px; }
+      .field-row, .field-row.three-col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="https://aussiecoppolelli.github.io/broker-toolkit/index.html">← Dashboard</a>
+  <span class="sep">·</span>
+  <span class="current">Pre-Approval Email Generator</span>
+  <span class="nav-beta">Beta</span>
+</nav>
+
+<header>
+  <div class="badge">Beta v1</div>
+  <h1>Pre-<span>Approval</span> Email Generator</h1>
+  <p>Congratulations email for pre-approved clients — personalised to your contact outcome, with next steps and optional Aussie services.</p>
+  <div class="time-pill" id="time-pill">Detecting time...</div>
+</header>
+
+<div class="layout">
+
+  <!-- Journey -->
+  <div class="card">
+    <div class="card-title">Client Journey — Where We Are</div>
+    <div class="timeline" id="ui-timeline"></div>
+    <div class="timeline-note">
+      <span class="note-icon">⚠</span>
+      <span>Pre-Approval is a <strong style="color:var(--text-muted);">conditional, temporary milestone</strong>. It converts to Formal Approval once a Contract of Sale is submitted and assessed by the lender.</span>
+    </div>
+  </div>
+
+  <!-- Client details -->
+  <div class="card">
+    <div class="card-title">Client Details</div>
+    <div class="field">
+      <label>Client First Name</label>
+      <input type="text" id="client-name" placeholder="e.g. Sarah" oninput="autoCapitalise(this)" />
+    </div>
+    <div class="field-row three-col">
+      <div>
+        <label>Loan Amount <span class="label-opt">(optional)</span></label>
+        <input type="text" id="approved-amount" placeholder="e.g. $750,000" />
+      </div>
+      <div>
+        <label>Purchase Price <span class="label-opt">(optional)</span></label>
+        <input type="text" id="purchase-price" placeholder="e.g. $850,000" />
+      </div>
+      <div>
+        <label>Lender <span class="label-opt">(optional)</span></label>
+        <input type="text" id="lender-name" placeholder="e.g. ANZ, CBA" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact outcome -->
+  <div class="card">
+    <div class="card-title">Contact Outcome</div>
+    <div class="field">
+      <label>Did you speak with the client?</label>
+      <div class="toggle-group" id="contact-group">
+        <button class="toggle-btn active" data-val="spoke" onclick="setToggle('contact-group',this)">Yes — spoke to them</button>
+        <button class="toggle-btn" data-val="voicemail" onclick="setToggle('contact-group',this)">No — left a voicemail</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Next steps -->
+  <div class="card">
+    <div class="card-title">Next Steps &amp; Services</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">The Contract of Sale section is always included. Toggle the optional Aussie services below.</p>
+
+    <!-- Always-on: Contract of Sale -->
+    <div class="always-on-item">
+      <span class="always-on-badge">Always&nbsp;on</span>
+      <div class="always-on-label">
+        📄 Contract of Sale
+        <small>Explains how the client sends the COS to progress from pre-approval to formal approval</small>
+      </div>
+    </div>
+
+    <!-- Toggleable services -->
+    <div class="checkbox-group">
+      <label class="checkbox-item">
+        <input type="checkbox" id="include-conveyancing" checked />
+        <span class="check-label">
+          <span class="check-title-row">
+            <span class="check-box"></span>
+            <span class="check-title">🏛️ Conveyancing</span>
+          </span>
+          <small>Offers the client Aussie's conveyancing service, including 1 complimentary contract review</small>
+        </span>
+      </label>
+      <label class="checkbox-item">
+        <input type="checkbox" id="include-buyers-agent" />
+        <span class="check-label">
+          <span class="check-title-row">
+            <span class="check-box"></span>
+            <span class="check-title">🔍 Buyers Agent</span>
+          </span>
+          <small>Offers the Aussie Buyers Agent team to assist with finding and purchasing a property</small>
+        </span>
+      </label>
+      <label class="checkbox-item">
+        <input type="checkbox" id="include-seller-assist" />
+        <span class="check-label">
+          <span class="check-title-row">
+            <span class="check-box"></span>
+            <span class="check-title">🏷️ Seller Assist</span>
+          </span>
+          <small>Offers the Aussie Seller Assist team to help the client sell their current home</small>
+        </span>
+      </label>
+      <label class="checkbox-item">
+        <input type="checkbox" id="include-referral" checked />
+        <span class="check-label">
+          <span class="check-title-row">
+            <span class="check-box"></span>
+            <span class="check-title">💬 Referral Paragraph</span>
+          </span>
+          <small>Asks the client to pass along your details to friends or family who may need a home loan</small>
+        </span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Survey & extras -->
+  <div class="card">
+    <div class="card-title">Additional Options</div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="survey-row">
+        <label class="switch"><input type="checkbox" id="include-attachment" checked /><span class="slider"></span></label>
+        <div class="survey-label">
+          Include approval letter note
+          <small>Tells the client their approval letter is attached to the email</small>
+        </div>
+      </div>
+      <div class="survey-row">
+        <label class="switch"><input type="checkbox" id="include-survey" checked /><span class="slider"></span></label>
+        <div class="survey-label">
+          Include survey request
+          <small>Asks client to complete the "How are we doing so far?" survey</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="generate-btn" onclick="generateEmail()">✉&nbsp; Generate Email</button>
+  <button class="clear-btn" onclick="clearFields()">✕&nbsp; Clear Fields</button>
+
+  <!-- Output -->
+  <div id="output-section">
+    <div class="output-title">Generated Email</div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Suggested Subject Lines</div>
+      <div class="subject-lines" id="subject-lines"></div>
+    </div>
+    <div id="email-preview">
+      <div class="email-top-bar"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+      <div id="email-body"></div>
+    </div>
+    <button class="copy-btn" id="copy-btn" onclick="copyEmail()">Copy email to clipboard</button>
+  </div>
+
+</div>
+
+<script>
+/* ── Journey (8 steps, Pre-Approval at index 3 is active) ── */
+const MILESTONES = [
+  { label:'Initial\nConsult',  abbr:'IC', emoji:null  },
+  { label:'Video\nCall',       abbr:'VC', emoji:null  },
+  { label:'Loan\nSubmission',  abbr:'LS', emoji:null  },
+  { label:'Pre-\nApproval',   abbr:'PA', emoji:'🔓'  },  // ← ACTIVE (conditional)
+  { label:'Formal\nApproval',  abbr:'FA', emoji:'🎉'  },
+  { label:'Settlement',        abbr:'ST', emoji:'🏁'  },
+  { label:'1 Month\nCheck-In', abbr:'1M', emoji:'📅'  },
+  { label:'1 Year\nCheck-In',  abbr:'1Y', emoji:'🏠'  },
+];
+const ACTIVE = 3;
+
+function buildUITimeline() {
+  const wrap = document.getElementById('ui-timeline');
+  let html = '';
+  MILESTONES.forEach((m, i) => {
+    const isLast = i === MILESTONES.length - 1;
+    let cls = i < ACTIVE ? 'done' : i === ACTIVE ? 'active' : 'future';
+    if (isLast) cls += ' last-milestone tl-end';
+    const dot = i < ACTIVE ? '&#10003;' : (m.emoji || m.abbr);
+    html += `<div class="timeline-step ${cls}">
+      <div class="timeline-dot">${dot}</div>
+      <div class="timeline-label">${m.label.replace('\n','<br/>')}</div>
+    </div>`;
+  });
+  wrap.innerHTML = html;
+}
+
+/* ── Email timeline (Outlook-safe) ── */
+function emailTimelineHTML() {
+  const DOT_W = 28;
+  let dotRow = '', labelRow = '';
+  MILESTONES.forEach(function(m, i) {
+    const isDone   = i < ACTIVE;
+    const isActive = i === ACTIVE;
+    const isFuture = i > ACTIVE;
+    const dotBg    = isDone ? '#fdf5e8' : isActive ? '#fdf5e8' : '#f0f1f5';
+    const dotBdr   = isDone ? '#c8a96e' : isActive ? '#c8a96e' : '#d0d4e0';
+    const dotClr   = isDone ? '#c8a96e' : isActive ? '#b8860a' : '#9ca3af';
+    const ring     = isActive ? 'box-shadow:0 0 0 3px rgba(200,169,110,0.3);' : '';
+    // Dashed border for the conditional step
+    const bdr      = isActive
+      ? `border:2px dashed ${dotBdr};`
+      : `border:2px solid ${dotBdr};`;
+    const txt      = isDone ? '&#10003;' : (m.emoji || m.abbr);
+    const fSize    = (!isDone && m.emoji) ? '14px' : '11px';
+    const fade     = isFuture ? 'opacity:0.45;' : '';
+
+    dotRow +=
+      `<td width="${DOT_W}" align="center" valign="middle" style="padding:0;${fade}">` +
+        `<table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;"><tr>` +
+          `<td width="${DOT_W}" height="${DOT_W}" align="center" valign="middle" bgcolor="${dotBg}" ` +
+            `style="width:${DOT_W}px;height:${DOT_W}px;border-radius:50%;background-color:${dotBg};` +
+            `${bdr}${ring}font-family:Arial,sans-serif;font-size:${fSize};` +
+            `font-weight:700;color:${dotClr};text-align:center;vertical-align:middle;">${txt}</td>` +
+        `</tr></table>` +
+      `</td>`;
+
+    const lClr = isDone ? '#c8a96e' : isActive ? '#b8860a' : '#9ca3af';
+    const lWt  = isActive ? '700' : '500';
+    // Every step gets the same two-line label structure; non-active get a blank sub-line
+    // so all label cells are the same height and stay perfectly aligned.
+    const subLine = isActive
+      ? `<span style="display:block;font-size:7.5px;font-style:italic;color:#c8a96e;font-weight:400;line-height:1.4;">(Conditional)</span>`
+      : `<span style="display:block;font-size:7.5px;line-height:1.4;">&nbsp;</span>`;
+    labelRow +=
+      `<td width="${DOT_W}" align="center" valign="top" style="padding:5px 0 0;${fade}">` +
+        `<span style="font-size:8.5px;color:${lClr};font-weight:${lWt};font-family:Arial,sans-serif;line-height:1.3;display:block;text-align:center;">` +
+        `${m.label.replace('\n','<br/>')}</span>${subLine}` +
+      `</td>`;
+
+    const cBg = isDone ? '#c8a96e' : '#d0d4e0';
+    dotRow   += `<td valign="middle" style="padding:0;"><table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td height="2" bgcolor="${cBg}" style="height:2px;background-color:${cBg};font-size:0;line-height:0;">&nbsp;</td></tr></table></td>`;
+    labelRow += `<td style="padding:0;"></td>`;
+  });
+
+  return (
+    `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;border-collapse:collapse;">` +
+      `<tr><td bgcolor="#f7f8fc" style="background-color:#f7f8fc;border:1px solid #e0e4f0;border-radius:10px;padding:20px 16px 18px;">` +
+        `<p style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6b7280;text-align:center;margin:0 0 16px;font-family:Arial,sans-serif;">📍 YOUR HOME LOAN JOURNEY</p>` +
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;"><tr>${dotRow}</tr><tr>${labelRow}</tr></table>` +
+      `</td></tr>` +
+    `</table>`
+  );
+}
+
+/* ── Block helper ── */
+function block(bg, borderSide, borderColor, content) {
+  const outer = `border-collapse:collapse;margin:16px 0;width:100%;`;
+  const inner = `background-color:${bg};padding:14px 18px;font-family:Arial,Helvetica,sans-serif;border-radius:8px;`;
+  if (borderSide === 'left') {
+    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${outer}"><tr>` +
+      `<td width="4" bgcolor="${borderColor}" style="width:4px;background-color:${borderColor};border-radius:4px 0 0 4px;font-size:0;line-height:0;">&nbsp;</td>` +
+      `<td bgcolor="${bg}" style="${inner}border-radius:0 8px 8px 0;">${content}</td>` +
+      `</tr></table>`;
+  }
+  if (borderSide === 'all') {
+    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${outer}border:1px solid ${borderColor};border-radius:8px;"><tr><td bgcolor="${bg}" style="${inner}">${content}</td></tr></table>`;
+  }
+  return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${outer}"><tr><td bgcolor="${bg}" style="${inner}">${content}</td></tr></table>`;
+}
+
+/* ── Utilities ── */
+function getTimeOfDay() { const h = new Date().getHours(); return h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening'; }
+function updateTimePill() {
+  const t = getTimeOfDay(), ico = { Morning:'🌅', Afternoon:'☀️', Evening:'🌙' };
+  document.getElementById('time-pill').textContent = `${ico[t]} Auto-detected: Good ${t}`;
+}
+function autoCapitalise(el) { if (el.value.length) el.value = el.value[0].toUpperCase() + el.value.slice(1); }
+function setToggle(gid, btn) { document.querySelectorAll(`#${gid} .toggle-btn`).forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+function getToggle(gid) { const a = document.querySelector(`#${gid} .toggle-btn.active`); return a ? a.dataset.val : null; }
+function formatCurrency(val) {
+  if (!val) return null;
+  const cleaned = val.replace(/[^\d.]/g, '');
+  if (!cleaned) return val.trim() || null;
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? val.trim() : '$' + num.toLocaleString('en-AU', { maximumFractionDigits: 0 });
+}
+
+function clearFields() {
+  document.getElementById('client-name').value = '';
+  document.getElementById('approved-amount').value = '';
+  document.getElementById('purchase-price').value = '';
+  document.getElementById('lender-name').value = '';
+  document.querySelector('#contact-group .toggle-btn[data-val="spoke"]').click();
+  document.getElementById('include-conveyancing').checked = true;
+  document.getElementById('include-buyers-agent').checked = false;
+  document.getElementById('include-seller-assist').checked = false;
+  document.getElementById('include-referral').checked = true;
+  document.getElementById('include-attachment').checked = true;
+  document.getElementById('include-survey').checked = true;
+  document.getElementById('output-section').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ── Generate ── */
+function generateEmail() {
+  const name      = document.getElementById('client-name').value.trim() || 'there';
+  const rawAmt    = document.getElementById('approved-amount').value.trim();
+  const rawPrice  = document.getElementById('purchase-price').value.trim();
+  const lender    = document.getElementById('lender-name').value.trim();
+  const contact   = getToggle('contact-group');
+  const time      = getTimeOfDay();
+  const inclConv  = document.getElementById('include-conveyancing').checked;
+  const inclBA    = document.getElementById('include-buyers-agent').checked;
+  const inclSA    = document.getElementById('include-seller-assist').checked;
+  const inclSrv   = document.getElementById('include-survey').checked;
+  const inclAttach = document.getElementById('include-attachment').checked;
+  const inclRef   = document.getElementById('include-referral').checked;
+  const amount    = formatCurrency(rawAmt);
+  const price     = formatCurrency(rawPrice);
+
+  /* Opening line */
+  const opening = contact === 'spoke'
+    ? 'Thank you so much for your time on the phone just now.'
+    : 'I hope you are doing well. I tried to call but was unfortunately unable to get through — I have left you a voicemail.';
+
+  /* Approval banner */
+  let amountLine = '';
+  if (amount && lender) amountLine += `<br/><span style="font-size:14px;color:#1a4a30;font-family:Arial,sans-serif;">Approved up to <strong>${amount}</strong> with <strong>${lender}</strong></span>`;
+  else if (amount)      amountLine += `<br/><span style="font-size:14px;color:#1a4a30;font-family:Arial,sans-serif;">Approved up to <strong>${amount}</strong></span>`;
+  else if (lender)      amountLine += `<br/><span style="font-size:14px;color:#1a4a30;font-family:Arial,sans-serif;">Lender: <strong>${lender}</strong></span>`;
+  if (price)            amountLine += `<br/><span style="font-size:14px;color:#1a4a30;font-family:Arial,sans-serif;">Purchase price: <strong>${price}</strong></span>`;
+
+  const congratsBanner = block('#edf7f1','left','#4caf82',
+    `<span style="font-weight:600;color:#1a4a30;font-size:16px;font-family:Arial,sans-serif;">🎉 Congratulations on your pre-approval!</span>${amountLine}`
+  );
+
+  /* What pre-approval means */
+  const conditionalNote = block('#fff8ee','left','#c8a96e',
+    `<strong style="color:#5a3e0a;font-family:Arial,sans-serif;font-size:14px;">ℹ️ What is a pre-approval?</strong><br/>` +
+    `<span style="color:#5a3e0a;font-size:14px;font-family:Arial,sans-serif;">` +
+    `Your pre-approval is a <strong>conditional</strong> approval — meaning the lender has assessed your financial situation and is comfortable lending to you, subject to finding the right property. ` +
+    `Once you find a property and submit a <strong>Contract of Sale</strong>, I can convert this into a full, formal approval.` +
+    `</span>`
+  );
+
+  /* Approval letter note (toggleable) */
+  const attachmentNote = inclAttach ? block('#f7f8fc','all','#e0e4f0',
+    `<span style="font-size:14px;color:#4a4f6a;font-family:Arial,sans-serif;">📎 Please see your <strong style="color:#1a1a2e;">approval letter</strong> attached to this email for your records.</span>`
+  ) : '';
+
+  /* Contract of Sale (always included) */
+  const cosBlock = block('#f7f8fc','all','#e0e4f0',
+    `<p style="font-weight:700;color:#1a1a2e;font-family:Arial,sans-serif;font-size:14px;margin:0 0 8px;">📄 Contract of Sale — How We Convert to Formal Approval</p>` +
+    `<p style="color:#4a4f6a;font-size:14px;margin:0 0 10px;font-family:Arial,sans-serif;">` +
+    `Once you have found a property you like, please send the <strong style="color:#1a1a2e;">Contract of Sale (COS)</strong> through to a conveyancer for review. ` +
+    `Once it has been reviewed and either you or the vendor have signed it, I can then submit it to the lender and convert your pre-approval into a <strong style="color:#1a1a2e;">formal approval</strong>.` +
+    `</p>` +
+    (inclConv
+      ? `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">` +
+          `<tr><td bgcolor="#e8f2ff" style="background-color:#e8f2ff;border:1px solid #b8d0f0;border-radius:6px;padding:10px 14px;font-family:Arial,sans-serif;font-size:14px;color:#1558b0;">` +
+            `<strong style="color:#1558b0;">Need a conveyancer?</strong> As an Aussie Home Loans client, you have access to our in-house conveyancing service — which includes <strong>1 complimentary contract review</strong>. Just reply to this email or give me a call and I can arrange everything for you.` +
+          `</td></tr></table>`
+      : '')
+  );
+
+  /* Buyers Agent — always its own block when on */
+  const baBlock = inclBA ? block('#f7f8fc','all','#e0e4f0',
+    `<p style="font-weight:700;color:#1a1a2e;font-family:Arial,sans-serif;font-size:14px;margin:0 0 8px;">🔍 Buyers Agent</p>` +
+    `<p style="color:#4a4f6a;font-size:14px;margin:0;font-family:Arial,sans-serif;">If you would like some extra assistance finding and purchasing your property, we have a dedicated Buyers Agent team here at Aussie Home Loans who can help guide you through the process. Please let me know and I can arrange for them to reach out to you.</p>`
+  ) : '';
+
+  /* Seller Assist — always its own block when on */
+  const saBlock = inclSA ? block('#f7f8fc','all','#e0e4f0',
+    `<p style="font-weight:700;color:#1a1a2e;font-family:Arial,sans-serif;font-size:14px;margin:0 0 8px;">🏷️ Seller Assist</p>` +
+    `<p style="color:#4a4f6a;font-size:14px;margin:0;font-family:Arial,sans-serif;">If you're also looking to sell your current home, our Seller Assist team at Aussie Home Loans can help you with that too. Please let me know and I'll arrange for them to get in touch.</p>`
+  ) : '';
+
+  /* Survey */
+  const surveyBlock = inclSrv ? block('#fff0f6','all','#f0c0d8',
+    `<strong style="display:block;margin-bottom:6px;color:#7a0a3a;font-family:Arial,sans-serif;font-size:14px;">🙏 Help Me Help You!</strong>` +
+    `<span style="color:#4a1a2e;font-size:14px;font-family:Arial,sans-serif;">You would've received an email with the subject line <em>"How are we doing so far?"</em> (check your junk/spam folder if you can't find it). When you have a spare moment, I'd really appreciate it if you could click the link inside and complete the short 3-question, star-rated survey.<br/><br/>Your feedback is incredibly helpful, and achieving a 10/10 directly contributes to my upcoming promotion. It also factors into my monthly performance metrics, so your support would mean the world to me.</span>`
+  ) : '';
+
+  /* Referral (toggleable) */
+  const referralBlock = inclRef ? block('#f7f8fc','all','#e0e4f0',
+    `<span style="font-size:14px;color:#4a4f6a;font-family:Arial,sans-serif;">💬 If you have any <strong style="color:#1a1a2e;">friends or family</strong> who are ever in need of assistance with a home loan, please don't hesitate to pass along my details — I am always open to new clients and really appreciate the referral.</span>`
+  ) : '';
+
+  /* Assemble */
+  const html =
+    `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;font-size:15px;line-height:1.75;"><tr><td style="padding:0;">` +
+    `<p style="font-size:18px;font-weight:600;margin:0 0 16px;">Good ${time}, ${name}.</p>` +
+    `<p style="margin:0 0 4px;">${opening}</p>` +
+    congratsBanner +
+    attachmentNote +
+    conditionalNote +
+    `<p style="font-weight:700;color:#1a1a2e;margin:20px 0 4px;font-size:15px;font-family:Arial,sans-serif;">Next Steps — Happy House Hunting! 🏡</p>` +
+    `<p style="color:#4a4f6a;font-size:14px;margin:0 0 4px;font-family:Arial,sans-serif;">Here's what you need to keep in mind as you start your property search:</p>` +
+    cosBlock +
+    baBlock +
+    saBlock +
+    surveyBlock +
+    referralBlock +
+    emailTimelineHTML() +
+    `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:24px;">` +
+      `<tr><td style="border-top:2px solid #e8ecf5;padding-top:20px;font-size:14px;color:#4a4f6a;font-family:Arial,sans-serif;">` +
+        `<p style="margin:0 0 12px;">Thank you — and happy house hunting! I'm always here if you need anything. Speak soon.</p>` +
+        `<strong style="font-size:16px;color:#1a1a2e;display:block;">Joshua Coppolelli</strong>` +
+        `<span style="font-size:13px;color:#888;display:block;margin-top:2px;">Mortgage Broker · Aussie Home Loans</span>` +
+      `</td></tr></table>` +
+    `</td></tr></table>`;
+
+  document.getElementById('email-body').innerHTML = html;
+
+  /* Subject lines */
+  const amtSuffix = amount ? ` for ${amount}` : '';
+  const subjects = [
+    `Congratulations ${name} — Your Pre-Approval Is Confirmed!`,
+    `Your Pre-Approval${amtSuffix} — What Happens Next`,
+    `Pre-Approval Confirmed — Let the House Hunt Begin! 🏡`,
+  ];
+  document.getElementById('subject-lines').innerHTML = subjects.map(s =>
+    `<div class="subject-pill" onclick="copySubject(this,'${s.replace(/'/g,"\\'")}')"><span>${s}</span><span class="copy-icon">Copy ↗</span></div>`
+  ).join('');
+
+  const out = document.getElementById('output-section');
+  out.style.display = 'block';
+  setTimeout(() => out.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  const btn = document.getElementById('copy-btn');
+  btn.textContent = 'Copy email to clipboard';
+  btn.className = 'copy-btn';
+}
+
+async function copyEmail() {
+  const emailBody = document.getElementById('email-body');
+  const btn = document.getElementById('copy-btn');
+  let success = false;
+  try {
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head><body style="font-family:Arial,Helvetica,sans-serif;">${emailBody.innerHTML}</body></html>`;
+    await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }) })]);
+    success = true;
+  } catch(e) {}
+  if (!success) {
+    try {
+      const range = document.createRange();
+      range.selectNodeContents(emailBody);
+      const sel = window.getSelection();
+      sel.removeAllRanges(); sel.addRange(range);
+      success = document.execCommand('copy');
+      sel.removeAllRanges();
+    } catch(e) {}
+  }
+  btn.textContent = success ? 'Copied!' : 'Please select & copy the email above';
+  btn.className = success ? 'copy-btn copied' : 'copy-btn';
+  setTimeout(() => { btn.textContent = 'Copy email to clipboard'; btn.className = 'copy-btn'; }, 2500);
+}
+
+function copySubject(el, subject) {
+  navigator.clipboard.writeText(subject).then(() => {
+    const ic = el.querySelector('.copy-icon');
+    ic.textContent = 'Copied';
+    setTimeout(() => ic.textContent = 'Copy ↗', 2000);
+  });
+}
+
+buildUITimeline();
+updateTimePill();
+</script>
+</body>
+</html>
