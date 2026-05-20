@@ -37,7 +37,6 @@ textarea:focus { border-color: #3b7dd8; box-shadow: 0 0 0 3px rgba(59,125,216,0.
 }
 .parse-btn:hover { background: #333; }
 
-/* Parsed options */
 .option-row {
   background: #f9fafb; border: 1px solid #e2e4e8; border-radius: 8px;
   padding: 10px 14px; margin-bottom: 8px; display: flex; align-items: center;
@@ -92,14 +91,12 @@ textarea:focus { border-color: #3b7dd8; box-shadow: 0 0 0 3px rgba(59,125,216,0.
 .reason-text { font-size: 13px; color: #444; line-height: 1.35; }
 .reason-item.auto-ticked { border-color: #b8ddd3; background: #f0f7f4; }
 
-/* Btn row */
 .btn-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 1rem; }
 .gen-btn { padding: 12px; background: #1a1a1a; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; color: #fff; cursor: pointer; }
 .gen-btn:hover { background: #333; }
 .clear-btn { padding: 12px 18px; background: #fff; border: 1px solid #d0d3d9; border-radius: 8px; font-size: 14px; font-weight: 500; color: #888; cursor: pointer; white-space: nowrap; }
 .clear-btn:hover { color: #c0392b; border-color: #c0392b; }
 
-/* Output */
 .out-card {
   background: #fff; border: 1px solid #e2e4e8; border-radius: 10px;
   padding: 1.5rem; margin-bottom: 1rem; font-size: 14px; line-height: 1.85;
@@ -135,12 +132,12 @@ textarea:focus { border-color: #3b7dd8; box-shadow: 0 0 0 3px rgba(59,125,216,0.
     <div class="card-title"><span class="step-num">1</span>Paste comparison text</div>
     <div class="field">
       <label>Paste your lender comparison summary below</label>
-      <textarea id="pasteArea" rows="13" placeholder="Summary of compared and selected products as of 19/05/2026&#10;The customer was presented with the below options:&#10;&#10;Macquarie&#10;$203,500, 24yr term, 5.84% variable rate, P&amp;I, Redraw, Offset&#10;HSBC&#10;$203,500, 24yr term, 5.99% variable rate, P&amp;I, Redraw, Offset&#10;Bankwest&#10;$203,500, 24yr term, 6.19% variable rate, P&amp;I, Redraw, Offset&#10;The selected option was:&#10;&#10;HSBC&#10;$203,500, 24yr term, 5.99% variable rate, P&amp;I, Redraw, Offset"></textarea>
+      <textarea id="pasteArea" rows="13" placeholder="Summary of compared and selected products as of 19/05/2026&#10;The customer was presented with the below options:&#10;&#10;Macquarie&#10;$203,500, 24yr term, 5.84% variable rate, P&amp;I, Redraw, no Offset&#10;HSBC&#10;$203,500, 24yr term, 5.99% variable rate, P&amp;I, Redraw, Offset&#10;The selected option was:&#10;&#10;Macquarie&#10;$203,500, 24yr term, 5.84% variable rate, P&amp;I, Redraw, no Offset"></textarea>
     </div>
     <button class="parse-btn" onclick="parseComparison()">Parse comparison &rarr;</button>
   </div>
 
-  <!-- Step 2: Parsed confirmation -->
+  <!-- Step 2 -->
   <div class="card hidden" id="parsedCard">
     <div class="card-title"><span class="step-num">2</span>Confirm parsed data</div>
     <div id="alertArea"></div>
@@ -153,7 +150,7 @@ textarea:focus { border-color: #3b7dd8; box-shadow: 0 0 0 3px rgba(59,125,216,0.
     <div id="optionsList"></div>
   </div>
 
-  <!-- Step 3: Reason checkboxes -->
+  <!-- Step 3: Reasons -->
   <div class="card hidden" id="reasonsCard">
     <div class="card-title">
       <span class="step-num">3</span>
@@ -230,7 +227,7 @@ textarea:focus { border-color: #3b7dd8; box-shadow: 0 0 0 3px rgba(59,125,216,0.
 
 </div>
 <script>
-// ─── Lender name aliases (for normalisation only) ─────────────────────────────
+// ─── Lender aliases ───────────────────────────────────────────────────────────
 var LENDER_ALIASES = {
   'ANZ':              ['anz'],
   'Macquarie Bank':   ['macquarie', 'macq', 'macquarie bank'],
@@ -254,28 +251,31 @@ var LENDER_ALIASES = {
   'NAB':              ['nab', 'national australia bank'],
 };
 
-// ─── Reason sentences ──────────────────────────────────────────────────────────
-var REASON_TEXT = {
-  lowest_rate:      'offered the most competitive interest rate of the options presented',
-  competitive_rate: 'offered a competitive interest rate, within 0.10% of the lowest rate in the comparison',
-  no_fees:          'charges no ongoing monthly fees, reducing the total cost of borrowing',
-  low_fees:         'carries lower fees than the alternative options considered',
-  cashback:         'offered a cashback incentive, providing additional upfront value to the client',
-  higher_borrowing: 'provided a higher borrowing capacity than the other lenders assessed, meeting the client\'s required loan amount',
-  income_flex:      'offered more flexible income assessment, particularly relevant given the client\'s employment structure',
-  altdoc:           'supports alt-doc and low-doc lending, accommodating the client\'s documentation requirements',
-  credit_policy:    'applied a more flexible credit policy suited to the client\'s circumstances',
-  valuation:        'produced a higher property valuation outcome than competing lenders, improving the client\'s LVR position',
-  lmi_waiver:       'offered an LMI waiver applicable to the client\'s profession or LVR, representing a significant cost saving',
-  adverse_credit:   'accepted the client\'s credit history where other lenders were unable to assist',
-  fast_sla:         'provided a faster turnaround and SLA than the other options, meeting the client\'s timeline requirements',
-  broker_support:   'offered strong broker support and BDM channel access, supporting a smooth and efficient application process',
-  digital:          'offers a strong digital banking platform, providing the client with convenient day-to-day account management',
-  existing_rel:     'aligned with the client\'s existing banking relationship, minimising disruption and simplifying the transition',
-  intl_rel:         'aligned with the client\'s international banking relationship, providing continuity across their financial arrangements',
-  client_pref:      'was the client\'s preferred lender, having been considered alongside all options presented',
-  shared_equity:    'offered a shared equity pathway, enabling the client to enter the market with a lower deposit without incurring LMI',
-  package:          'provided package benefits including offset, card and/or insurance features suited to the client\'s broader financial needs',
+// ─── Reason sentences (complete, flowing) ─────────────────────────────────────
+// {name} is replaced with the selected lender name at generation time
+var REASON_SENTENCES = {
+  // Note: lowest_rate and competitive_rate are handled in the rate intro — they only
+  // appear in the paragraph if the intro is neutral (lowest_rate unticked when IS cheapest)
+  lowest_rate:      '{name} offered the most competitive interest rate of the options presented.',
+  competitive_rate: '{name} offered a competitive interest rate, sitting within 0.10% of the lowest rate in the comparison.',
+  no_fees:          '{name} charges no ongoing monthly fees, reducing the total cost of borrowing.',
+  low_fees:         '{name} carries lower fees than the alternative options considered.',
+  cashback:         '{name} offered a cashback incentive, providing additional upfront value to the client.',
+  higher_borrowing: '{name} provided a higher borrowing capacity than the other lenders assessed, meeting the client\'s required loan amount.',
+  income_flex:      '{name} offered more flexible income assessment, particularly relevant given the client\'s employment structure.',
+  altdoc:           '{name} supports alt-doc and low-doc lending, accommodating the client\'s documentation requirements.',
+  credit_policy:    '{name} applied a more flexible credit policy suited to the client\'s circumstances.',
+  valuation:        '{name} produced a higher property valuation outcome than competing lenders, improving the client\'s LVR position.',
+  lmi_waiver:       '{name} offered an LMI waiver applicable to the client\'s profession or LVR, representing a significant cost saving.',
+  adverse_credit:   '{name} accepted the client\'s credit history where other lenders were unable to assist.',
+  fast_sla:         '{name} provided a faster turnaround and SLA than the other options, meeting the client\'s timeline requirements.',
+  broker_support:   '{name} offered strong broker support and BDM channel access, supporting a smooth and efficient application process.',
+  digital:          '{name} offers a strong digital banking platform, providing the client with convenient day-to-day account management.',
+  existing_rel:     '{name} aligned with the client\'s existing banking relationship, minimising disruption and simplifying the transition.',
+  intl_rel:         '{name} aligned with the client\'s international banking relationship, providing continuity across their financial arrangements.',
+  client_pref:      '{name} was the client\'s preferred lender, having been considered alongside all options presented.',
+  shared_equity:    '{name} offered a shared equity pathway, enabling the client to enter the market with a lower deposit without incurring LMI.',
+  package:          '{name} provided package benefits including offset, card and/or insurance features suited to the client\'s broader financial needs.',
 };
 
 // ─── State ─────────────────────────────────────────────────────────────────────
@@ -283,7 +283,7 @@ var parsedOptions  = [];
 var parsedSelected = null;
 var parsedDate     = '';
 
-// ─── Lender name normalisation ─────────────────────────────────────────────────
+// ─── Lender normalisation ──────────────────────────────────────────────────────
 function normaliseLenderName(raw) {
   if (!raw) return raw;
   var lower = raw.toLowerCase().trim();
@@ -300,6 +300,15 @@ function normaliseLenderName(raw) {
     }
   }
   return raw;
+}
+
+// ─── Feature detection: handles "no Offset", "no Redraw" etc. ─────────────────
+// Returns true only if the feature word appears WITHOUT a preceding "no"
+function hasFeature(detailStr, featureName) {
+  var noPattern  = new RegExp('\\bno[\\s-]?' + featureName, 'i');
+  var yesPattern = new RegExp('\\b' + featureName + '\\b', 'i');
+  if (noPattern.test(detailStr)) return false;  // explicitly excluded
+  return yesPattern.test(detailStr);
 }
 
 // ─── Parser helpers ─────────────────────────────────────────────────────────────
@@ -334,7 +343,7 @@ function parseSection(lines) {
   return results;
 }
 
-// ─── Parse comparison text ──────────────────────────────────────────────────────
+// ─── Parse ────────────────────────────────────────────────────────────────────
 function parseComparison() {
   var text = document.getElementById('pasteArea').value.trim();
   if (!text) { showErr('Please paste your comparison text first.'); return; }
@@ -370,7 +379,6 @@ function parseComparison() {
 
   renderParsed();
   setDefaultReasons();
-
   ['parsedCard','reasonsCard','extraCard','genRow'].forEach(function(id) {
     document.getElementById(id).classList.remove('hidden');
   });
@@ -380,36 +388,45 @@ function parseComparison() {
 function makeOption(lender, detailStr) {
   var o = {
     lender: normaliseLenderName(lender || ''),
-    rawLender: lender || '',
     rawDetail: detailStr || '',
-    amount:'', term:'', rate:null, rateType:'', repayment:'', features:[]
+    amount: '', term: '', rate: null, rateType: '', repayment: '', features: []
   };
   if (!detailStr) return o;
+
+  // Amount — strip trailing commas from the captured group to fix double-comma bug
   var amtM = detailStr.match(/\$([\d,]+)/);
-  if (amtM) o.amount = '$' + amtM[1];
+  if (amtM) o.amount = '$' + amtM[1].replace(/,+$/, '');
+
   var termM = detailStr.match(/(\d+)\s*yr/i);
   if (termM) o.term = termM[1] + 'yr term';
+
   var rateM = detailStr.match(/([\d.]+)%/);
   if (rateM) o.rate = parseFloat(rateM[1]);
-  if (/variable/i.test(detailStr)) o.rateType = 'variable rate';
-  else if (/fixed/i.test(detailStr)) o.rateType = 'fixed rate';
-  if (/\bP&I\b/i.test(detailStr)) o.repayment = 'P&I';
+
+  if (/variable/i.test(detailStr))      o.rateType = 'variable rate';
+  else if (/fixed/i.test(detailStr))    o.rateType = 'fixed rate';
+
+  if (/\bP&I\b/i.test(detailStr))                         o.repayment = 'P&I';
   else if (/\bIO\b|\binterest[\s-]?only\b/i.test(detailStr)) o.repayment = 'IO';
-  ['Offset','Redraw','Construction','Package','Cashback','Guarantor'].forEach(function(f) {
-    if (new RegExp(f,'i').test(detailStr)) o.features.push(f);
+
+  // Features: only add if present AND not prefixed with "no"
+  ['Offset', 'Redraw', 'Construction', 'Package', 'Cashback', 'Guarantor'].forEach(function(f) {
+    if (hasFeature(detailStr, f)) o.features.push(f);
   });
+
   return o;
 }
 
+// Build the clean detail line for the output text
 function formatOptionLine(opt) {
-  // Reconstruct a clean detail string from parsed fields
   var parts = [];
-  if (opt.amount) parts.push(opt.amount);
-  if (opt.term) parts.push(opt.term);
+  if (opt.amount)   parts.push(opt.amount);
+  if (opt.term)     parts.push(opt.term);
   if (opt.rate !== null) parts.push(opt.rate.toFixed(2) + '%');
   if (opt.rateType) parts.push(opt.rateType);
   if (opt.repayment) parts.push(opt.repayment);
-  if (opt.features.length) opt.features.forEach(function(f){ parts.push(f); });
+  // Only list features that are actually present
+  opt.features.forEach(function(f) { parts.push(f); });
   return parts.join(', ');
 }
 
@@ -421,17 +438,16 @@ function lenderMatch(a, b) {
   return false;
 }
 
-// ─── Render parsed options ──────────────────────────────────────────────────────
+// ─── Render parsed options ─────────────────────────────────────────────────────
 function renderParsed() {
   document.getElementById('parsedDate').textContent = parsedDate ? 'Comparison date: ' + parsedDate : '';
-
   var rates   = parsedOptions.map(function(o){ return o.rate; }).filter(function(r){ return r !== null; });
   var minRate = rates.length ? Math.min.apply(null, rates) : null;
   var list    = document.getElementById('optionsList');
   list.innerHTML = '';
 
   parsedOptions.forEach(function(opt) {
-    var isSel = parsedSelected && lenderMatch(opt.lender, parsedSelected.lender);
+    var isSel    = parsedSelected && lenderMatch(opt.lender, parsedSelected.lender);
     var rateDiff = (opt.rate !== null && minRate !== null) ? +(opt.rate - minRate).toFixed(3) : null;
     var rateClass = 'rate-unknown', rateTag = '';
     if (rateDiff !== null) {
@@ -460,19 +476,16 @@ function renderParsed() {
     document.getElementById('alertArea').innerHTML =
       '<div class="alert-box">&#9888; Could not automatically detect the selected lender. Check the output and edit as needed.</div>';
   }
-
-  var lbl = document.getElementById('reasonsFor');
-  lbl.textContent = parsedSelected && parsedSelected.lender ? parsedSelected.lender : '';
+  document.getElementById('reasonsFor').textContent = parsedSelected && parsedSelected.lender ? parsedSelected.lender : '';
 }
 
-// ─── Pre-tick reasons based on rate position ────────────────────────────────────
+// ─── Pre-tick checkboxes ───────────────────────────────────────────────────────
 function setDefaultReasons() {
   document.querySelectorAll('#reasonsCard input[type=checkbox]').forEach(function(cb) {
     cb.checked = false;
     var ri = document.getElementById('ri_' + cb.id.replace('r_', ''));
     if (ri) ri.classList.remove('auto-ticked');
   });
-
   if (!parsedSelected) return;
 
   var rates      = parsedOptions.map(function(o){ return o.rate; }).filter(function(r){ return r !== null; });
@@ -485,7 +498,6 @@ function setDefaultReasons() {
     if (rateDiffBp === 0)      toTick.push('lowest_rate');
     else if (rateDiffBp <= 10) toTick.push('competitive_rate');
   }
-
   toTick.forEach(function(key) {
     var cb = document.getElementById('r_' + key);
     var ri = document.getElementById('ri_' + key);
@@ -501,13 +513,13 @@ function showErr(msg) {
   document.getElementById('parsedDate').textContent = '';
 }
 
-// ─── Generate BID notes ─────────────────────────────────────────────────────────
+// ─── Generate ─────────────────────────────────────────────────────────────────
 function generateBID() {
   if (!parsedOptions.length) { alert('Please parse a valid comparison first.'); return; }
 
-  var sel   = parsedSelected || {};
-  var n     = parsedOptions.length;
-  var extra = document.getElementById('extraNotes').value.trim();
+  var sel     = parsedSelected || {};
+  var n       = parsedOptions.length;
+  var extra   = document.getElementById('extraNotes').value.trim();
   var selName = sel.lender || '[Selected lender]';
 
   // Collect ticked reasons
@@ -516,94 +528,122 @@ function generateBID() {
     ticked.push(cb.id.replace('r_', ''));
   });
 
+  var lowestRateTicked      = ticked.indexOf('lowest_rate') !== -1;
+  var competitiveRateTicked = ticked.indexOf('competitive_rate') !== -1;
+
   // Rate context
   var rates      = parsedOptions.map(function(o){ return o.rate; }).filter(function(r){ return r !== null; });
   var minRate    = rates.length ? Math.min.apply(null, rates) : null;
   var selRate    = sel.rate;
   var rateDiffBp = (selRate !== null && minRate !== null) ? Math.round((selRate - minRate) * 100) : null;
   var cheapest   = parsedOptions.find(function(o){ return o.rate === minRate && !lenderMatch(o.lender, selName); });
+  var rateStr    = selRate !== null ? selRate.toFixed(2) + '% p.a. (' + (sel.rateType || 'variable') + ')' : '';
 
-  // ── HEADER: replaces "BID Notes" ───────────────────────────────────────────
+  // ── Header ─────────────────────────────────────────────────────────────────
   var header = 'Summary of compared and selected products' + (parsedDate ? ' as of ' + parsedDate : '');
 
-  // ── COMPARED OPTIONS TABLE ──────────────────────────────────────────────────
+  // ── Options list ───────────────────────────────────────────────────────────
   var nWords = ['one','two','three','four','five','six','seven','eight','nine','ten'];
   var nWord  = (n <= 10) ? nWords[n-1] : String(n);
   var nSent  = (nWord.charAt(0).toUpperCase() + nWord.slice(1)) + ' lender' + (n !== 1 ? 's were' : ' was') + ' compared.';
 
-  var optionsBlock = [];
-  optionsBlock.push('The customer was presented with the following options:');
-  optionsBlock.push('');
+  var optLines = ['The customer was presented with the following options:', ''];
   parsedOptions.forEach(function(opt, idx) {
-    var isSel = lenderMatch(opt.lender, selName);
+    var isSel  = lenderMatch(opt.lender, selName);
     var detail = formatOptionLine(opt);
-    optionsBlock.push((idx + 1) + '. ' + opt.lender + (isSel ? ' [SELECTED]' : ''));
-    optionsBlock.push('   ' + detail);
+    optLines.push((idx + 1) + '. ' + opt.lender + (isSel ? ' [SELECTED]' : ''));
+    optLines.push('   ' + detail);
   });
 
-  // ── LOAN STRUCTURE ──────────────────────────────────────────────────────────
-  var structureParts = [];
+  // ── Loan structure ─────────────────────────────────────────────────────────
+  var structParts = [];
+
   if (sel.repayment === 'P&I') {
-    structureParts.push('Principal and interest (P&I) repayments were recommended to ensure the client reduces their loan balance from day one, minimising total interest payable over the life of the loan and building equity as quickly as possible.');
+    structParts.push('Principal and interest (P&I) repayments were recommended to ensure the client reduces their loan balance from day one, minimising total interest payable over the life of the loan and building equity as quickly as possible.');
   } else if (sel.repayment === 'IO') {
-    structureParts.push('Interest only (IO) repayments were recommended to reduce the minimum monthly commitment during the IO period, preserving cash flow flexibility in line with the client\'s circumstances and objectives.');
+    structParts.push('Interest only (IO) repayments were recommended to reduce the minimum monthly commitment during the IO period, preserving cash flow flexibility in line with the client\'s circumstances and objectives.');
   }
+
   if (sel.rateType === 'variable rate') {
-    structureParts.push('A variable rate was recommended to provide repayment flexibility \u2014 allowing additional repayments without penalty, access to surplus funds, and the ability to benefit from any future reductions in the official cash rate.');
+    structParts.push('A variable rate was recommended to provide repayment flexibility \u2014 allowing additional repayments without penalty, access to surplus funds, and the ability to benefit from any future reductions in the official cash rate.');
   } else if (sel.rateType === 'fixed rate') {
-    structureParts.push('A fixed rate was recommended to provide certainty of repayments over the fixed term, protecting the client from potential rate increases and supporting accurate financial planning.');
+    structParts.push('A fixed rate was recommended to provide certainty of repayments over the fixed term, protecting the client from potential rate increases and supporting accurate financial planning.');
   }
+
   var hasOffset = sel.features && sel.features.indexOf('Offset') !== -1;
   var hasRedraw = sel.features && sel.features.indexOf('Redraw') !== -1;
-  if (hasOffset) {
-    structureParts.push('An offset account was recommended to reduce daily interest charged on the loan \u2014 funds held in the offset directly reduce the effective loan balance used for interest calculation, lowering total interest payable without restricting access to those funds.');
-  }
-  if (hasRedraw && !hasOffset) {
-    structureParts.push('A redraw facility was included to allow the client to access any additional repayments made, providing liquidity while reducing the outstanding loan balance and generating interest savings.');
-  }
-  var structureText = structureParts.join(' ') || '[Loan structure details not detected \u2014 please add manually.]';
 
-  // ── LENDER SELECTION ────────────────────────────────────────────────────────
+  if (hasOffset) {
+    structParts.push('An offset account was recommended to reduce daily interest charged on the loan \u2014 funds held in the offset directly reduce the effective loan balance used for interest calculation, lowering total interest payable without restricting access to those funds.');
+  }
+
+  if (hasRedraw) {
+    structParts.push('A redraw facility is available on this product, allowing the client to access any additional repayments made ahead of schedule, providing a degree of liquidity while continuing to reduce their outstanding balance and generate interest savings.');
+  }
+
+  var structureText = structParts.join(' ') || '[Loan structure details not detected \u2014 please add manually.]';
+
+  // ── Rate intro sentence ────────────────────────────────────────────────────
+  // The "lowest rate" checkbox overrides the auto-detection.
+  // If unticked even though it IS cheapest, we use a neutral intro.
   var rateIntro = '';
   if (rateDiffBp !== null) {
-    if (rateDiffBp === 0) {
-      rateIntro = selName + ' offered the most competitive interest rate of the options presented (' + selRate.toFixed(2) + '% p.a. ' + (sel.rateType || 'variable') + ').';
+    if (rateDiffBp === 0 && lowestRateTicked) {
+      // Cheapest AND checkbox confirms it
+      rateIntro = selName + ' offered the most competitive interest rate of the options presented (' + rateStr + ').';
+    } else if (rateDiffBp === 0 && !lowestRateTicked) {
+      // Cheapest but broker has unticked — use neutral language
+      rateIntro = selName + '\'s rate of ' + rateStr + ' was presented alongside ' + (n - 1) + ' other option' + (n - 1 !== 1 ? 's' : '') + '.';
     } else if (rateDiffBp <= 10) {
-      rateIntro = selName + '\'s rate of ' + selRate.toFixed(2) + '% p.a. (' + (sel.rateType || 'variable') + ') was competitive, sitting ' + rateDiffBp + 'bp above the lowest rate in the comparison' + (cheapest ? ' (' + cheapest.lender + ' at ' + minRate.toFixed(2) + '% p.a.)' : '') + '.';
+      // Within competitive threshold
+      rateIntro = selName + '\'s rate of ' + rateStr + ' was competitive, sitting ' + rateDiffBp + 'bp above the lowest rate in the comparison' + (cheapest ? ' (' + cheapest.lender + ' at ' + minRate.toFixed(2) + '% p.a.)' : '') + '.';
     } else {
-      rateIntro = 'While ' + selName + '\'s rate of ' + selRate.toFixed(2) + '% p.a. (' + (sel.rateType || 'variable') + ') was not the lowest of the options compared' + (cheapest ? ' \u2014 ' + cheapest.lender + ' offered ' + minRate.toFixed(2) + '% p.a.' : '') + ', ' + selName + ' was recommended for the following reasons.';
+      // Rate premium — lead into reasons
+      rateIntro = 'While ' + selName + '\'s rate of ' + rateStr + ' was not the lowest of the options compared' + (cheapest ? ' \u2014 ' + cheapest.lender + ' offered ' + minRate.toFixed(2) + '% p.a.' : '') + ', ' + selName + ' was recommended for the following reasons.';
     }
   } else {
     rateIntro = selName + ' was recommended as the most suitable option for this client.';
   }
 
-  // Reason bullet lines
+  // ── Reason sentences → flowing paragraph ──────────────────────────────────
+  // Filter out rate-related reasons that are already baked into the intro sentence
   var reasonKeys = ticked.filter(function(k) {
-    if ((k === 'lowest_rate' || k === 'competitive_rate') && rateDiffBp !== null && rateDiffBp <= 10) return false;
+    // lowest_rate is always handled in the intro (either claimed or neutralised)
+    if (k === 'lowest_rate') return false;
+    // competitive_rate is stated in the intro when within the threshold
+    if (k === 'competitive_rate' && rateDiffBp !== null && rateDiffBp > 0 && rateDiffBp <= 10) return false;
     return true;
   });
-  var reasonLines = reasonKeys.map(function(k) {
-    return REASON_TEXT[k] ? '- ' + selName + ' ' + REASON_TEXT[k] + '.' : null;
+
+  var reasonSentences = reasonKeys.map(function(k) {
+    var tmpl = REASON_SENTENCES[k];
+    return tmpl ? tmpl.replace(/\{name\}/g, selName) : null;
   }).filter(Boolean);
 
-  // ── Assemble ────────────────────────────────────────────────────────────────
+  var reasonPara = reasonSentences.join(' ');
+
+  // ── Assemble output ────────────────────────────────────────────────────────
   var out = [];
   out.push(header);
   out.push('');
-  optionsBlock.forEach(function(l){ out.push(l); });
+  optLines.forEach(function(l){ out.push(l); });
   out.push('');
   out.push('LOAN STRUCTURE');
+  out.push('');
   out.push(structureText);
   out.push('');
   out.push('LENDER SELECTION \u2014 ' + selName.toUpperCase());
-  out.push(nSent + ' ' + rateIntro);
-  if (reasonLines.length) {
-    out.push('');
-    reasonLines.forEach(function(l){ out.push(l); });
-  }
+  out.push('');
+
+  // Lender selection paragraph: rate intro + reasons in one flowing block
+  var selectionPara = nSent + ' ' + rateIntro;
+  if (reasonPara) selectionPara += ' ' + reasonPara;
+  out.push(selectionPara);
+
   if (extra) {
     out.push('');
     out.push('ADDITIONAL NOTES');
+    out.push('');
     out.push(extra);
   }
 
@@ -661,7 +701,6 @@ function doClear() {
   parsedOptions=[]; parsedSelected=null; parsedDate='';
 }
 
-// ─── Util ──────────────────────────────────────────────────────────────────────
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 </script>
 </body>
