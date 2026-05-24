@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>eSign / VOI SMS Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0b0f1a;
+      --surface:      #111827;
+      --surface-2:    #1a2236;
+      --border:       #1f2d45;
+      --border-light: #2a3a55;
+      --accent:       #e8402a;
+      --accent-hover: #ff5740;
+      --gold:         #d4a843;
+      --text:         #f0f4ff;
+      --text-muted:   #7a8fa8;
+      --text-dim:     #4a5e78;
+      --green:        #22c55e;
+      --green-bg:     rgba(34,197,94,0.08);
+      --amber:        #f59e0b;
+      --amber-bg:     rgba(245,158,11,0.08);
+      --blue:         #3b82f6;
+      --blue-bg:      rgba(59,130,246,0.08);
+      --radius:       10px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .topbar {
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .topbar a {
+      color: var(--text-muted);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color .15s;
+    }
+    .topbar a:hover { color: var(--text); }
+    .topbar .sep { color: var(--text-dim); }
+    .badge {
+      background: var(--amber-bg);
+      color: var(--amber);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      padding: 2px 7px;
+      text-transform: uppercase;
+    }
+
+    .hero {
+      padding: 40px 24px 0;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -.3px;
+      line-height: 1.25;
+      margin-bottom: 6px;
+    }
+    .hero p { color: var(--text-muted); font-size: 14px; }
+
+    .journey {
+      max-width: 760px;
+      margin: 28px auto 0;
+      padding: 0 24px;
+    }
+    .journey-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+    .journey-steps {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .j-step {
+      flex: 1;
+      padding: 9px 12px;
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: center;
+      border-right: 1px solid var(--border);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .j-step:last-child { border-right: none; }
+    .j-step.active {
+      background: rgba(232,64,42,0.12);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .j-step.done { color: var(--text-muted); }
+
+    .main {
+      max-width: 760px;
+      margin: 28px auto 60px;
+      padding: 0 24px;
+      display: grid;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .card-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .card-body { padding: 18px; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 13px; font-weight: 500; color: var(--text); }
+    .field .hint { font-size: 12px; color: var(--text-muted); margin-top: -3px; }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="time"] {
+      background: var(--surface-2);
+      border: 1px solid var(--border-light);
+      border-radius: 7px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      padding: 10px 13px;
+      outline: none;
+      transition: border-color .15s;
+      width: 100%;
+      color-scheme: dark;
+    }
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    input[type="time"]:focus { border-color: var(--accent); }
+    input[type="text"]::placeholder { color: var(--text-dim); }
+
+    /* ── MESSAGE TYPE SWITCHER ── */
+    .type-switcher { display: flex; gap: 8px; }
+    .type-btn {
+      flex: 1;
+      padding: 11px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      background: var(--surface-2);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all .15s;
+    }
+    .type-btn:hover { color: var(--text); border-color: #3a4f6a; }
+    .type-btn.active-first {
+      background: var(--blue-bg);
+      border-color: rgba(59,130,246,0.4);
+      color: var(--blue);
+      font-weight: 600;
+    }
+    .type-btn.active-reminder {
+      background: rgba(212,168,67,0.08);
+      border-color: rgba(212,168,67,0.35);
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    /* ── REMINDER DATE/TIME ── */
+    .reminder-fields {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+    .reminder-fields.visible { display: flex; }
+    .reminder-row { display: flex; gap: 10px; }
+    .reminder-row .field { flex: 1; }
+
+    /* ── SECTION HEADERS ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .section-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .clear-link {
+      font-size: 12px;
+      color: var(--text-dim);
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      transition: color .15s;
+    }
+    .clear-link:hover { color: var(--text-muted); }
+
+    /* ── TOGGLE ITEMS ── */
+    .toggle-group { display: flex; flex-direction: column; gap: 8px; }
+    .toggle-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      user-select: none;
+    }
+    .toggle-item:hover { background: #1e2d42; }
+    .toggle-item.sel-blue { background: var(--blue-bg); border-color: rgba(59,130,246,0.4); }
+    .toggle-item.sel-green { background: var(--green-bg); border-color: rgba(34,197,94,0.4); }
+
+    .toggle-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--border-light);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color .15s, background .15s;
+    }
+    .toggle-item.sel-blue .toggle-dot { border-color: var(--blue); background: var(--blue); }
+    .toggle-item.sel-green .toggle-dot { border-color: var(--green); background: var(--green); }
+    .toggle-dot::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: white;
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity .1s;
+    }
+    .toggle-item.sel-blue .toggle-dot::after,
+    .toggle-item.sel-green .toggle-dot::after { opacity: 1; }
+
+    .toggle-info { flex: 1; }
+    .toggle-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .delivery-pill {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid;
+    }
+    .pill-email  { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.3); color: #6baaff; }
+    .pill-sms    { background: rgba(34,197,94,0.1);  border-color: rgba(34,197,94,0.3);  color: #4ade80; }
+    .pill-unknown{ background: rgba(122,143,168,0.1);border-color: rgba(122,143,168,0.3);color: var(--text-muted); }
+    .toggle-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── BUTTONS ── */
+    .btn-row { display: flex; gap: 10px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 11px 20px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background .15s, transform .1s;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text-muted);
+      border: 1px solid var(--border-light);
+    }
+    .btn-secondary:hover { color: var(--text); border-color: #3a4f6a; }
+
+    /* ── OUTPUT ── */
+    .output-card { display: none; }
+    .output-card.visible { display: block; }
+    .sms-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 80px;
+    }
+    .char-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .char-count { font-size: 12px; font-weight: 600; }
+    .char-count.ok   { color: var(--green); }
+    .char-count.warn { color: var(--amber); }
+    .char-count.over { color: var(--accent); }
+    .char-bar-wrap {
+      flex: 1;
+      max-width: 200px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 0 12px;
+    }
+    .char-bar { height: 100%; border-radius: 2px; transition: width .3s, background .3s; }
+
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-light);
+      border-radius: 7px;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .copy-btn:hover { color: var(--text); border-color: #3a4f6a; }
+    .copy-btn.copied {
+      background: var(--green-bg);
+      border-color: rgba(34,197,94,0.35);
+      color: var(--green);
+    }
+
+    /* ── NOTICE ── */
+    .notice {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      background: rgba(245,158,11,0.07);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 12px;
+      color: #c9a060;
+      line-height: 1.5;
+    }
+    .notice-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+    @media (max-width: 520px) {
+      .j-step { display: none; }
+      .j-step.active { display: block; flex: unset; width: 100%; }
+      .btn-row { flex-direction: column; }
+      .type-switcher { flex-direction: column; }
+      .reminder-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="https://aussiecoppolelli.github.io/broker-toolkit/index.html">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    Dashboard
+  </a>
+  <span class="sep">·</span>
+  <span>eSign / VOI SMS Generator</span>
+  <span style="margin-left:auto"><span class="badge">Beta</span></span>
+</div>
+
+<div class="hero">
+  <h1>eSign / VOI SMS Generator</h1>
+  <p>Generate a ready-to-send SMS when digital ID or eSign forms have been sent to a client.</p>
+</div>
+
+<div class="journey">
+  <div class="journey-label">Client Journey — Where We Are</div>
+  <div class="journey-steps">
+    <div class="j-step done">1 · First Contact</div>
+    <div class="j-step active">2 · Submission Prep</div>
+    <div class="j-step">2a · Submission</div>
+    <div class="j-step">3 · Approval</div>
+    <div class="j-step">4 · Settlement</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Message type -->
+  <div class="card">
+    <div class="card-head">Message Type</div>
+    <div class="card-body">
+      <div class="type-switcher">
+        <button class="type-btn active-first" id="btn-first" onclick="setType('first')">
+          <span>📤</span> First send
+        </button>
+        <button class="type-btn" id="btn-reminder" onclick="setType('reminder')">
+          <span>🔁</span> Reminder
+        </button>
+      </div>
+
+      <div class="reminder-fields" id="reminder-fields">
+        <div style="font-size:12px;color:var(--text-muted);">When was the original message sent?</div>
+        <div class="reminder-row">
+          <div class="field">
+            <label for="sentDate">Date</label>
+            <input type="date" id="sentDate" />
+          </div>
+          <div class="field">
+            <label for="sentTime">Time <span style="color:var(--text-dim);font-weight:400">(optional)</span></label>
+            <input type="time" id="sentTime" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client name -->
+  <div class="card">
+    <div class="card-head">Client Details</div>
+    <div class="card-body">
+      <div class="field">
+        <label for="clientName">Client first name <span style="color:var(--text-dim);font-weight:400">(optional)</span></label>
+        <div class="hint">If added, the SMS will open with "Hi [Name],"</div>
+        <input type="text" id="clientName" placeholder="e.g. Sarah" maxlength="40" />
+      </div>
+    </div>
+  </div>
+
+  <!-- eSign -->
+  <div class="card">
+    <div class="card-head">AOL / eSign Form</div>
+    <div class="card-body">
+      <div class="section-header">
+        <div class="section-title">Select the form sent — or leave blank if none</div>
+        <span class="clear-link" onclick="clearGroup('esign')">Clear</span>
+      </div>
+      <div class="toggle-group" id="esign-group">
+        <div class="toggle-item" data-group="esign" data-value="anz-esign" onclick="selectItem(this)">
+          <div class="toggle-dot"></div>
+          <div class="toggle-info">
+            <div class="toggle-name">ANZ eSign <span class="delivery-pill pill-email">Email</span></div>
+            <div class="toggle-desc">ANZ-specific eSign form sent via email</div>
+          </div>
+        </div>
+        <div class="toggle-item" data-group="esign" data-value="esign" onclick="selectItem(this)">
+          <div class="toggle-dot"></div>
+          <div class="toggle-info">
+            <div class="toggle-name">eSign <span class="delivery-pill pill-email">Email</span></div>
+            <div class="toggle-desc">Standard eSign request sent via email</div>
+          </div>
+        </div>
+        <div class="toggle-item" data-group="esign" data-value="docusign" onclick="selectItem(this)">
+          <div class="toggle-dot"></div>
+          <div class="toggle-info">
+            <div class="toggle-name">DocuSign <span class="delivery-pill pill-email">Email</span></div>
+            <div class="toggle-desc">DocuSign envelope sent via email</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VOI -->
+  <div class="card">
+    <div class="card-head">VOI (Verification of Identity)</div>
+    <div class="card-body">
+      <div class="section-header">
+        <div class="section-title">Select the VOI sent — or leave blank if none</div>
+        <span class="clear-link" onclick="clearGroup('voi')">Clear</span>
+      </div>
+      <div class="toggle-group" id="voi-group">
+        <div class="toggle-item" data-group="voi" data-value="nextgenid" onclick="selectItem(this)">
+          <div class="toggle-dot"></div>
+          <div class="toggle-info">
+            <div class="toggle-name">NextGenID <span class="delivery-pill pill-sms">SMS</span></div>
+            <div class="toggle-desc">Digital identity verification — link sent via SMS</div>
+          </div>
+        </div>
+        <div class="toggle-item" data-group="voi" data-value="sunverify" onclick="selectItem(this)">
+          <div class="toggle-dot"></div>
+          <div class="toggle-info">
+            <div class="toggle-name">SunVerify <span class="delivery-pill pill-unknown">Check delivery</span></div>
+            <div class="toggle-desc">Suncorp VOI verification form</div>
+          </div>
+        </div>
+        <div class="toggle-item" data-group="voi" data-value="anz-everify" onclick="selectItem(this)">
+          <div class="toggle-dot"></div>
+          <div class="toggle-info">
+            <div class="toggle-name">ANZ eVerify <span class="delivery-pill pill-unknown">Check delivery</span></div>
+            <div class="toggle-desc">ANZ electronic verification of identity</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notice" id="unknown-notice" style="display:none">
+    <div class="notice-icon">⚠️</div>
+    <div>SunVerify and ANZ eVerify delivery methods are not yet confirmed. The generated message will reference them by name only — update once you know how they are delivered.</div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="generate()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Generate SMS
+    </button>
+    <button class="btn btn-secondary" onclick="clearAll()">Clear all</button>
+  </div>
+
+  <div class="card output-card" id="output-card">
+    <div class="card-head">Generated SMS</div>
+    <div class="card-body">
+      <div class="sms-box" id="sms-output"></div>
+      <div class="char-row">
+        <span class="char-count" id="char-count"></span>
+        <div class="char-bar-wrap">
+          <div class="char-bar" id="char-bar"></div>
+        </div>
+        <button class="copy-btn" id="copy-btn" onclick="copySMS()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy to clipboard
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const selections = { esign: null, voi: null };
+  let messageType = 'first';
+
+  // ── TYPE SWITCHER ──
+  function setType(type) {
+    messageType = type;
+    document.getElementById('btn-first').className    = 'type-btn' + (type === 'first'    ? ' active-first'    : '');
+    document.getElementById('btn-reminder').className = 'type-btn' + (type === 'reminder' ? ' active-reminder' : '');
+    const rf = document.getElementById('reminder-fields');
+    type === 'reminder' ? rf.classList.add('visible') : rf.classList.remove('visible');
+    // Pre-fill date to today if empty
+    if (type === 'reminder' && !document.getElementById('sentDate').value) {
+      document.getElementById('sentDate').value = new Date().toISOString().split('T')[0];
+    }
+  }
+
+  // ── FORM SELECTION ──
+  function selectItem(el) {
+    const group = el.dataset.group;
+    const value = el.dataset.value;
+    const selClass = group === 'esign' ? 'sel-blue' : 'sel-green';
+    document.querySelectorAll(`[data-group="${group}"]`).forEach(item => {
+      item.classList.remove('sel-blue', 'sel-green');
+    });
+    if (selections[group] === value) {
+      selections[group] = null;
+    } else {
+      selections[group] = value;
+      el.classList.add(selClass);
+    }
+    updateNotice();
+  }
+
+  function clearGroup(group) {
+    document.querySelectorAll(`[data-group="${group}"]`).forEach(item => {
+      item.classList.remove('sel-blue', 'sel-green');
+    });
+    selections[group] = null;
+    updateNotice();
+  }
+
+  function updateNotice() {
+    const unknowns = ['sunverify', 'anz-everify'];
+    document.getElementById('unknown-notice').style.display =
+      unknowns.includes(selections.voi) ? 'flex' : 'none';
+  }
+
+  // ── LABELS ──
+  const esignLabels = {
+    'anz-esign': 'ANZ eSign request (email)',
+    'esign':     'eSign request (email)',
+    'docusign':  'DocuSign request (email)',
+  };
+  const voiLabels = {
+    'nextgenid':   'NextGenID (SMS)',
+    'sunverify':   'SunVerify',
+    'anz-everify': 'ANZ eVerify',
+  };
+
+  // ── FORMAT DATE/TIME ──
+  function formatSentTime(dateStr, timeStr) {
+    if (!dateStr) return null;
+
+    const today     = new Date();
+    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+    const sent      = new Date(dateStr + 'T00:00:00');
+
+    const sameDay = (a, b) =>
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth()    === b.getMonth()    &&
+      a.getDate()     === b.getDate();
+
+    let dayStr;
+    if (sameDay(sent, today)) {
+      dayStr = 'earlier today';
+    } else if (sameDay(sent, yesterday)) {
+      dayStr = 'yesterday';
+    } else {
+      const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      // If within last 7 days, use day name; otherwise use date
+      const diffMs   = today - sent;
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+      if (diffDays < 7) {
+        dayStr = days[sent.getDay()];
+      } else {
+        dayStr = `${sent.getDate()} ${months[sent.getMonth()]}`;
+      }
+    }
+
+    if (timeStr) {
+      // Format 14:30 -> 2:30pm
+      const [h, m]   = timeStr.split(':').map(Number);
+      const ampm     = h >= 12 ? 'pm' : 'am';
+      const hour12   = h % 12 || 12;
+      const minStr   = m === 0 ? '' : `:${String(m).padStart(2,'0')}`;
+      const timeFormatted = `${hour12}${minStr}${ampm}`;
+      return dayStr === 'earlier today' ? `at ${timeFormatted} today` : `${dayStr} at ${timeFormatted}`;
+    }
+
+    if (dayStr === 'earlier today' || dayStr === 'yesterday') return dayStr;
+    return `on ${dayStr}`;
+  }
+
+  // ── GENERATE ──
+  function generate() {
+    const name  = document.getElementById('clientName').value.trim();
+    const esign = selections.esign;
+    const voi   = selections.voi;
+
+    if (!esign && !voi) {
+      alert('Please select at least one eSign form or VOI type before generating.');
+      return;
+    }
+
+    if (messageType === 'reminder' && !document.getElementById('sentDate').value) {
+      alert('Please enter the date the original message was sent.');
+      return;
+    }
+
+    const parts = [];
+    if (esign) parts.push(esignLabels[esign]);
+    if (voi)   parts.push(voiLabels[voi]);
+
+    const vowels  = ['a','e','i','o','u'];
+    const article = vowels.includes(parts[0].charAt(0).toLowerCase()) ? 'An' : 'A';
+    const formsStr = parts.length === 2
+      ? `${article} ${parts[0]} and ${parts[1]}`
+      : `${article} ${parts[0]}`;
+    const verb     = parts.length === 1 ? 'has' : 'have';
+    const greeting = name ? `Hi ${name},` : 'Hi,';
+
+    let body;
+    if (messageType === 'first') {
+      body = `${formsStr} ${verb} been sent to you. Please complete this ASAP as it is required prior to lender submission.`;
+    } else {
+      const dateStr = document.getElementById('sentDate').value;
+      const timeStr = document.getElementById('sentTime').value;
+      const when    = formatSentTime(dateStr, timeStr);
+      // Lowercase only the article (first char), keep the rest of formsStr as-is
+      const formsLower = formsStr.charAt(0).toLowerCase() + formsStr.slice(1);
+      body = `Reminder — ${formsLower} ${verb} been sent to you ${when}. Please complete this ASAP as it is required prior to lender submission.`;
+    }
+
+    const msg = `${greeting}\n${body}\nJosh - Aussie\nPlease do not reply.`;
+
+    document.getElementById('sms-output').textContent = msg;
+
+    const len     = msg.length;
+    const countEl = document.getElementById('char-count');
+    const barEl   = document.getElementById('char-bar');
+    const pct     = Math.min((len / 300) * 100, 100);
+
+    countEl.textContent = `${len} / 300 characters`;
+    countEl.className   = 'char-count ' + (len <= 220 ? 'ok' : len <= 280 ? 'warn' : 'over');
+    barEl.style.width      = pct + '%';
+    barEl.style.background = len <= 220 ? 'var(--green)' : len <= 280 ? 'var(--amber)' : 'var(--accent)';
+
+    const card = document.getElementById('output-card');
+    card.classList.add('visible');
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    const copyBtn = document.getElementById('copy-btn');
+    copyBtn.classList.remove('copied');
+    copyBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy to clipboard`;
+  }
+
+  function copySMS() {
+    const text = document.getElementById('sms-output').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copy-btn');
+      btn.classList.add('copied');
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy to clipboard`;
+      }, 2500);
+    });
+  }
+
+  function clearAll() {
+    document.getElementById('clientName').value = '';
+    document.getElementById('sentDate').value   = '';
+    document.getElementById('sentTime').value   = '';
+    clearGroup('esign');
+    clearGroup('voi');
+    setType('first');
+    document.getElementById('output-card').classList.remove('visible');
+    document.getElementById('unknown-notice').style.display = 'none';
+  }
+</script>
+</body>
+</html>
