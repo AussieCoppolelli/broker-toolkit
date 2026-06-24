@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loan Submission Email Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0f14; --surface: #161920; --surface-2: #1e2230; --border: #2a2f3f;
+      --accent: #c8a96e; --accent-soft: rgba(200,169,110,0.12); --accent-glow: rgba(200,169,110,0.25);
+      --green: #4caf82; --green-soft: rgba(76,175,130,0.12);
+      --text: #e8eaf0; --text-muted: #7c8299; --text-dim: #4a5168;
+      --radius: 12px; --radius-sm: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; line-height: 1.6; }
+    nav { padding: 18px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: var(--surface); }
+    nav a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; }
+    nav a:hover { color: var(--accent); }
+    nav .sep { color: var(--text-dim); font-size: 12px; }
+    nav .current { color: var(--text); font-size: 13px; font-weight: 500; }
+    .nav-live { background: rgba(76,175,130,0.15); border: 1px solid rgba(76,175,130,0.35); color: #4caf82; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; margin-left: 4px; }
+    header { padding: 52px 32px 40px; max-width: 780px; margin: 0 auto; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; background: var(--green-soft); border: 1px solid rgba(76,175,130,0.3); color: var(--green); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; margin-bottom: 18px; }
+    header h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px,4vw,40px); font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 10px; }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--text-muted); font-size: 15px; max-width: 520px; }
+    .time-pill { display: inline-flex; align-items: center; gap: 7px; background: var(--accent-soft); border: 1px solid rgba(200,169,110,0.3); color: var(--accent); font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 20px; margin-top: 14px; }
+    .layout { max-width: 780px; margin: 0 auto; padding: 0 32px 80px; display: flex; flex-direction: column; gap: 24px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
+    .card-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+    .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .timeline { display: flex; align-items: flex-start; overflow: hidden; }
+    .timeline-step { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; min-width: 0; }
+    .timeline-step.done::after { content: ''; position: absolute; top: 15px; left: calc(50% + 16px); right: calc(-50% + 16px); height: 2px; background: var(--accent); z-index: 0; }
+    .timeline-step.active::after, .timeline-step.future:not(.tl-end)::after { content: ''; position: absolute; top: 15px; left: calc(50% + 16px); right: calc(-50% + 16px); height: 2px; background: repeating-linear-gradient(to right,var(--border) 0,var(--border) 5px,transparent 5px,transparent 9px); z-index: 0; }
+    .timeline-step.last-milestone::after { right: -10px; background: repeating-linear-gradient(to right,var(--border) 0,var(--border) 5px,transparent 5px,transparent 9px); }
+    .timeline-dot { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; position: relative; z-index: 1; flex-shrink: 0; color: var(--text-dim); }
+    .timeline-step.done .timeline-dot { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+    .timeline-step.active .timeline-dot { background: var(--accent); border-color: var(--accent); color: #0d0f14; box-shadow: 0 0 0 4px var(--accent-glow); }
+    .timeline-step.future .timeline-dot { opacity: 0.45; }
+    .timeline-label { font-size: 10px; color: var(--text-dim); margin-top: 8px; text-align: center; line-height: 1.3; font-weight: 500; }
+    .timeline-step.done .timeline-label { color: var(--accent); }
+    .timeline-step.active .timeline-label { color: var(--accent); font-weight: 700; }
+    .timeline-step.future .timeline-label { opacity: 0.45; }
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+    label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 7px; }
+    input[type="text"] { width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 11px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
+    input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    input[type="text"]::placeholder { color: var(--text-dim); }
+    .survey-row { display: flex; align-items: center; gap: 14px; }
+    .switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; inset: 0; background: var(--surface-2); border: 1px solid var(--border); border-radius: 24px; cursor: pointer; transition: all 0.2s; }
+    .slider::before { content: ''; position: absolute; width: 16px; height: 16px; background: var(--text-muted); border-radius: 50%; top: 3px; left: 3px; transition: all 0.2s; }
+    .switch input:checked + .slider { background: var(--accent-soft); border-color: var(--accent); }
+    .switch input:checked + .slider::before { background: var(--accent); transform: translateX(20px); }
+    .survey-label { font-size: 14px; color: var(--text); }
+    .survey-label small { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .generate-btn { width: 100%; background: var(--accent); border: none; border-radius: var(--radius); padding: 16px; color: #0d0f14; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.03em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 9px; transition: all 0.2s; box-shadow: 0 4px 24px var(--accent-glow); }
+    .generate-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 32px var(--accent-glow); filter: brightness(1.07); }
+    .clear-btn { width: 100%; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); padding: 13px; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; margin-top: -8px; }
+    .clear-btn:hover { border-color: #e05c5c; color: #e05c5c; background: rgba(224,92,92,0.06); }
+    #output-section { display: none; }
+    .output-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--text); margin-bottom: 16px; }
+    .copy-btn { width: 100%; margin-top: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 13px 16px; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: all 0.18s; }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .copy-btn.copied { border-color: var(--green); color: var(--green); background: var(--green-soft); }
+    #email-preview { background: #ffffff; border-radius: var(--radius); overflow: hidden; }
+    .email-top-bar { background: #1a1f2e; padding: 14px 24px; display: flex; align-items: center; gap: 8px; }
+    .email-top-bar span { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ff5f57; } .dot-yellow { background: #febc2e; } .dot-green { background: #28c840; }
+    #email-body { padding: 36px 40px; }
+    .subject-lines { display: flex; flex-direction: column; gap: 8px; }
+    .subject-pill { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; transition: all 0.18s; }
+    .subject-pill:hover { border-color: var(--accent); color: var(--accent); }
+    .subject-pill .copy-icon { font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
+    .subject-pill:hover .copy-icon { color: var(--accent); }
+    @media (max-width: 600px) { nav, header, .layout { padding-left: 18px; padding-right: 18px; } header { padding-top: 32px; } #email-body { padding: 24px 20px; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="https://aussiecoppolelli.github.io/broker-toolkit/index.html">← Dashboard</a>
+  <span class="sep">·</span>
+  <span class="current">Loan Submission Email Generator</span>
+  <span class="nav-live">Live</span>
+</nav>
+
+<header>
+  <div class="badge">Live</div>
+  <h1>Loan <span>Submission</span> Email Generator</h1>
+  <p>Notify your client their application is in — set clear expectations for what comes next.</p>
+  <div class="time-pill" id="time-pill">Detecting time...</div>
+</header>
+
+<div class="layout">
+  <div class="card">
+    <div class="card-title">Client Journey — Where We Are</div>
+    <div class="timeline" id="ui-timeline"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Client Details</div>
+    <div class="field">
+      <label>Client First Name</label>
+      <input type="text" id="client-name" placeholder="e.g. Sarah" oninput="autoCapitalise(this)" />
+    </div>
+    <div class="field">
+      <label>Loan Type <span style="text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span></label>
+      <input type="text" id="loan-type" placeholder="e.g. home loan, refinance, investment loan" />
+    </div>
+    <div class="field">
+      <label>Lender Name <span style="text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span></label>
+      <input type="text" id="lender-name" placeholder="e.g. ANZ, CBA, Westpac" oninput="autoCapitalise(this)" />
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Feedback Survey</div>
+    <div class="survey-row">
+      <label class="switch"><input type="checkbox" id="include-survey" checked /><span class="slider"></span></label>
+      <div class="survey-label">Include survey request<small>Asks client to complete the "How are we doing so far?" survey</small></div>
+    </div>
+  </div>
+
+  <button class="generate-btn" onclick="generateEmail()">Generate Email</button>
+  <button class="clear-btn" onclick="clearFields()">Clear Fields</button>
+
+  <div id="output-section">
+    <div class="output-title">Generated Email</div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Suggested Subject Lines</div>
+      <div class="subject-lines" id="subject-lines"></div>
+    </div>
+    <div id="email-preview">
+      <div class="email-top-bar"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+      <div id="email-body"></div>
+    </div>
+    <button class="copy-btn" id="copy-btn" onclick="copyEmail()">Copy email to clipboard</button>
+  </div>
+</div>
+
+<script>
+  // ── Aussie brand palette (used in email only, not UI chrome) ──
+  const AUSSIE_PURPLE      = '#2d1a6e';
+  const AUSSIE_PURPLE_SOFT = '#eeebf8'; // very light purple tint
+  const AUSSIE_PURPLE_MID  = '#4a3a8a'; // medium purple for body text on tinted bg
+  const AUSSIE_YELLOW      = '#f5c800';
+  const AUSSIE_YELLOW_SOFT = '#fffbe6'; // light yellow tint
+
+  const MILESTONES = [
+    { label:'Initial\nConsult',  abbr:'IC', emoji:null },
+    { label:'Video\nCall',       abbr:'VC', emoji:null },
+    { label:'Loan\nSubmission',  abbr:'LS', emoji:'📋' },
+    { label:'Formal\nApproval',  abbr:'FA', emoji:'🎉' },
+    { label:'Settlement',        abbr:'ST', emoji:'🏁' },
+    { label:'1 Month\nCheck-In', abbr:'1M', emoji:'📅' },
+    { label:'1 Year\nCheck-In',  abbr:'1Y', emoji:'🏠' },
+  ];
+  const ACTIVE = 2;
+
+  function buildUITimeline() {
+    const wrap = document.getElementById('ui-timeline');
+    let html = '';
+    MILESTONES.forEach((m, i) => {
+      const isLast = i === MILESTONES.length - 1;
+      let cls = i < ACTIVE ? 'done' : i === ACTIVE ? 'active' : 'future';
+      if (isLast) cls += ' last-milestone tl-end';
+      html += `<div class="timeline-step ${cls}">
+        <div class="timeline-dot" style="${(i >= ACTIVE && m.emoji) ? 'font-size:15px;' : ''}">${i < ACTIVE ? '&#10003;' : (m.emoji || m.abbr)}</div>
+        <div class="timeline-label">${m.label.replace('\n', '<br/>')}</div>
+      </div>`;
+    });
+    wrap.innerHTML = html;
+  }
+
+  /* ── Journey graphic → JPEG (original gold palette, larger canvas) ── */
+  function buildJourneyJpeg(callback) {
+    const dotR = 28;
+    const stepW = 175;
+    const padX = 70;
+    const W = padX * 2 + stepW * (MILESTONES.length - 1);
+    const H = 260;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const ctx = c.getContext('2d');
+
+    // White base (JPEG needs explicit bg)
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    // Card background
+    ctx.fillStyle = '#f7f8fc';
+    roundRect(ctx, 0, 0, W, H, 18);
+    ctx.fill();
+
+    // Border
+    ctx.strokeStyle = '#e0e4f0';
+    ctx.lineWidth = 2.5;
+    roundRect(ctx, 1.25, 1.25, W - 2.5, H - 2.5, 18);
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '700 22px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\uD83D\uDCCD YOUR HOME LOAN JOURNEY', W / 2, 40);
+
+    const dotY = 130;
+
+    MILESTONES.forEach((m, i) => {
+      const x = padX + i * stepW;
+      const isDone   = i < ACTIVE;
+      const isActive = i === ACTIVE;
+      const isFuture = i > ACTIVE;
+
+      // Connector line
+      if (i > 0) {
+        const prevX = padX + (i - 1) * stepW;
+        ctx.globalAlpha = isFuture ? 0.35 : 1;
+        ctx.strokeStyle = i <= ACTIVE ? '#c8a96e' : '#d0d4e0';
+        ctx.lineWidth = 4;
+        ctx.setLineDash(isFuture ? [8, 8] : []);
+        ctx.beginPath();
+        ctx.moveTo(prevX + dotR, dotY);
+        ctx.lineTo(x - dotR, dotY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+      }
+
+      ctx.globalAlpha = isFuture ? 0.4 : 1;
+
+      // Dot fill
+      ctx.fillStyle = isDone || isActive ? '#fdf5e8' : '#f0f1f5';
+      ctx.beginPath();
+      ctx.arc(x, dotY, dotR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Dot border
+      ctx.strokeStyle = isDone || isActive ? '#c8a96e' : '#d0d4e0';
+      ctx.lineWidth = isActive ? 4 : 2.5;
+      ctx.beginPath();
+      ctx.arc(x, dotY, dotR, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Active outer ring — gold glow
+      if (isActive) {
+        ctx.strokeStyle = 'rgba(200,169,110,0.35)';
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.arc(x, dotY, dotR + 8, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Dot text/emoji
+      ctx.fillStyle = isDone || isActive ? '#c8a96e' : '#9ca3af';
+      ctx.font = isDone ? '700 24px Arial' : (m.emoji ? '26px Arial' : '700 16px Arial');
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(isDone ? '\u2713' : (m.emoji || m.abbr), x, dotY);
+
+      // Label
+      const lClr = isDone ? '#c8a96e' : isActive ? '#b8860a' : '#9ca3af';
+      ctx.fillStyle = lClr;
+      ctx.font = isActive ? '700 17px Arial' : '500 16px Arial';
+      ctx.textBaseline = 'top';
+      const lines = m.label.split('\n');
+      lines.forEach((ln, li) => ctx.fillText(ln, x, dotY + dotR + 10 + li * 21));
+
+      ctx.globalAlpha = 1;
+    });
+
+    callback(c.toDataURL('image/jpeg', 0.95));
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
+
+  /* ── Outlook-safe coloured block ── */
+  function block(bg, borderSide, borderColor, labelColor, labelText, bodyColor, bodyHtml) {
+    const label = `<strong style="display:block;color:${labelColor};font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:7px;">${labelText}</strong>`;
+    const body  = `<span style="color:${bodyColor};font-size:14px;font-family:Arial,sans-serif;line-height:1.75;">${bodyHtml}</span>`;
+    const inner = `background-color:${bg};padding:15px 18px;font-family:Arial,Helvetica,sans-serif;border-radius:8px;`;
+    if (borderSide === 'left') {
+      return (
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:14px 0;">` +
+          `<tr>` +
+            `<td width="4" bgcolor="${borderColor}" style="width:4px;background-color:${borderColor};border-radius:4px 0 0 4px;font-size:0;line-height:0;">&nbsp;</td>` +
+            `<td bgcolor="${bg}" style="${inner}border-radius:0 8px 8px 0;">${label}${body}</td>` +
+          `</tr>` +
+        `</table>`
+      );
+    }
+    return (
+      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:14px 0;border:1px solid ${borderColor};border-radius:8px;">` +
+        `<tr><td bgcolor="${bg}" style="${inner}">${label}${body}</td></tr>` +
+      `</table>`
+    );
+  }
+
+  function getTimeOfDay() { const h = new Date().getHours(); return h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening'; }
+  function updateTimePill() {
+    const t = getTimeOfDay(), ico = { Morning:'🌅', Afternoon:'☀️', Evening:'🌙' };
+    document.getElementById('time-pill').textContent = `${ico[t]} Auto-detected: Good ${t}`;
+  }
+  function autoCapitalise(el) { if (el.value.length) el.value = el.value[0].toUpperCase() + el.value.slice(1); }
+
+  function clearFields() {
+    document.getElementById('client-name').value = '';
+    document.getElementById('loan-type').value = '';
+    document.getElementById('lender-name').value = '';
+    document.getElementById('include-survey').checked = true;
+    document.getElementById('output-section').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function generateEmail() {
+    const name      = document.getElementById('client-name').value.trim() || 'there';
+    const loanRaw   = document.getElementById('loan-type').value.trim();
+    const loan      = loanRaw || 'loan';
+    const loanCap   = loanRaw ? loanRaw[0].toUpperCase() + loanRaw.slice(1) : 'Loan';
+    const lenderRaw = document.getElementById('lender-name').value.trim();
+    const lender    = lenderRaw ? lenderRaw : 'the lender';
+    const lenderCap = lenderRaw ? lenderRaw[0].toUpperCase() + lenderRaw.slice(1) : 'the lender';
+    const time      = getTimeOfDay();
+    const survey    = document.getElementById('include-survey').checked;
+
+    buildJourneyJpeg(function(jpegSrc) {
+
+      // ── Journey image ──
+      const journeyImg =
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:20px 0 6px;">` +
+          `<tr><td><img src="${jpegSrc}" width="100%" style="display:block;border-radius:10px;" alt="Your Home Loan Journey" /></td></tr>` +
+        `</table>`;
+
+      // ── Confirmation header: Aussie purple left-border block ──
+      const submissionHeader =
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:0 0 18px;">` +
+          `<tr>` +
+            `<td width="5" bgcolor="${AUSSIE_PURPLE}" style="width:5px;background-color:${AUSSIE_PURPLE};border-radius:4px 0 0 4px;font-size:0;line-height:0;">&nbsp;</td>` +
+            `<td bgcolor="${AUSSIE_PURPLE_SOFT}" style="background-color:${AUSSIE_PURPLE_SOFT};border-radius:0 8px 8px 0;padding:15px 20px;font-family:Arial,Helvetica,sans-serif;">` +
+              `<span style="display:block;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${AUSSIE_PURPLE};margin-bottom:5px;">Application Submitted</span>` +
+              `<span style="display:block;font-size:17px;font-weight:700;color:#1a1030;font-family:Arial,sans-serif;line-height:1.3;">` +
+                (lenderRaw
+                  ? `Your ${loanCap} has been lodged with ${lenderCap}.`
+                  : `Your ${loanCap} application is now with the lender.`) +
+              `</span>` +
+            `</td>` +
+          `</tr>` +
+        `</table>`;
+
+      // ── Info blocks — Aussie purple labels, warm tinted backgrounds ──
+      const whatsNowBlock = block(
+        AUSSIE_PURPLE_SOFT, 'left', AUSSIE_PURPLE,
+        AUSSIE_PURPLE, 'What happens now?',
+        AUSSIE_PURPLE_MID,
+        `${lenderCap === 'the lender' ? 'The lender\'s' : lenderCap + '\'s'} credit team will now assess your application — they'll look at your income, expenses, liabilities, and the property itself. You don't need to do anything at this stage. I'll be monitoring things closely and will reach out the moment there's any movement.`
+      );
+
+      const slaBlock = block(
+        '#f0f4ff', 'all', '#c8d0f0',
+        AUSSIE_PURPLE, 'How long will it take?',
+        '#1a1a4a',
+        `Most lenders come back within <strong style="color:#1a1a4a;">3–10 business days</strong>, though it can vary depending on complexity and how busy their credit team is. Some lenders are quicker — particularly those with a more digital process. Either way, I'll keep you in the loop throughout. No news is usually good news, but I'll always flag it if something needs attention.`
+      );
+
+      const docsBlock = block(
+        AUSSIE_YELLOW_SOFT, 'all', '#e8d060',
+        AUSSIE_PURPLE, 'We may need a little more from you',
+        '#3a2e00',
+        `Occasionally lenders request additional documents during assessment — things like updated payslips, recent bank statements, or a quick clarification on something in your file. If that happens, I'll be in touch straight away so we can turn it around quickly and keep things on track.`
+      );
+
+      const surveyBlock = survey ? block(
+        '#fff0f6', 'all', '#f0c0d8',
+        '#7a0a3a', 'One small favour',
+        '#4a1a2e',
+        `You should have received an email with the subject line <em>"How are we doing so far?"</em> — if you can't find it, check your junk or spam folder. When you have a spare moment, I'd genuinely appreciate it if you could click the link and fill in the short 3-question survey. Your feedback means a lot, and it also contributes to my monthly performance metrics — so it really does go a long way.`
+      ) : '';
+
+      // ── Divider in Aussie yellow ──
+      const yellowDivider =
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:22px 0 0;">` +
+          `<tr><td height="3" bgcolor="${AUSSIE_YELLOW}" style="height:3px;background-color:${AUSSIE_YELLOW};border-radius:2px;font-size:0;line-height:0;">&nbsp;</td></tr>` +
+        `</table>`;
+
+      const html =
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;font-size:15px;line-height:1.75;"><tr><td style="padding:0;">` +
+        `<p style="font-size:16px;font-weight:600;margin:0 0 16px;font-family:Arial,sans-serif;">Good ${time}, ${name}.</p>` +
+        submissionHeader +
+        `<p style="margin:0 0 14px;font-family:Arial,sans-serif;">Your ${loan} application has been formally submitted to ${lender} — this is a big step and I'm really pleased we've reached this point. From here, the hard work of putting the file together is behind us. We now move into the assessment phase.</p>` +
+        whatsNowBlock +
+        slaBlock +
+        docsBlock +
+        `<p style="margin:16px 0 14px;font-family:Arial,sans-serif;">If anything comes to mind in the meantime, please don't hesitate to reach out — I'm always happy to chat through where things are at.</p>` +
+        surveyBlock +
+        journeyImg +
+        yellowDivider +
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:18px;">` +
+          `<tr><td style="padding-top:4px;font-size:14px;color:#4a4f6a;font-family:Arial,sans-serif;">` +
+            `<p style="margin:0 0 14px;font-family:Arial,sans-serif;">Speak soon, ${name} — we're on the right track!</p>` +
+            `<strong style="font-size:16px;color:#1a1a2e;font-weight:700;display:block;font-family:Arial,sans-serif;">Josh Coppolelli</strong>` +
+            `<span style="font-size:13px;color:#888;display:block;margin-top:2px;font-family:Arial,sans-serif;">Mortgage Broker · Aussie Home Loans</span>` +
+            `<span style="font-size:13px;color:#666;display:block;margin-top:6px;font-family:Arial,sans-serif;">📱 0426 275 799 &nbsp;·&nbsp; ☎️ 02 7256 9675</span>` +
+            `<a href="https://www.aussie.com.au/mobile-app/connect-with-me/?brokerid=c56979bb-d130-8920-afe2-1a279a847012&utm_source=app-prl" style="font-size:13px;color:${AUSSIE_PURPLE};display:block;margin-top:6px;font-family:Arial,sans-serif;text-decoration:none;font-weight:600;">📅 Book a time to chat</a>` +
+          `</td></tr>` +
+        `</table>` +
+        `</td></tr></table>`;
+
+      document.getElementById('email-body').innerHTML = html;
+
+      const lLabel = loanRaw ? loanCap : 'Home Loan';
+      const lenderLabel = lenderRaw ? ` with ${lenderCap}` : '';
+      const subjects = [
+        `Your ${lLabel} Application Has Been Submitted${lenderLabel}, ${name}!`,
+        `Application Lodged \u2014 Here\u2019s What to Expect Next`,
+        `Your Loan Is Now with the Lender \u2014 Timeline & Next Steps`,
+      ];
+      document.getElementById('subject-lines').innerHTML = subjects.map(s =>
+        `<div class="subject-pill" onclick="copySubject(this,'${s.replace(/'/g, "\\'")}')"><span>${s}</span><span class="copy-icon">Copy ↗</span></div>`
+      ).join('');
+
+      const out = document.getElementById('output-section');
+      out.style.display = 'block';
+      setTimeout(() => out.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+      document.getElementById('copy-btn').textContent = 'Copy email to clipboard';
+      document.getElementById('copy-btn').className = 'copy-btn';
+    });
+  }
+
+  async function copyEmail() {
+    const emailBody = document.getElementById('email-body');
+    const btn = document.getElementById('copy-btn');
+    let success = false;
+    try {
+      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head><body style="font-family:Arial,Helvetica,sans-serif;">${emailBody.innerHTML}</body></html>`;
+      await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }) })]);
+      success = true;
+    } catch(e) {}
+    if (!success) {
+      try {
+        const range = document.createRange();
+        range.selectNodeContents(emailBody);
+        const sel = window.getSelection();
+        sel.removeAllRanges(); sel.addRange(range);
+        success = document.execCommand('copy');
+        sel.removeAllRanges();
+      } catch(e) {}
+    }
+    btn.textContent = success ? 'Copied!' : 'Please select & copy the email above';
+    btn.className = success ? 'copy-btn copied' : 'copy-btn';
+    setTimeout(() => { btn.textContent = 'Copy email to clipboard'; btn.className = 'copy-btn'; }, 2500);
+  }
+
+  function copySubject(el, subject) {
+    navigator.clipboard.writeText(subject).then(() => {
+      const ic = el.querySelector('.copy-icon');
+      ic.textContent = 'Copied';
+      setTimeout(() => ic.textContent = 'Copy ↗', 2000);
+    });
+  }
+
+  buildUITimeline();
+  updateTimePill();
+</script>
+</body>
+</html>
