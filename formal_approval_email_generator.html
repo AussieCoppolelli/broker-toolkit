@@ -20,7 +20,7 @@
     nav a:hover { color: var(--accent); }
     nav .sep { color: var(--text-dim); font-size: 12px; }
     nav .current { color: var(--text); font-size: 13px; font-weight: 500; }
-    .nav-beta { background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.35); color: #c4a4ff; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; margin-left: 4px; }
+    .nav-live { background: rgba(76,175,130,0.15); border: 1px solid rgba(76,175,130,0.35); color: #4caf82; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; margin-left: 4px; }
     header { padding: 52px 32px 40px; max-width: 780px; margin: 0 auto; }
     .badge { display: inline-flex; align-items: center; gap: 6px; background: var(--green-soft); border: 1px solid rgba(76,175,130,0.3); color: var(--green); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; margin-bottom: 18px; }
     header h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px,4vw,40px); font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 10px; }
@@ -100,11 +100,11 @@
   <a href="https://aussiecoppolelli.github.io/broker-toolkit/index.html">← Dashboard</a>
   <span class="sep">·</span>
   <span class="current">Formal Approval Email Generator</span>
-  <span class="nav-beta">Beta</span>
+  <span class="nav-live">Live</span>
 </nav>
 
 <header>
-  <div class="badge">Beta v1</div>
+  <div class="badge">Live</div>
   <h1>Formal <span>Approval</span> Email Generator</h1>
   <p>Unconditional approval congratulations email — tailored to how and when you reached the client.</p>
   <div class="time-pill" id="time-pill">Detecting time...</div>
@@ -115,6 +115,7 @@
     <div class="card-title">Client Journey — Where We Are</div>
     <div class="timeline" id="ui-timeline"></div>
   </div>
+
   <div class="card">
     <div class="card-title">Client Details</div>
     <div class="field">
@@ -122,6 +123,7 @@
       <input type="text" id="client-name" placeholder="e.g. Sarah" oninput="autoCapitalise(this)" />
     </div>
   </div>
+
   <div class="card">
     <div class="card-title">Contact Outcome</div>
     <div class="field">
@@ -132,6 +134,7 @@
       </div>
     </div>
   </div>
+
   <div class="card">
     <div class="card-title">Required Next Steps</div>
     <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Select the items the client needs to action. These will appear in the email.</p>
@@ -148,6 +151,7 @@
       </label>
     </div>
   </div>
+
   <div class="card">
     <div class="card-title">Feedback Survey</div>
     <div class="survey-row">
@@ -155,8 +159,10 @@
       <div class="survey-label">Include survey request<small>Asks client to complete the "How are we doing so far?" survey</small></div>
     </div>
   </div>
+
   <button class="generate-btn" onclick="generateEmail()">Generate Email</button>
   <button class="clear-btn" onclick="clearFields()">Clear Fields</button>
+
   <div id="output-section">
     <div class="output-title">Generated Email</div>
     <div class="card" style="margin-bottom:16px;">
@@ -172,6 +178,12 @@
 </div>
 
 <script>
+  // ── Aussie brand palette ──
+  const AUSSIE_PURPLE      = '#2d1a6e';
+  const AUSSIE_PURPLE_SOFT = '#eeebf8';
+  const AUSSIE_PURPLE_MID  = '#4a3a8a';
+  const AUSSIE_YELLOW      = '#f5c800';
+
   const MILESTONES = [
     { label:'Initial\nConsult',  abbr:'IC', emoji:null },
     { label:'Video\nCall',       abbr:'VC', emoji:null },
@@ -181,13 +193,12 @@
     { label:'1 Month\nCheck-In', abbr:'1M', emoji:'📅' },
     { label:'1 Year\nCheck-In',  abbr:'1Y', emoji:'🏠' },
   ];
-  const ACTIVE = 3; // Formal Approval
+  const ACTIVE = 3;
 
-  /* ── Browser UI timeline (flexbox is fine here) ── */
   function buildUITimeline() {
     const wrap = document.getElementById('ui-timeline');
     let html = '';
-    MILESTONES.forEach((m,i) => {
+    MILESTONES.forEach((m, i) => {
       const isLast = i === MILESTONES.length - 1;
       let cls = i < ACTIVE ? 'done' : i === ACTIVE ? 'active' : 'future';
       if (isLast) cls += ' last-milestone tl-end';
@@ -199,129 +210,118 @@
     wrap.innerHTML = html;
   }
 
-  /* ── Outlook-safe table timeline ─────────────────────────────────────────
-     Structure: one wide table, two rows.
-       Row 1 (dots + connectors): [dot td] [connector td] [dot td] … [dot td] [trailing-line td]
-       Row 2 (labels):            [label td] [spacer td]  [label td] …                           
-     The trailing-line td after the final dot extends the dashed line to the
-     container edge — replacing the old ellipsis approach entirely.
-  ──────────────────────────────────────────────────────────────────────── */
-  function emailTimelineHTML() {
-    const DOT_W = 28;
-    let dotRow = '', labelRow = '';
+  /* ── Journey graphic → JPEG (gold palette, matches other tools) ── */
+  function buildJourneyJpeg(callback) {
+    const dotR  = 28;
+    const stepW = 175;
+    const padX  = 70;
+    const W     = padX * 2 + stepW * (MILESTONES.length - 1);
+    const H     = 260;
+    const c     = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const ctx   = c.getContext('2d');
 
-    MILESTONES.forEach(function(m, i) {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.fillStyle = '#f7f8fc';
+    roundRect(ctx, 0, 0, W, H, 18);
+    ctx.fill();
+
+    ctx.strokeStyle = '#e0e4f0';
+    ctx.lineWidth = 2.5;
+    roundRect(ctx, 1.25, 1.25, W - 2.5, H - 2.5, 18);
+    ctx.stroke();
+
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '700 22px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\uD83D\uDCCD YOUR HOME LOAN JOURNEY', W / 2, 40);
+
+    const dotY = 130;
+
+    MILESTONES.forEach((m, i) => {
+      const x        = padX + i * stepW;
       const isDone   = i < ACTIVE;
       const isActive = i === ACTIVE;
-      const isLast   = i === MILESTONES.length - 1;
       const isFuture = i > ACTIVE;
 
-      const dotBg  = isDone ? '#fdf5e8' : isActive ? '#fdf5e8' : '#f0f1f5';
-      const dotBdr = isDone ? '#c8a96e' : isActive ? '#c8a96e' : '#d0d4e0';
-      const dotClr = isDone ? '#c8a96e' : isActive ? '#c8a96e' : '#9ca3af';
-      const ring   = isActive ? 'box-shadow:0 0 0 3px rgba(200,169,110,0.3);' : '';
-      const txt      = isDone ? '&#10003;' : (m.emoji || m.abbr);
-      const dotFSize = (!isDone && m.emoji) ? '15px' : '11px';
-      const fade   = isFuture ? 'opacity:0.45;' : '';
-
-      /* dot cell */
-      dotRow +=
-        `<td width="${DOT_W}" align="center" valign="middle" style="padding:0;${fade}">` +
-          `<table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;"><tr>` +
-            `<td width="${DOT_W}" height="${DOT_W}" align="center" valign="middle" bgcolor="${dotBg}" ` +
-              `style="width:${DOT_W}px;height:${DOT_W}px;border-radius:50%;background-color:${dotBg};` +
-              `border:2px solid ${dotBdr};${ring}font-family:Arial,sans-serif;font-size:${dotFSize};` +
-              `font-weight:700;color:${dotClr};text-align:center;vertical-align:middle;">${txt}</td>` +
-          `</tr></table>` +
-        `</td>`;
-
-      /* label cell */
-      const lClr = isDone ? '#c8a96e' : isActive ? '#b8860a' : '#9ca3af';
-      const lWt  = isActive ? '700' : '500';
-      labelRow +=
-        `<td width="${DOT_W}" align="center" valign="top" style="padding:5px 0 0;${fade}">` +
-          `<span style="font-size:8.5px;color:${lClr};font-weight:${lWt};font-family:Arial,` +
-          `sans-serif;line-height:1.3;display:block;text-align:center;">` +
-          `${m.label.replace('\n','<br/>')}</span>` +
-        `</td>`;
-
-      /* connector or trailing line */
-      if (!isLast) {
-        /* normal inter-step connector */
-        const cBg = isDone ? '#c8a96e' : '#d0d4e0';
-        dotRow   += `<td valign="middle" style="padding:0;">` +
-          `<table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>` +
-            `<td height="2" bgcolor="${cBg}" style="height:2px;background-color:${cBg};font-size:0;line-height:0;">&nbsp;</td>` +
-          `</tr></table></td>`;
-        labelRow += `<td style="padding:0;"></td>`;
-      } else {
-        /* trailing dashed line after the last dot — fills remaining width */
-        dotRow   += `<td valign="middle" style="padding:0;">` +
-          `<table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>` +
-            `<td height="2" bgcolor="#d0d4e0" style="height:2px;background-color:#d0d4e0;font-size:0;line-height:0;">&nbsp;</td>` +
-          `</tr></table></td>`;
-        labelRow += `<td style="padding:0;"></td>`;
+      if (i > 0) {
+        const prevX = padX + (i - 1) * stepW;
+        ctx.globalAlpha = isFuture ? 0.35 : 1;
+        ctx.strokeStyle = i <= ACTIVE ? '#c8a96e' : '#d0d4e0';
+        ctx.lineWidth = 4;
+        ctx.setLineDash(isFuture ? [8, 8] : []);
+        ctx.beginPath();
+        ctx.moveTo(prevX + dotR, dotY);
+        ctx.lineTo(x - dotR, dotY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
       }
+
+      ctx.globalAlpha = isFuture ? 0.4 : 1;
+
+      ctx.fillStyle = isDone || isActive ? '#fdf5e8' : '#f0f1f5';
+      ctx.beginPath();
+      ctx.arc(x, dotY, dotR, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = isDone || isActive ? '#c8a96e' : '#d0d4e0';
+      ctx.lineWidth = isActive ? 4 : 2.5;
+      ctx.beginPath();
+      ctx.arc(x, dotY, dotR, 0, Math.PI * 2);
+      ctx.stroke();
+
+      if (isActive) {
+        ctx.strokeStyle = 'rgba(200,169,110,0.35)';
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.arc(x, dotY, dotR + 8, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = isDone || isActive ? '#c8a96e' : '#9ca3af';
+      ctx.font = isDone ? '700 24px Arial' : (m.emoji ? '26px Arial' : '700 16px Arial');
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(isDone ? '\u2713' : (m.emoji || m.abbr), x, dotY);
+
+      const lClr = isDone ? '#c8a96e' : isActive ? '#b8860a' : '#9ca3af';
+      ctx.fillStyle = lClr;
+      ctx.font = isActive ? '700 17px Arial' : '500 16px Arial';
+      ctx.textBaseline = 'top';
+      const lines = m.label.split('\n');
+      lines.forEach((ln, li) => ctx.fillText(ln, x, dotY + dotR + 10 + li * 21));
+
+      ctx.globalAlpha = 1;
     });
 
-    return (
-      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;border-collapse:collapse;">` +
-        `<tr><td bgcolor="#f7f8fc" style="background-color:#f7f8fc;border:1px solid #e0e4f0;border-radius:10px;padding:20px 16px 18px;">` +
-          `<p style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6b7280;` +
-            `text-align:center;margin:0 0 16px;font-family:Arial,sans-serif;">📍 YOUR HOME LOAN JOURNEY</p>` +
-          `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">` +
-            `<tr>${dotRow}</tr>` +
-            `<tr>${labelRow}</tr>` +
-          `</table>` +
-        `</td></tr>` +
-      `</table>`
-    );
+    callback(c.toDataURL('image/jpeg', 0.95));
   }
 
-  /* ── Outlook-safe coloured block (table + bgcolor) ──────────────────────
-     borderSide: 'left' | 'all' | 'none'
-  ──────────────────────────────────────────────────────────────────────── */
-  function block(bg, borderSide, borderColor, content) {
-    let outerStyle = `border-collapse:collapse;margin:16px 0;width:100%;`;
-    let innerStyle = `background-color:${bg};padding:14px 18px;font-family:Arial,Helvetica,sans-serif;border-radius:8px;`;
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
 
+  /* ── Block helper ── */
+  function block(bg, borderSide, borderColor, labelColor, labelText, bodyColor, bodyHtml) {
+    const label = labelText
+      ? `<strong style="display:block;color:${labelColor};font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:7px;">${labelText}</strong>`
+      : '';
+    const body  = `<span style="color:${bodyColor};font-size:14px;font-family:Arial,sans-serif;line-height:1.75;">${bodyHtml}</span>`;
+    const inner = `background-color:${bg};padding:15px 18px;font-family:Arial,Helvetica,sans-serif;border-radius:8px;`;
     if (borderSide === 'left') {
-      /* Outlook doesn't honour border-left on a td directly, so we use a
-         narrow coloured td beside the content td */
-      return (
-        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${outerStyle}">` +
-          `<tr>` +
-            `<td width="4" bgcolor="${borderColor}" style="width:4px;background-color:${borderColor};border-radius:4px 0 0 4px;font-size:0;line-height:0;">&nbsp;</td>` +
-            `<td bgcolor="${bg}" style="${innerStyle}border-radius:0 8px 8px 0;">${content}</td>` +
-          `</tr>` +
-        `</table>`
-      );
+      return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:14px 0;"><tr>` +
+        `<td width="4" bgcolor="${borderColor}" style="width:4px;background-color:${borderColor};border-radius:4px 0 0 4px;font-size:0;line-height:0;">&nbsp;</td>` +
+        `<td bgcolor="${bg}" style="${inner}border-radius:0 8px 8px 0;">${label}${body}</td></tr></table>`;
     }
-    if (borderSide === 'all') {
-      return (
-        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${outerStyle}border:1px solid ${borderColor};border-radius:8px;">` +
-          `<tr><td bgcolor="${bg}" style="${innerStyle}">${content}</td></tr>` +
-        `</table>`
-      );
-    }
-    /* none */
-    return (
-      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="${outerStyle}">` +
-        `<tr><td bgcolor="${bg}" style="${innerStyle}">${content}</td></tr>` +
-      `</table>`
-    );
-  }
-
-  /* ── Step number badge (table-based circle) ── */
-  function stepBadge(num) {
-    return (
-      `<table cellpadding="0" cellspacing="0" border="0" style="display:inline-table;margin-right:8px;"><tr>` +
-        `<td width="26" height="26" align="center" valign="middle" bgcolor="#c8a96e" ` +
-          `style="width:26px;height:26px;min-width:26px;min-height:26px;border-radius:50%;` +
-          `background-color:#c8a96e;font-family:Arial,sans-serif;font-size:12px;font-weight:700;` +
-          `color:#1a1a2e;text-align:center;vertical-align:middle;line-height:26px;padding:0;">${num}</td>` +
-      `</tr></table>`
-    );
+    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:14px 0;border:1px solid ${borderColor};border-radius:8px;"><tr><td bgcolor="${bg}" style="${inner}">${label}${body}</td></tr></table>`;
   }
 
   function getTimeOfDay() { const h = new Date().getHours(); return h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening'; }
@@ -330,7 +330,7 @@
     document.getElementById('time-pill').textContent = `${ico[t]} Auto-detected: Good ${t}`;
   }
   function autoCapitalise(el) { if (el.value.length) el.value = el.value[0].toUpperCase() + el.value.slice(1); }
-  function setToggle(gid, btn) { document.querySelectorAll(`#${gid} .toggle-btn`).forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  function setToggle(gid, btn) { document.querySelectorAll(`#${gid} .toggle-btn`).forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
   function getToggle(gid) { const a = document.querySelector(`#${gid} .toggle-btn.active`); return a ? a.dataset.val : null; }
 
   function clearFields() {
@@ -340,7 +340,7 @@
     document.getElementById('include-discharge').checked = true;
     document.getElementById('include-survey').checked = true;
     document.getElementById('output-section').style.display = 'none';
-    window.scrollTo({ top:0, behavior:'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function generateEmail() {
@@ -351,88 +351,132 @@
     const inclDis = document.getElementById('include-discharge').checked;
     const inclSrv = document.getElementById('include-survey').checked;
 
-    const opening = contact === 'spoke'
-      ? 'Thank you for your time on the phone just then.'
-      : 'I hope you are doing well. I just tried to call — unfortunately I was unable to get through and have left you a voicemail.';
+    buildJourneyJpeg(function(jpegSrc) {
 
-    /* next steps */
-    let stepsHtml = '', stepN = 0;
-    if (inclCoc) {
-      stepN++;
-      stepsHtml += block('#f7f8fc','all','#e0e4f0',
-        `<p style="font-weight:700;color:#1a1a2e;font-family:Arial,sans-serif;font-size:14px;margin:0 0 8px;">🛡️ Certificate of Currency (Home &amp; Contents Insurance)</p>` +
-        `<p style="color:#4a4f6a;font-size:14px;margin:0 0 0;font-family:Arial,sans-serif;">We'll need an updated insurance policy with the new lender listed — this is your Certificate of Currency, which is simply proof that your property is insured.</p>` +
-        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:10px 0 0;">` +
-          `<tr><td bgcolor="#e8f2ff" style="background-color:#e8f2ff;border:1px solid #b8d0f0;border-radius:6px;padding:10px 14px;font-family:Arial,sans-serif;font-size:14px;color:#1558b0;">` +
-            `<strong style="color:#1558b0;">Need cover or looking for a better rate?</strong> As an Aussie Home Loans client, you have access to exclusive discounted insurance rates through our partnership with <strong style="color:#1558b0;">Allianz</strong>. Just reply to this email or give me a call and I can arrange a quote.` +
+      const opening = contact === 'spoke'
+        ? 'Thank you for your time on the phone just now — I\'m really glad I was able to share this news with you directly.'
+        : 'I hope this finds you well. I tried to reach you but was unable to get through, so I\'ve left you a voicemail — I didn\'t want to wait to share this though!';
+
+      // ── Green congratulations block (kept intentionally distinct from purple header style) ──
+      const congratsBanner =
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:0 0 18px;">` +
+          `<tr>` +
+            `<td width="5" bgcolor="#4caf82" style="width:5px;background-color:#4caf82;border-radius:4px 0 0 4px;font-size:0;line-height:0;">&nbsp;</td>` +
+            `<td bgcolor="#edf7f1" style="background-color:#edf7f1;border-radius:0 8px 8px 0;padding:15px 20px;font-family:Arial,Helvetica,sans-serif;">` +
+              `<span style="display:block;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#2a7a52;margin-bottom:5px;">Formal Approval Confirmed</span>` +
+              `<span style="display:block;font-size:17px;font-weight:700;color:#1a3a2a;font-family:Arial,sans-serif;line-height:1.3;">🎉 Congratulations, ${name} — your loan is unconditionally approved!</span>` +
+            `</td>` +
+          `</tr>` +
+        `</table>`;
+
+      // ── Loan documents block ──
+      const docsBlock = block(
+        AUSSIE_PURPLE_SOFT, 'left', AUSSIE_PURPLE,
+        AUSSIE_PURPLE, 'Loan documents',
+        AUSSIE_PURPLE_MID,
+        `Loan documents have been requested to be issued <strong style="color:${AUSSIE_PURPLE_MID};">electronically</strong>. These typically take <strong style="color:${AUSSIE_PURPLE_MID};">48–72 hours</strong> to be generated and sent through, so please keep an eye on your inbox — and your junk folder just in case.`
+      );
+
+      // ── Next steps ──
+      let stepsHtml = '';
+
+      if (inclCoc) {
+        stepsHtml += block(
+          '#f7f8fc', 'all', '#e0e4f0',
+          AUSSIE_PURPLE, 'Certificate of Currency (Home &amp; Contents Insurance)',
+          '#4a4f6a',
+          `We'll need an updated insurance policy with the new lender listed — this is your Certificate of Currency, which is simply proof that your property is insured.` +
+          `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:10px;">` +
+            `<tr><td bgcolor="#e8f0fd" style="background-color:#e8f0fd;border:1px solid #c0d0f0;border-radius:6px;padding:10px 14px;font-family:Arial,sans-serif;font-size:14px;color:#1a1a4a;">` +
+              `<strong style="color:${AUSSIE_PURPLE};">Need cover or looking for a better rate?</strong> As an Aussie Home Loans client, you have access to exclusive discounted rates through our partnership with <strong>Allianz</strong>. Just reply to this email or give me a call and I can arrange a quote.` +
+            `</td></tr></table>`
+        );
+      }
+
+      if (inclDis) {
+        stepsHtml += block(
+          '#f7f8fc', 'all', '#e0e4f0',
+          AUSSIE_PURPLE, 'Discharge Authority',
+          '#4a4f6a',
+          `This notifies your current lender that you intend to close your account with them and switch lenders. Don't worry — I'll walk you through this step personally when the time comes.`
+        );
+      }
+
+      const nextStepsSection = (inclCoc || inclDis)
+        ? `<p style="font-weight:700;color:#1a1a2e;margin:20px 0 6px;font-size:15px;font-family:Arial,sans-serif;">A couple of things we'll also need from you</p>` +
+          `<p style="color:#4a4f6a;font-size:14px;margin:0 0 4px;font-family:Arial,sans-serif;">Alongside signing the loan documents, please action the following:</p>` +
+          stepsHtml
+        : '';
+
+      // ── Settlements team ──
+      const settlementsBlock = block(
+        '#f0f4ff', 'all', '#c8d0f0',
+        AUSSIE_PURPLE, 'Meet my settlements team',
+        '#1a1a4a',
+        `I have a dedicated settlements team who assist me with the settlement of your loan. They'll reach out to you — usually within a day or two — to introduce themselves and walk you through the above steps in more detail. I'll remain closely involved throughout and am always available if you need anything in the meantime.`
+      );
+
+      // ── Survey ──
+      const surveyBlock = inclSrv ? block(
+        '#fff0f6', 'all', '#f0c0d8',
+        '#7a0a3a', 'One small favour',
+        '#4a1a2e',
+        `You should have received an email with the subject line <em>"How are we doing so far?"</em> — if you can't find it, check your junk or spam folder. When you have a spare moment, I'd really appreciate it if you could complete the short 3-question, star-rated survey inside.<br/><br/>Your feedback means a lot — and it also contributes to my monthly performance metrics, so your support is genuinely appreciated.`
+      ) : '';
+
+      // ── Yellow divider ──
+      const yellowDivider =
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:22px 0 0;">` +
+          `<tr><td height="3" bgcolor="${AUSSIE_YELLOW}" style="height:3px;background-color:${AUSSIE_YELLOW};border-radius:2px;font-size:0;line-height:0;">&nbsp;</td></tr>` +
+        `</table>`;
+
+      // ── Journey image ──
+      const journeyImg =
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:20px 0 6px;">` +
+          `<tr><td><img src="${jpegSrc}" width="100%" style="display:block;border-radius:10px;" alt="Your Home Loan Journey" /></td></tr>` +
+        `</table>`;
+
+      const html =
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;font-size:15px;line-height:1.75;"><tr><td style="padding:0;">` +
+        `<p style="font-size:16px;font-weight:600;margin:0 0 14px;font-family:Arial,sans-serif;">Good ${time}, ${name}.</p>` +
+        `<p style="margin:0 0 16px;font-family:Arial,sans-serif;">${opening}</p>` +
+        congratsBanner +
+        `<p style="margin:0 0 14px;font-family:Arial,sans-serif;">This is a huge milestone — your home loan has been formally and unconditionally approved by the lender. Here's what happens from here.</p>` +
+        docsBlock +
+        nextStepsSection +
+        settlementsBlock +
+        `<p style="margin:16px 0 14px;font-family:Arial,sans-serif;">If you have any questions at any point, please don't hesitate to reach out — I'm always happy to help.</p>` +
+        surveyBlock +
+        journeyImg +
+        yellowDivider +
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:18px;">` +
+          `<tr><td style="padding-top:4px;font-size:14px;color:#4a4f6a;font-family:Arial,sans-serif;">` +
+            `<p style="margin:0 0 14px;font-family:Arial,sans-serif;">Thank you again — this is a big moment and it's been a pleasure working with you to get here. Speak soon, ${name}!</p>` +
+            `<strong style="font-size:16px;color:#1a1a2e;font-weight:700;display:block;font-family:Arial,sans-serif;">Josh Coppolelli</strong>` +
+            `<span style="font-size:13px;color:#888;display:block;margin-top:2px;font-family:Arial,sans-serif;">Mortgage Broker · Aussie Home Loans</span>` +
+            `<span style="font-size:13px;color:#666;display:block;margin-top:6px;font-family:Arial,sans-serif;">📱 0426 275 799 &nbsp;·&nbsp; ☎️ 02 7256 9675</span>` +
+            `<a href="https://www.aussie.com.au/mobile-app/connect-with-me/?brokerid=c56979bb-d130-8920-afe2-1a279a847012&utm_source=app-prl" style="font-size:13px;color:${AUSSIE_PURPLE};display:block;margin-top:6px;font-family:Arial,sans-serif;text-decoration:none;font-weight:600;">📅 Book a time to chat</a>` +
           `</td></tr>` +
-        `</table>`
-      );
-    }
-    if (inclDis) {
-      stepN++;
-      stepsHtml += block('#f7f8fc','all','#e0e4f0',
-        `<p style="font-weight:700;color:#1a1a2e;font-family:Arial,sans-serif;font-size:14px;margin:0 0 8px;">✍️ Discharge Authority</p>` +
-        `<p style="color:#4a4f6a;font-size:14px;margin:0;font-family:Arial,sans-serif;">This notifies your current lender that you intend to close your account with them and change lenders. Don't worry — I'll walk you through this step personally when the time comes.</p>`
-      );
-    }
+        `</table>` +
+        `</td></tr></table>`;
 
-    const congratsBanner = block('#edf7f1','left','#4caf82',
-      `<span style="font-weight:600;color:#1a4a30;font-size:16px;font-family:Arial,sans-serif;">🎉 Congratulations on your unconditional approval!</span>`
-    );
+      document.getElementById('email-body').innerHTML = html;
 
-    const docsBlock = block('#fff8ee','left','#c8a96e',
-      `<strong style="color:#5a3e0a;font-family:Arial,sans-serif;font-size:14px;">📄 Loan Documents</strong><br/>` +
-      `<span style="color:#5a3e0a;font-size:14px;font-family:Arial,sans-serif;">Loan documents have been requested to be issued <strong>electronically</strong>. These typically take <strong>48–72 hours</strong> to be generated and sent through to you, so please keep an eye on your inbox.</span>`
-    );
+      const subjects = [
+        `Your Home Loan Has Been Formally Approved, ${name}!`,
+        `Unconditional Approval — Here\'s What Happens Next`,
+        `Congratulations ${name} — You\'re Officially Approved! 🎉`,
+      ];
+      document.getElementById('subject-lines').innerHTML = subjects.map(s =>
+        `<div class="subject-pill" onclick="copySubject(this,'${s.replace(/'/g,"\\'")}')"><span>${s}</span><span class="copy-icon">Copy ↗</span></div>`
+      ).join('');
 
-    const settlementsBlock = block('#f0f4ff','all','#c8d0f0',
-      `<strong style="display:block;margin-bottom:6px;color:#1a1a4a;font-family:Arial,sans-serif;font-size:14px;">🤝 Meet My Settlements Team</strong>` +
-      `<span style="color:#1a1a4a;font-size:14px;font-family:Arial,sans-serif;">I have a dedicated settlements team who assist me with the settlement of your loan. They will reach out to you — usually within a day or two — to introduce themselves and walk you through the above steps in more detail.</span>`
-    );
-
-    const surveyBlock = inclSrv ? block('#fff0f6','all','#f0c0d8',
-      `<strong style="display:block;margin-bottom:6px;color:#7a0a3a;font-family:Arial,sans-serif;font-size:14px;">🙏 One Small Favour</strong>` +
-      `<span style="color:#4a1a2e;font-size:14px;font-family:Arial,sans-serif;">You would've received an email with the subject line <em>"How are we doing so far?"</em> (check your junk/spam folder if you can't find it). When you have a spare moment, I'd really appreciate it if you could click the link inside and complete the short 3-question, star-rated survey.<br/><br/>Your feedback means a lot — and it also contributes to my monthly performance metrics, so your support is genuinely appreciated.</span>`
-    ) : '';
-
-    const html =
-      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;font-size:15px;line-height:1.75;"><tr><td style="padding:0;">` +
-      `<p style="font-size:18px;font-weight:600;margin:0 0 16px;">Good ${time}, ${name}.</p>` +
-      `<p style="margin:0 0 16px;">${opening}</p>` +
-      congratsBanner +
-      `<p style="margin:0 0 16px;">This is a huge milestone — your home loan has been formally approved by the lender. Here's what happens from here.</p>` +
-      docsBlock +
-      ((inclCoc||inclDis) ? `<p style="font-weight:700;color:#1a1a2e;margin:20px 0 4px;font-size:15px;font-family:Arial,sans-serif;">In addition to signing the loan documents, we'll also need the following:</p>${stepsHtml}` : '') +
-      settlementsBlock +
-      `<p style="margin:16px 0;">I'll still be involved throughout this process and remain available to you at any time. If you have any questions or concerns along the way, please don't hesitate to reach out.</p>` +
-      surveyBlock +
-      emailTimelineHTML() +
-      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:24px;">` +
-        `<tr><td style="border-top:2px solid #e8ecf5;padding-top:20px;font-size:14px;color:#4a4f6a;font-family:Arial,sans-serif;">` +
-          `<p style="margin:0 0 12px;">Thank you again — this is a big moment and it's been a pleasure working with you to get here. Speak soon!</p>` +
-          `<strong style="font-size:16px;color:#1a1a2e;display:block;">Joshua Coppolelli</strong>` +
-          `<span style="font-size:13px;color:#888;display:block;margin-top:2px;">Mortgage Broker · Aussie Home Loans</span>` +
-        `</td></tr>` +
-      `</table>` +
-      `</td></tr></table>`;
-
-    document.getElementById('email-body').innerHTML = html;
-
-    const subjects = [
-      `Your Home Loan Has Been Formally Approved, ${name}!`,
-      `Unconditional Approval — Your Next Steps`,
-      `Congratulations ${name} — You're Officially Approved!`,
-    ];
-    document.getElementById('subject-lines').innerHTML = subjects.map(s =>
-      `<div class="subject-pill" onclick="copySubject(this,'${s.replace(/'/g,"\\'")}')"><span>${s}</span><span class="copy-icon">Copy ↗</span></div>`
-    ).join('');
-
-    const out = document.getElementById('output-section');
-    out.style.display = 'block';
-    setTimeout(()=>out.scrollIntoView({behavior:'smooth',block:'start'}),80);
-    document.getElementById('copy-btn').textContent = 'Copy email to clipboard';
-    document.getElementById('copy-btn').className = 'copy-btn';
+      const out = document.getElementById('output-section');
+      out.style.display = 'block';
+      setTimeout(() => out.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+      document.getElementById('copy-btn').textContent = 'Copy email to clipboard';
+      document.getElementById('copy-btn').className = 'copy-btn';
+    });
   }
 
   async function copyEmail() {
@@ -441,7 +485,7 @@
     let success = false;
     try {
       const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head><body style="font-family:Arial,Helvetica,sans-serif;">${emailBody.innerHTML}</body></html>`;
-      await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'})})]);
+      await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }) })]);
       success = true;
     } catch(e) {}
     if (!success) {
@@ -456,14 +500,14 @@
     }
     btn.textContent = success ? 'Copied!' : 'Please select & copy the email above';
     btn.className = success ? 'copy-btn copied' : 'copy-btn';
-    setTimeout(()=>{ btn.textContent='Copy email to clipboard'; btn.className='copy-btn'; }, 2500);
+    setTimeout(() => { btn.textContent = 'Copy email to clipboard'; btn.className = 'copy-btn'; }, 2500);
   }
 
   function copySubject(el, subject) {
-    navigator.clipboard.writeText(subject).then(()=>{
+    navigator.clipboard.writeText(subject).then(() => {
       const ic = el.querySelector('.copy-icon');
       ic.textContent = 'Copied';
-      setTimeout(()=>ic.textContent='Copy ↗', 2000);
+      setTimeout(() => ic.textContent = 'Copy ↗', 2000);
     });
   }
 
