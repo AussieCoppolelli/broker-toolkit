@@ -497,13 +497,10 @@
           `</tr>` +
         `</table>`;
 
-      // Approval letter note
-      const attachmentNote = inclAttach ? block(
-        '#f7f8fc', 'all', '#e0e4f0',
-        '', '',
-        '#4a4f6a',
-        `📎 Please see your <strong style="color:#1a1a2e;">approval letter</strong> attached to this email for your records.`
-      ) : '';
+      // Approval letter note — plain prose
+      const attachmentNote = inclAttach
+        ? `<p style="margin:0 0 14px;font-family:Arial,sans-serif;font-size:15px;color:#1a1a2e;line-height:1.75;">📎 Please also see your <strong>approval letter</strong> attached to this email for your records.</p>`
+        : '';
 
       // What pre-approval means
       const conditionalNote = block(
@@ -513,11 +510,28 @@
         `Your pre-approval is a <strong style="color:${AUSSIE_PURPLE_MID};">conditional</strong> approval — the lender has assessed your financial situation and is comfortable lending to you, subject to finding the right property. Once you find a property and send through a <strong style="color:${AUSSIE_PURPLE_MID};">Contract of Sale</strong>, I can convert this into a full, formal approval.`
       );
 
-      // Contract of Sale (always on)
-      const conveyancingInner = inclConv
+      // ── Aussie Services — all in one box ──
+      // Conveyancing sub-item
+      const conveyancingItem = inclConv
+        ? `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:12px;">` +
+            `<tr><td bgcolor="#e8f0fd" style="background-color:#e8f0fd;border:1px solid #c0d0f0;border-radius:6px;padding:10px 14px;font-family:Arial,sans-serif;font-size:14px;color:#1a1a4a;">` +
+              `<strong style="color:${AUSSIE_PURPLE};">🏛️ Conveyancing</strong><br/>As an Aussie Home Loans client, you have access to our in-house conveyancing service — which includes <strong>2 complimentary contract reviews</strong>. Just reply to this email or give me a call and I can arrange everything for you.` +
+            `</td></tr></table>`
+        : '';
+
+      // Buyers Agent sub-item
+      const baItem = inclBA
         ? `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:10px;">` +
             `<tr><td bgcolor="#e8f0fd" style="background-color:#e8f0fd;border:1px solid #c0d0f0;border-radius:6px;padding:10px 14px;font-family:Arial,sans-serif;font-size:14px;color:#1a1a4a;">` +
-              `<strong style="color:${AUSSIE_PURPLE};">Need a conveyancer?</strong> As an Aussie Home Loans client, you have access to our in-house conveyancing service — which includes <strong>2 complimentary contract reviews</strong>. Just reply to this email or give me a call and I can arrange everything for you.` +
+              `<strong style="color:${AUSSIE_PURPLE};">🔍 Buyers Agent</strong><br/>If you'd like some extra help finding and securing your property, we have a dedicated Buyers Agent team who can guide you through the process. Just let me know and I can arrange for them to reach out.` +
+            `</td></tr></table>`
+        : '';
+
+      // Seller Assist sub-item
+      const saItem = inclSA
+        ? `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:10px;">` +
+            `<tr><td bgcolor="#e8f0fd" style="background-color:#e8f0fd;border:1px solid #c0d0f0;border-radius:6px;padding:10px 14px;font-family:Arial,sans-serif;font-size:14px;color:#1a1a4a;">` +
+              `<strong style="color:${AUSSIE_PURPLE};">🏷️ Seller Assist</strong><br/>If you're also looking to sell your current home, our Seller Assist team at Aussie Home Loans can help with that too. Let me know and I'll arrange for them to get in touch.` +
             `</td></tr></table>`
         : '';
 
@@ -525,24 +539,15 @@
         '#f7f8fc', 'all', '#e0e4f0',
         AUSSIE_PURPLE, 'Contract of Sale — converting to formal approval',
         '#4a4f6a',
-        `Once you have found a property, please send the <strong style="color:#1a1a2e;">Contract of Sale (COS)</strong> through to a conveyancer for review. Once it has been reviewed and signed, I can submit it to the lender and convert your pre-approval into a <strong style="color:#1a1a2e;">formal approval</strong>.${conveyancingInner}`
+        `Once you have found a property, please send the <strong style="color:#1a1a2e;">Contract of Sale (COS)</strong> through to a conveyancer for review. Once it has been reviewed and signed, I can submit it to the lender and convert your pre-approval into a <strong style="color:#1a1a2e;">formal approval</strong>.` +
+        ((inclConv || inclBA || inclSA)
+          ? `<p style="margin:12px 0 4px;font-family:Arial,sans-serif;font-size:14px;color:#4a4f6a;">I can also help with the following Aussie services if you need them:</p>` + conveyancingItem + baItem + saItem
+          : '')
       );
 
-      // Buyers Agent
-      const baBlock = inclBA ? block(
-        '#f7f8fc', 'all', '#e0e4f0',
-        AUSSIE_PURPLE, 'Buyers Agent',
-        '#4a4f6a',
-        `If you'd like some extra help finding and securing your property, we have a dedicated Buyers Agent team here at Aussie Home Loans who can guide you through the process. Just let me know and I can arrange for them to reach out.`
-      ) : '';
-
-      // Seller Assist
-      const saBlock = inclSA ? block(
-        '#f7f8fc', 'all', '#e0e4f0',
-        AUSSIE_PURPLE, 'Seller Assist',
-        '#4a4f6a',
-        `If you're also looking to sell your current home, our Seller Assist team at Aussie Home Loans can help with that too. Let me know and I'll arrange for them to get in touch.`
-      ) : '';
+      // Remove standalone BA and SA blocks — now consolidated above
+      const baBlock = '';
+      const saBlock = '';
 
       // Survey
       const surveyBlock = inclSrv ? block(
@@ -552,13 +557,10 @@
         `You should have received an email with the subject line <em>"How are we doing so far?"</em> — if you can't find it, check your junk or spam folder. When you have a spare moment, I'd really appreciate it if you could complete the short 3-question, star-rated survey inside.<br/><br/>Your feedback means a lot — and achieving a 10/10 directly contributes to my upcoming promotion. It also factors into my monthly performance metrics, so your support would mean the world to me.`
       ) : '';
 
-      // Referral
-      const referralBlock = inclRef ? block(
-        '#f7f8fc', 'all', '#e0e4f0',
-        '', '',
-        '#4a4f6a',
-        `💬 If you have any <strong style="color:#1a1a2e;">friends or family</strong> who could use a hand with a home loan, please feel free to pass along my details — I'm always happy to help and really appreciate any referrals.`
-      ) : '';
+      // Referral — plain prose
+      const referralBlock = inclRef
+        ? `<p style="margin:14px 0;font-family:Arial,sans-serif;font-size:15px;color:#1a1a2e;line-height:1.75;">Lastly, if you have any friends or family who could use a hand with a home loan, please feel free to pass along my details — I'm always happy to help and really appreciate any referrals.</p>`
+        : '';
 
       // Yellow divider
       const yellowDivider =
