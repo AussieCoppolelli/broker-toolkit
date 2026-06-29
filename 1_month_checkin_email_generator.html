@@ -20,7 +20,7 @@
     nav a:hover { color: var(--accent); }
     nav .sep { color: var(--text-dim); font-size: 12px; }
     nav .current { color: var(--text); font-size: 13px; font-weight: 500; }
-    .nav-beta { background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.35); color: #c4a4ff; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; margin-left: 4px; }
+    .nav-live { background: rgba(76,175,130,0.15); border: 1px solid rgba(76,175,130,0.35); color: #4caf82; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; margin-left: 4px; }
     header { padding: 52px 32px 40px; max-width: 780px; margin: 0 auto; }
     .badge { display: inline-flex; align-items: center; gap: 6px; background: var(--green-soft); border: 1px solid rgba(76,175,130,0.3); color: var(--green); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; margin-bottom: 18px; }
     header h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px,4vw,40px); font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 10px; }
@@ -91,11 +91,11 @@
   <a href="https://aussiecoppolelli.github.io/broker-toolkit/index.html">← Dashboard</a>
   <span class="sep">·</span>
   <span class="current">1 Month Check-In Email Generator</span>
-  <span class="nav-beta">Beta</span>
+  <span class="nav-live">Live</span>
 </nav>
 
 <header>
-  <div class="badge">Beta v1</div>
+  <div class="badge">Live</div>
   <h1>1 Month <span>Check-In</span> Email Generator</h1>
   <p>A warm one-month follow-up — show your clients you're still in their corner well after settlement.</p>
   <div class="time-pill" id="time-pill">Detecting time...</div>
@@ -156,6 +156,12 @@
 </div>
 
 <script>
+  // ── Aussie brand palette ──
+  const AUSSIE_PURPLE      = '#2d1a6e';
+  const AUSSIE_PURPLE_SOFT = '#eeebf8';
+  const AUSSIE_PURPLE_MID  = '#4a3a8a';
+  const AUSSIE_YELLOW      = '#f5c800';
+
   const MILESTONES = [
     { label:'Initial\nConsult',  abbr:'IC', emoji:null },
     { label:'Video\nCall',       abbr:'VC', emoji:null },
@@ -165,9 +171,8 @@
     { label:'1 Month\nCheck-In', abbr:'1M', emoji:'📅' },
     { label:'1 Year\nCheck-In',  abbr:'1Y', emoji:'🏠' },
   ];
-  const ACTIVE = 5; // 1 Month Check-In
+  const ACTIVE = 5;
 
-  /* ── Browser UI timeline ── */
   function buildUITimeline() {
     const wrap = document.getElementById('ui-timeline');
     let html = '';
@@ -183,84 +188,114 @@
     wrap.innerHTML = html;
   }
 
-  /* ── Outlook-safe table timeline ── */
-  function emailTimelineHTML() {
-    const DOT_W = 28;
-    let dotRow = '', labelRow = '';
+  /* ── Journey graphic → JPEG (gold palette, matches all other tools) ── */
+  function buildJourneyJpeg(callback) {
+    const dotR  = 28;
+    const stepW = 175;
+    const padX  = 70;
+    const W     = padX * 2 + stepW * (MILESTONES.length - 1);
+    const H     = 260;
+    const c     = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const ctx   = c.getContext('2d');
 
-    MILESTONES.forEach(function(m, i) {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#f7f8fc';
+    roundRect(ctx, 0, 0, W, H, 18);
+    ctx.fill();
+    ctx.strokeStyle = '#e0e4f0';
+    ctx.lineWidth = 2.5;
+    roundRect(ctx, 1.25, 1.25, W - 2.5, H - 2.5, 18);
+    ctx.stroke();
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '700 22px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\uD83D\uDCCD YOUR HOME LOAN JOURNEY', W / 2, 40);
+
+    const dotY = 130;
+
+    MILESTONES.forEach((m, i) => {
+      const x        = padX + i * stepW;
       const isDone   = i < ACTIVE;
       const isActive = i === ACTIVE;
-      const isLast   = i === MILESTONES.length - 1;
       const isFuture = i > ACTIVE;
 
-      const dotBg  = isDone ? '#fdf5e8' : isActive ? '#fdf5e8' : '#f0f1f5';
-      const dotBdr = isDone ? '#c8a96e' : isActive ? '#c8a96e' : '#d0d4e0';
-      const dotClr = isDone ? '#c8a96e' : isActive ? '#c8a96e' : '#9ca3af';
-      const ring   = isActive ? 'box-shadow:0 0 0 3px rgba(200,169,110,0.3);' : '';
-      const txt    = isDone ? '&#10003;' : (m.emoji || m.abbr);
-      const dotFSize = (!isDone && m.emoji) ? '15px' : '11px';
-      const fade   = isFuture ? 'opacity:0.45;' : '';
+      if (i > 0) {
+        const prevX = padX + (i - 1) * stepW;
+        ctx.globalAlpha = isFuture ? 0.35 : 1;
+        ctx.strokeStyle = i <= ACTIVE ? '#c8a96e' : '#d0d4e0';
+        ctx.lineWidth = 4;
+        ctx.setLineDash(isFuture ? [8, 8] : []);
+        ctx.beginPath();
+        ctx.moveTo(prevX + dotR, dotY);
+        ctx.lineTo(x - dotR, dotY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+      }
 
-      dotRow +=
-        `<td width="${DOT_W}" align="center" valign="middle" style="padding:0;${fade}">` +
-          `<table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;"><tr>` +
-            `<td width="${DOT_W}" height="${DOT_W}" align="center" valign="middle" bgcolor="${dotBg}" ` +
-              `style="width:${DOT_W}px;height:${DOT_W}px;border-radius:50%;background-color:${dotBg};` +
-              `border:2px solid ${dotBdr};${ring}font-family:Arial,sans-serif;font-size:${dotFSize};` +
-              `font-weight:700;color:${dotClr};text-align:center;vertical-align:middle;">${txt}</td>` +
-          `</tr></table>` +
-        `</td>`;
+      ctx.globalAlpha = isFuture ? 0.4 : 1;
+      ctx.fillStyle = isDone || isActive ? '#fdf5e8' : '#f0f1f5';
+      ctx.beginPath();
+      ctx.arc(x, dotY, dotR, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = isDone || isActive ? '#c8a96e' : '#d0d4e0';
+      ctx.lineWidth = isActive ? 4 : 2.5;
+      ctx.beginPath();
+      ctx.arc(x, dotY, dotR, 0, Math.PI * 2);
+      ctx.stroke();
+
+      if (isActive) {
+        ctx.strokeStyle = 'rgba(200,169,110,0.35)';
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.arc(x, dotY, dotR + 8, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = isDone || isActive ? '#c8a96e' : '#9ca3af';
+      ctx.font = isDone ? '700 24px Arial' : (m.emoji ? '26px Arial' : '700 16px Arial');
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(isDone ? '\u2713' : (m.emoji || m.abbr), x, dotY);
 
       const lClr = isDone ? '#c8a96e' : isActive ? '#b8860a' : '#9ca3af';
-      const lWt  = isActive ? '700' : '500';
-      labelRow +=
-        `<td width="${DOT_W}" align="center" valign="top" style="padding:5px 0 0;${fade}">` +
-          `<span style="font-size:8.5px;color:${lClr};font-weight:${lWt};font-family:Arial,sans-serif;line-height:1.3;display:block;text-align:center;">` +
-          `${m.label.replace('\n', '<br/>')}</span>` +
-        `</td>`;
+      ctx.fillStyle = lClr;
+      ctx.font = isActive ? '700 17px Arial' : '500 16px Arial';
+      ctx.textBaseline = 'top';
+      const lines = m.label.split('\n');
+      lines.forEach((ln, li) => ctx.fillText(ln, x, dotY + dotR + 10 + li * 21));
 
-      if (!isLast) {
-        const cBg = isDone ? '#c8a96e' : '#d0d4e0';
-        dotRow   += `<td valign="middle" style="padding:0;"><table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td height="2" bgcolor="${cBg}" style="height:2px;background-color:${cBg};font-size:0;line-height:0;">&nbsp;</td></tr></table></td>`;
-        labelRow += `<td style="padding:0;"></td>`;
-      } else {
-        dotRow   += `<td valign="middle" style="padding:0;"><table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td height="2" bgcolor="#d0d4e0" style="height:2px;background-color:#d0d4e0;font-size:0;line-height:0;">&nbsp;</td></tr></table></td>`;
-        labelRow += `<td style="padding:0;"></td>`;
-      }
+      ctx.globalAlpha = 1;
     });
 
-    return (
-      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;border-collapse:collapse;">` +
-        `<tr><td bgcolor="#f7f8fc" style="background-color:#f7f8fc;border:1px solid #e0e4f0;border-radius:10px;padding:20px 16px 18px;">` +
-          `<p style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#6b7280;text-align:center;margin:0 0 16px;font-family:Arial,sans-serif;">📍 YOUR HOME LOAN JOURNEY</p>` +
-          `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">` +
-            `<tr>${dotRow}</tr>` +
-            `<tr>${labelRow}</tr>` +
-          `</table>` +
-        `</td></tr>` +
-      `</table>`
-    );
+    callback(c.toDataURL('image/jpeg', 0.95));
   }
 
-  /* ── Outlook-safe coloured block ── */
-  function block(bg, borderSide, borderColor, content) {
-    const inner = `background-color:${bg};padding:14px 18px;font-family:Arial,Helvetica,sans-serif;border-radius:8px;`;
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
+
+  /* ── Block helper ── */
+  function block(bg, borderSide, borderColor, labelColor, labelText, bodyColor, bodyHtml) {
+    const label = labelText
+      ? `<strong style="display:block;color:${labelColor};font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:7px;">${labelText}</strong>`
+      : '';
+    const body  = `<span style="color:${bodyColor};font-size:14px;font-family:Arial,sans-serif;line-height:1.75;">${bodyHtml}</span>`;
+    const inner = `background-color:${bg};padding:15px 18px;font-family:Arial,Helvetica,sans-serif;border-radius:8px;`;
     if (borderSide === 'left') {
-      return (
-        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:16px 0;">` +
-          `<tr>` +
-            `<td width="4" bgcolor="${borderColor}" style="width:4px;background-color:${borderColor};border-radius:4px 0 0 4px;font-size:0;line-height:0;">&nbsp;</td>` +
-            `<td bgcolor="${bg}" style="${inner}border-radius:0 8px 8px 0;">${content}</td>` +
-          `</tr>` +
-        `</table>`
-      );
+      return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:14px 0;"><tr>` +
+        `<td width="4" bgcolor="${borderColor}" style="width:4px;background-color:${borderColor};border-radius:4px 0 0 4px;font-size:0;line-height:0;">&nbsp;</td>` +
+        `<td bgcolor="${bg}" style="${inner}border-radius:0 8px 8px 0;">${label}${body}</td></tr></table>`;
     }
-    return (
-      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:16px 0;border:1px solid ${borderColor};border-radius:8px;">` +
-        `<tr><td bgcolor="${bg}" style="${inner}">${content}</td></tr>` +
-      `</table>`
-    );
+    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:14px 0;border:1px solid ${borderColor};border-radius:8px;"><tr><td bgcolor="${bg}" style="${inner}">${label}${body}</td></tr></table>`;
   }
 
   function getTimeOfDay() { const h = new Date().getHours(); return h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening'; }
@@ -290,98 +325,101 @@
     const time    = getTimeOfDay();
     const survey  = document.getElementById('include-survey').checked;
 
-    const opening = contact === 'spoke'
-      ? `Thank you so much for taking the time to chat just now — it was genuinely great to catch up!`
-      : `I hope you're doing well! I did try to give you a quick call but couldn't get through — I just wanted to reach out and check in.`;
+    buildJourneyJpeg(function(jpegSrc) {
 
-    /* ── Canvas banner — warm dark green, white text ── */
-    const checkinBanner = (function() {
-      const W = 1200, H = 210, R = 20;
-      const c = document.createElement('canvas');
-      c.width = W; c.height = H;
-      const x = c.getContext('2d');
-      x.fillStyle = '#1a3a2a';
-      x.beginPath();
-      x.moveTo(R,0); x.lineTo(W-R,0); x.arcTo(W,0,W,R,R);
-      x.lineTo(W,H-R); x.arcTo(W,H,W-R,H,R);
-      x.lineTo(R,H); x.arcTo(0,H,0,H-R,R);
-      x.lineTo(0,R); x.arcTo(0,0,R,0,R);
-      x.closePath(); x.fill();
-      x.fillStyle = '#ffffff';
-      x.font = 'bold 46px Georgia, serif';
-      x.textAlign = 'center'; x.textBaseline = 'alphabetic';
-      x.fillText('\uD83D\uDCC5 One Month In \u2014 How\u2019s Everything Going?', W/2, 108);
-      x.fillStyle = '#a8c8b8';
-      x.font = '28px Arial, sans-serif';
-      x.fillText('Settlement was just the beginning \u2014 I\u2019m still here for you.', W/2, 160);
-      const src = c.toDataURL('image/png');
-      return `<img src="${src}" width="100%" style="display:block;border-radius:10px;margin:16px 0;" alt="One Month In \u2014 Checking In on You!" />`;
-    })();
+      const opening = contact === 'spoke'
+        ? `Thank you so much for taking the time to chat just now — it was genuinely great to catch up!`
+        : `I hope you're doing well! I did try to give you a quick call but couldn't get through — I just wanted to reach out and check in.`;
 
-    const thankYouBlock = block('#fff8ee', 'left', '#c8a96e',
-      `<strong style="color:#5a3e0a;font-family:Arial,sans-serif;font-size:14px;">💛 Thank You for Choosing to Work With Me</strong><br/>` +
-      `<span style="color:#5a3e0a;font-size:14px;font-family:Arial,sans-serif;">It genuinely means a lot to have had the opportunity to assist you with your ${loan}. ` +
-      `Working with clients like you is exactly why I love what I do, and I hope the entire experience has been a positive one from your end. ` +
-      `It was truly a pleasure getting you across the finish line.</span>`
-    );
+      // ── Check-in header — Aussie purple, no canvas banner ──
+      const checkinHeader =
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:0 0 18px;">` +
+          `<tr>` +
+            `<td width="5" bgcolor="${AUSSIE_PURPLE}" style="width:5px;background-color:${AUSSIE_PURPLE};border-radius:4px 0 0 4px;font-size:0;line-height:0;">&nbsp;</td>` +
+            `<td bgcolor="${AUSSIE_PURPLE_SOFT}" style="background-color:${AUSSIE_PURPLE_SOFT};border-radius:0 8px 8px 0;padding:15px 20px;font-family:Arial,Helvetica,sans-serif;">` +
+              `<span style="display:block;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${AUSSIE_PURPLE};margin-bottom:5px;">1 Month Check-In</span>` +
+              `<span style="display:block;font-size:17px;font-weight:700;color:#1a1030;font-family:Arial,sans-serif;line-height:1.3;">One month in — how's everything going, ${name}?</span>` +
+            `</td>` +
+          `</tr>` +
+        `</table>`;
 
-    const alwaysHereBlock = block('#f0f4ff', 'all', '#c8d0f0',
-      `<strong style="display:block;margin-bottom:6px;color:#1a1a4a;font-family:Arial,sans-serif;font-size:14px;">📞 Always Here for You</strong>` +
-      `<span style="color:#1a1a4a;font-size:14px;font-family:Arial,sans-serif;">Even though your ${loan} has settled, I'm never far away. ` +
-      `Whether it's a question about your repayments, a change in your financial situation, or you're starting to think about your next move — I want to be your first call. ` +
-      `Please never feel like you're bothering me — that's exactly what I'm here for.</span>`
-    );
+      // ── Thank you — kept boxed, it's the emotional centrepiece ──
+      const thankYouBlock = block(
+        AUSSIE_PURPLE_SOFT, 'left', AUSSIE_PURPLE,
+        AUSSIE_PURPLE, 'Thank you for choosing to work with me',
+        AUSSIE_PURPLE_MID,
+        `It genuinely means a lot to have had the opportunity to assist you with your ${loan}. Working with clients like you is exactly why I love what I do, and I hope the experience has been a positive one from your end. It was truly a pleasure getting you across the finish line.`
+      );
 
-    const referralBlock = block('#f0f9f4', 'left', '#4caf82',
-      `<strong style="color:#1a3a2a;font-family:Arial,sans-serif;font-size:14px;">💚 Know Someone Who Could Use a Hand?</strong><br/>` +
-      `<span style="color:#1a3a2a;font-size:14px;font-family:Arial,sans-serif;">If any friends, family, or colleagues are thinking about a home loan, refinance, or investment property, ` +
-      `I'd love it if you kept me in mind. A referral genuinely means the world to me, and I promise to look after anyone you send my way — just as I have with you.</span>`
-    );
+      // ── Always here — plain prose ──
+      const alwaysHereText =
+        `<p style="margin:16px 0 14px;font-family:Arial,sans-serif;font-size:15px;color:#1a1a2e;line-height:1.75;">Even though your ${loan} has settled, I'm never far away. Whether it's a question about your repayments, a change in your financial situation, or you're starting to think about your next move — I want to be your first call. Please never feel like you're bothering me — that's exactly what I'm here for.</p>`;
 
-    const surveyBlock = survey ? block('#fff0f6', 'all', '#f0c0d8',
-      `<strong style="display:block;margin-bottom:6px;color:#7a0a3a;font-family:Arial,sans-serif;font-size:14px;">🙏 One Small Favour</strong>` +
-      `<span style="color:#4a1a2e;font-size:14px;font-family:Arial,sans-serif;">You would've received an email with the subject line <em>"How are we doing so far?"</em> (check your junk/spam folder if you can't find it). When you have a spare moment, I'd really appreciate it if you could click the link inside and complete the short 3-question, star-rated survey.<br/><br/>Your feedback genuinely means a lot — and it also contributes to my monthly performance metrics, so your support is very much appreciated.</span>`
-    ) : '';
+      // ── Survey — kept boxed ──
+      const surveyBlock = survey ? block(
+        '#fff0f6', 'all', '#f0c0d8',
+        '#7a0a3a', 'One small favour',
+        '#4a1a2e',
+        `You should have received an email with the subject line <em>"How are we doing so far?"</em> — if you can't find it, check your junk or spam folder. When you have a spare moment, I'd really appreciate it if you could complete the short 3-question, star-rated survey inside.<br/><br/>Your feedback genuinely means a lot — and it also contributes to my monthly performance metrics, so your support is very much appreciated.`
+      ) : '';
 
-    const html =
-      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;font-size:15px;line-height:1.75;"><tr><td style="padding:0;">` +
-      `<p style="font-size:18px;font-weight:600;margin:0 0 16px;font-family:Arial,sans-serif;">Good ${time}, ${name}.</p>` +
-      `<p style="margin:0 0 16px;font-family:Arial,sans-serif;">${opening}</p>` +
-      checkinBanner +
-      `<p style="margin:0 0 16px;font-family:Arial,sans-serif;">Can you believe it's already been a month since your ${loan} settled? Time really does fly! I just wanted to reach out, see how you're settling in, and remind you that I'm still very much in your corner.</p>` +
-      thankYouBlock +
-      alwaysHereBlock +
-      referralBlock +
-      surveyBlock +
-      emailTimelineHTML() +
-      `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:24px;">` +
-        `<tr><td style="border-top:2px solid #e8ecf5;padding-top:20px;font-size:14px;color:#4a4f6a;font-family:Arial,sans-serif;">` +
-          `<p style="margin:0 0 14px;font-family:Arial,sans-serif;">Thank you again, ${name} — here's to everything going brilliantly with your new ${loan}. Don't be a stranger!</p>` +
-          `<strong style="font-size:16px;color:#1a1a2e;font-weight:700;display:block;font-family:Arial,sans-serif;">Joshua Coppolelli</strong>` +
-          `<span style="font-size:13px;color:#888;display:block;margin-top:2px;font-family:Arial,sans-serif;">Mortgage Broker · Aussie Home Loans</span>` +
-          `<span style="font-size:13px;color:#666;display:block;margin-top:6px;font-family:Arial,sans-serif;">📱 0426 275 799 &nbsp;·&nbsp; ☎️ 02 7256 9675</span>` +
-          `<a href="https://www.aussie.com.au/mobile-app/connect-with-me/?brokerid=c56979bb-d130-8920-afe2-1a279a847012&utm_source=app-prl" style="font-size:13px;color:#c8a96e;display:block;margin-top:6px;font-family:Arial,sans-serif;text-decoration:none;">📅 Book a time to chat</a>` +
-        `</td></tr>` +
-      `</table>` +
-      `</td></tr></table>`;
+      // ── Referral — plain prose ──
+      const referralText =
+        `<p style="margin:16px 0 14px;font-family:Arial,sans-serif;font-size:15px;color:#1a1a2e;line-height:1.75;">Lastly, if any friends, family, or colleagues are thinking about a home loan, refinance, or investment property, I'd love it if you kept me in mind. A referral genuinely means the world to me, and I promise to look after anyone you send my way — just as I have with you.</p>`;
 
-    document.getElementById('email-body').innerHTML = html;
+      // ── Yellow divider ──
+      const yellowDivider =
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:22px 0 0;">` +
+          `<tr><td height="3" bgcolor="${AUSSIE_YELLOW}" style="height:3px;background-color:${AUSSIE_YELLOW};border-radius:2px;font-size:0;line-height:0;">&nbsp;</td></tr>` +
+        `</table>`;
 
-    const lLabel = loanRaw ? loanCap : 'Home Loan';
-    const subjects = [
-      `One Month In \u2014 Checking In on You, ${name}!`,
-      `It\u2019s Been a Month \u2014 How\u2019s Everything Tracking?`,
-      `Just Checking In, ${name} \u2014 One Month Since Settlement`,
-    ];
-    document.getElementById('subject-lines').innerHTML = subjects.map(s =>
-      `<div class="subject-pill" onclick="copySubject(this,'${s.replace(/'/g, "\\'")}')"><span>${s}</span><span class="copy-icon">Copy ↗</span></div>`
-    ).join('');
+      // ── Journey image ──
+      const journeyImg =
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:20px 0 6px;">` +
+          `<tr><td><img src="${jpegSrc}" width="100%" style="display:block;border-radius:10px;" alt="Your Home Loan Journey" /></td></tr>` +
+        `</table>`;
 
-    const out = document.getElementById('output-section');
-    out.style.display = 'block';
-    setTimeout(() => out.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
-    document.getElementById('copy-btn').textContent = 'Copy email to clipboard';
-    document.getElementById('copy-btn').className = 'copy-btn';
+      const html =
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;font-size:15px;line-height:1.75;"><tr><td style="padding:0;">` +
+        `<p style="font-size:16px;font-weight:600;margin:0 0 14px;font-family:Arial,sans-serif;">Good ${time}, ${name}.</p>` +
+        `<p style="margin:0 0 16px;font-family:Arial,sans-serif;">${opening}</p>` +
+        checkinHeader +
+        `<p style="margin:0 0 14px;font-family:Arial,sans-serif;">Can you believe it's already been a month since your ${loan} settled? Time really does fly. I just wanted to reach out, see how you're settling in, and remind you that I'm still very much in your corner.</p>` +
+        thankYouBlock +
+        alwaysHereText +
+        surveyBlock +
+        referralText +
+        journeyImg +
+        yellowDivider +
+        `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-top:18px;">` +
+          `<tr><td style="padding-top:4px;font-size:14px;color:#4a4f6a;font-family:Arial,sans-serif;">` +
+            `<p style="margin:0 0 14px;font-family:Arial,sans-serif;">Thank you again, ${name} — here's to everything going brilliantly with your new ${loan}. Don't be a stranger!</p>` +
+            `<strong style="font-size:16px;color:#1a1a2e;font-weight:700;display:block;font-family:Arial,sans-serif;">Josh Coppolelli</strong>` +
+            `<span style="font-size:13px;color:#888;display:block;margin-top:2px;font-family:Arial,sans-serif;">Mortgage Broker · Aussie Home Loans</span>` +
+            `<span style="font-size:13px;color:#666;display:block;margin-top:6px;font-family:Arial,sans-serif;">📱 0426 275 799 &nbsp;·&nbsp; ☎️ 02 7256 9675</span>` +
+            `<a href="https://www.aussie.com.au/mobile-app/connect-with-me/?brokerid=c56979bb-d130-8920-afe2-1a279a847012&utm_source=app-prl" style="font-size:13px;color:${AUSSIE_PURPLE};display:block;margin-top:6px;font-family:Arial,sans-serif;text-decoration:none;font-weight:600;">📅 Book a time to chat</a>` +
+          `</td></tr>` +
+        `</table>` +
+        `</td></tr></table>`;
+
+      document.getElementById('email-body').innerHTML = html;
+
+      const lLabel = loanRaw ? loanCap : 'Home Loan';
+      const subjects = [
+        `One Month In \u2014 Checking In on You, ${name}!`,
+        `It\u2019s Been a Month \u2014 How\u2019s Everything Tracking?`,
+        `Just Checking In, ${name} \u2014 One Month Since Settlement`,
+      ];
+      document.getElementById('subject-lines').innerHTML = subjects.map(s =>
+        `<div class="subject-pill" onclick="copySubject(this,'${s.replace(/'/g, "\\'")}')"><span>${s}</span><span class="copy-icon">Copy ↗</span></div>`
+      ).join('');
+
+      const out = document.getElementById('output-section');
+      out.style.display = 'block';
+      setTimeout(() => out.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+      document.getElementById('copy-btn').textContent = 'Copy email to clipboard';
+      document.getElementById('copy-btn').className = 'copy-btn';
+    });
   }
 
   async function copyEmail() {
