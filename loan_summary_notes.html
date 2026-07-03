@@ -18,10 +18,16 @@
 body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh}
 .page{max-width:740px;margin:0 auto;padding:1.5rem 1.25rem 5rem}
 
+/* Top nav — matches the email generator's dark nav + Live badge */
+.topnav{padding:14px 24px;background:#161920;border-bottom:1px solid #2a2f3f;display:flex;align-items:center;gap:12px}
+.topnav a{color:#7c8299;text-decoration:none;font-size:13px;font-weight:500;transition:color .2s}
+.topnav a:hover{color:#c8a96e}
+.nav-sep{color:#4a5168;font-size:12px}
+.nav-current{color:#e8eaf0;font-size:13px;font-weight:500}
+.nav-live{background:rgba(76,175,130,0.15);border:1px solid rgba(76,175,130,0.35);color:#4caf82;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:20px;margin-left:4px}
+
 /* Header */
 .page-header{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;flex-wrap:wrap}
-.back-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border2);border-radius:var(--rs);background:white;font-family:inherit;font-size:12.5px;font-weight:500;color:var(--text2);cursor:pointer;text-decoration:none;transition:all .15s}
-.back-btn:hover{border-color:var(--navy2);color:var(--navy2);background:var(--info-bg)}
 .header-text{flex:1}
 .header-text h1{font-size:20px;font-weight:600;color:var(--navy);margin-bottom:2px}
 .header-text p{color:var(--text2);font-size:12.5px}
@@ -131,10 +137,15 @@ textarea{resize:vertical;min-height:68px}
 </style>
 </head>
 <body>
+<nav class="topnav">
+  <a href="https://aussiecoppolelli.github.io/broker-toolkit/index.html">&#8592; Dashboard</a>
+  <span class="nav-sep">&middot;</span>
+  <span class="nav-current">Loan Summary Generator</span>
+  <span class="nav-live">Live</span>
+</nav>
 <div class="page">
 
 <div class="page-header">
-  <a class="back-btn" href="https://aussiecoppolelli.github.io/broker-toolkit/index.html">&#8592; Dashboard</a>
   <div class="header-text">
     <h1>Loan Summary Generator</h1>
     <p>Generate formatted credit summary notes from loan application details.</p>
