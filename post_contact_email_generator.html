@@ -26,12 +26,15 @@ select.sel-amber  { background-color:#633806;color:#FAC775;border-color:#633806;
 select.sel-blue   { background-color:#0C447C;color:#B5D4F4;border-color:#0C447C; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23B5D4F4' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); }
 select.sel-teal   { background-color:#0e5c6e;color:#a8dde8;border-color:#0e5c6e; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a8dde8' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); }
 select.sel-indigo { background-color:#3730a3;color:#c7d2fe;border-color:#3730a3; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c7d2fe' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); }
-select.sel-green option, select.sel-amber option, select.sel-blue option, select.sel-teal option, select.sel-indigo option { background:#fff;color:#1a1a1a; }
+select.sel-rose   { background-color:#7c1d3f;color:#f4b8c9;border-color:#7c1d3f; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23f4b8c9' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); }
+select.sel-green option, select.sel-amber option, select.sel-blue option, select.sel-teal option, select.sel-indigo option, select.sel-rose option { background:#fff;color:#1a1a1a; }
 .seg { display: flex; border: 1px solid #d0d3d9; border-radius: 6px; overflow: hidden; }
 .seg-opt { flex: 1; padding: 9px 12px; font-size: 13px; font-weight: 500; cursor: pointer; text-align: center; border: none; background: #fff; color: #888; transition: background 0.12s, color 0.12s; }
 .seg-opt + .seg-opt { border-left: 1px solid #d0d3d9; }
 .seg-opt.on-blue  { background: #0C447C; color: #B5D4F4; }
 .seg-opt.on-green { background: #085041; color: #9FE1CB; }
+.seg-opt.on-amber { background: #633806; color: #FAC775; }
+.mode-hint { font-size: 12px; color: #888; margin-top: 8px; line-height: 1.6; }
 .applicant-block { margin-top: 4px; }
 .applicant-row { display: flex; align-items: center; gap: 8px; }
 .applicant-row select { flex: 1; min-width: 0; }
@@ -109,35 +112,50 @@ select.sel-green option, select.sel-amber option, select.sel-blue option, select
 
   <div class="card">
     <div class="card-title">Appointment details</div>
-    <div class="grid2" style="margin-bottom:12px;">
-      <div class="field">
-        <label>Appointment date</label>
-        <input type="date" id="apptDate" onchange="updateTimezoneHint()"/>
+
+    <div class="field" style="margin-bottom:14px;">
+      <label style="margin-bottom:6px;">Is the client ready to book a follow-up?</label>
+      <div class="seg">
+        <button class="seg-opt" id="modeBooked" onclick="setFollowUpMode('booked')">📅 Yes — book appointment</button>
+        <button class="seg-opt" id="modeSoft" onclick="setFollowUpMode('soft')">🤝 Not yet — soft close</button>
       </div>
-      <div class="field">
-        <label>Time <span id="tzHint" style="font-weight:400;color:#888;font-size:11px;"></span></label>
-        <select id="apptTime" onchange="updateTimezoneHint()">
-          <option value="">— Select time —</option>
+    </div>
+
+    <div id="bookedFields">
+      <div class="grid2" style="margin-bottom:12px;">
+        <div class="field">
+          <label>Appointment date</label>
+          <input type="date" id="apptDate" onchange="updateTimezoneHint()"/>
+        </div>
+        <div class="field">
+          <label>Time <span id="tzHint" style="font-weight:400;color:#888;font-size:11px;"></span></label>
+          <select id="apptTime" onchange="updateTimezoneHint()">
+            <option value="">— Select time —</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label>Client's timezone</label>
+        <select id="clientTz" onchange="updateTimezoneHint()">
+          <option value="">— Select timezone —</option>
+          <option value="Australia/Sydney">NSW / VIC / TAS / ACT — Sydney/Melbourne time</option>
+          <option value="Australia/Brisbane">QLD — Brisbane time (no daylight saving)</option>
+          <option value="Australia/Adelaide">SA — Adelaide time</option>
+          <option value="Australia/Darwin">NT — Darwin time</option>
+          <option value="Australia/Perth">WA — Perth time</option>
         </select>
       </div>
-    </div>
-    <div class="field" style="margin-bottom:12px;">
-      <label>Client's timezone</label>
-      <select id="clientTz" onchange="updateTimezoneHint()">
-        <option value="">— Select timezone —</option>
-        <option value="Australia/Sydney">NSW / VIC / TAS / ACT — Sydney/Melbourne time</option>
-        <option value="Australia/Brisbane">QLD — Brisbane time (no daylight saving)</option>
-        <option value="Australia/Adelaide">SA — Adelaide time</option>
-        <option value="Australia/Darwin">NT — Darwin time</option>
-        <option value="Australia/Perth">WA — Perth time</option>
-      </select>
-    </div>
-    <div class="field">
-      <label style="margin-bottom:6px;">Call type</label>
-      <div class="seg">
-        <button class="seg-opt" id="optVideo" onclick="setCallType('video')">📹 Video call (Microsoft Teams)</button>
-        <button class="seg-opt" id="optPhone" onclick="setCallType('phone')">📞 Phone call</button>
+      <div class="field">
+        <label style="margin-bottom:6px;">Call type</label>
+        <div class="seg">
+          <button class="seg-opt" id="optVideo" onclick="setCallType('video')">📹 Video call (Microsoft Teams)</button>
+          <button class="seg-opt" id="optPhone" onclick="setCallType('phone')">📞 Phone call</button>
+        </div>
       </div>
+    </div>
+
+    <div id="softFields" style="display:none;">
+      <p class="mode-hint">No appointment will be scheduled. The email will let the client know there's no rush, and invite them to reach out or book a time whenever suits them, using your booking link above.</p>
     </div>
   </div>
 
@@ -159,6 +177,7 @@ select.sel-green option, select.sel-amber option, select.sel-blue option, select
 <script>
 // ─── State ───────────────────────────────────────────────────────────────────
 var callType = '';
+var followUpMode = 'booked'; // 'booked' | 'soft'
 var applicants = [];
 var nextApplicantId = 1;
 var MAX_APPLICANTS = 6;
@@ -186,7 +205,17 @@ var MAX_APPLICANTS = 6;
     String(d.getMonth() + 1).padStart(2, '0') + '-' +
     String(d.getDate()).padStart(2, '0');
   addApplicant();
+  setFollowUpMode('booked');
 })();
+
+// ─── Follow-up mode (booked vs. soft close) ───────────────────────────────────
+function setFollowUpMode(mode) {
+  followUpMode = mode;
+  document.getElementById('modeBooked').className = 'seg-opt' + (mode === 'booked' ? ' on-blue' : '');
+  document.getElementById('modeSoft').className   = 'seg-opt' + (mode === 'soft'   ? ' on-amber' : '');
+  document.getElementById('bookedFields').style.display = mode === 'booked' ? '' : 'none';
+  document.getElementById('softFields').style.display   = mode === 'soft'   ? '' : 'none';
+}
 
 // ─── Applicant management ─────────────────────────────────────────────────────
 function addApplicant() {
@@ -218,7 +247,8 @@ function renderApplicants() {
     sel.innerHTML = '<option value="">— Employment type —</option>' +
       '<option value="payg">Employee (PAYG)</option>' +
       '<option value="sole">Sole Trader</option>' +
-      '<option value="company">Company</option>';
+      '<option value="company">Company</option>' +
+      '<option value="pension">Pension</option>';
     sel.value = appt.empValue;
     if (appt.empValue) styleEmpSelect(sel, appt.empValue);
     sel.onchange = (function(a, s) {
@@ -259,6 +289,7 @@ function styleEmpSelect(el, val) {
   if (val === 'payg')    el.className = 'sel-green';
   if (val === 'sole')    el.className = 'sel-amber';
   if (val === 'company') el.className = 'sel-blue';
+  if (val === 'pension') el.className = 'sel-rose';
 }
 function styleResSelect(el, val) {
   el.className = '';
@@ -434,6 +465,7 @@ function doClear() {
   document.getElementById('tzHint').textContent = '';
   callType = '';
   setCallType('');
+  setFollowUpMode('booked');
   applicants = [];
   nextApplicantId = 1;
   addApplicant();
@@ -522,6 +554,7 @@ function buildDocList(appts, txn) {
     if (emp === 'payg')         items = ['2 most recent payslips'];
     else if (emp === 'sole')    items = ['2 most recent Notices of Assessment (NOAs)', '2 most recent Individual Tax Returns'];
     else if (emp === 'company') items = ['2 most recent Notices of Assessment (NOAs)', '2 most recent Individual Tax Returns', '2 most recent Company Tax Returns', '2 most recent Company Financials'];
+    else if (emp === 'pension') items = ['Most recent Centrelink statement'];
     if (!items.length) return;
     html += '<hr style="border:none;border-top:1px solid #e2e4e8;margin:4px 0 14px;"/>';
     html += '<p style="font-size:13px;font-weight:700;color:' + G + ';margin-bottom:6px;">' + heading + suffix + '</p>';
@@ -556,11 +589,12 @@ function buildDocList(appts, txn) {
 // ─── Milestone timeline (email, Outlook-safe table layout) ─────────────────────
 //
 // ACTIVE index:
+//   soft close (no appointment booked) → 0 (Initial Consult active, nothing done yet)
 //   phone call → 0 (Initial Consult active; 📞 emoji shown)
 //   video call → 1 (Video Call active; Initial Consult ✓ done)
 //
 function emailTimelineHTML() {
-  var ACTIVE = (callType === 'video') ? 1 : 0;
+  var ACTIVE = (followUpMode === 'soft') ? 0 : ((callType === 'video') ? 1 : 0);
 
   var MILESTONES = [
     { label: 'Initial\nConsult',  abbr: 'IC', emoji: '📞' },  // shown when active (phone); becomes ✓ on video path
@@ -664,36 +698,52 @@ function generate() {
   var broker   = getVal('brokerName');
   var phone    = getVal('brokerPhone');
   var appLink  = getVal('appLink');
-  var apptDate = getVal('apptDate');
-  var apptTime = getVal('apptTime');
   var txn      = getVal('transactionType');
-  var clientTz = getVal('clientTz');
 
-  if (!callType)  { alert('Please select video call or phone call.'); return; }
-  if (!apptTime)  { alert('Please select an appointment time.'); return; }
-  if (!apptDate)  { alert('Please select an appointment date.'); return; }
-  if (!clientTz)  { alert('Please select the client\'s timezone.'); return; }
+  var apptLine, apptDate, apptTime, subjects;
 
-  var dateDisplay = getSmartDayLabel(apptDate) + ' ' + fmtDate(apptDate);
-  var tzResult    = convertToSydney(clientTz, apptDate, apptTime);
-  var timeInEmail = apptTime;
-  if (tzResult) {
-    timeInEmail += ' ' + tzResult.clientAbbr;
-    if (!tzResult.same) {
-      timeInEmail += ' (' + tzResult.label + ' ' + tzResult.sydAbbr + ')';
+  if (followUpMode === 'soft') {
+    apptLine =
+      'Whenever you\u2019re ready to move forward with the application, or if any questions come up in the meantime, please don\u2019t hesitate to reach out. You\u2019re also welcome to ' +
+      '<a href="' + appLink + '" style="color:#185FA5;text-decoration:underline;">book a time directly via my calendar</a> whenever it suits you.';
+
+    subjects = [
+      'Your home loan options, ' + name + ' \u2014 as discussed',
+      'Following up on our chat, ' + name + ' \uD83D\uDC4B',
+      'Here whenever you\u2019re ready, ' + name
+    ];
+  } else {
+    apptDate = getVal('apptDate');
+    apptTime = getVal('apptTime');
+    var clientTz = getVal('clientTz');
+
+    if (!callType)  { alert('Please select video call or phone call.'); return; }
+    if (!apptTime)  { alert('Please select an appointment time.'); return; }
+    if (!apptDate)  { alert('Please select an appointment date.'); return; }
+    if (!clientTz)  { alert('Please select the client\'s timezone.'); return; }
+
+    var dateDisplay = getSmartDayLabel(apptDate) + ' ' + fmtDate(apptDate);
+    var tzResult    = convertToSydney(clientTz, apptDate, apptTime);
+    var timeInEmail = apptTime;
+    if (tzResult) {
+      timeInEmail += ' ' + tzResult.clientAbbr;
+      if (!tzResult.same) {
+        timeInEmail += ' (' + tzResult.label + ' ' + tzResult.sydAbbr + ')';
+      }
     }
+
+    apptLine = callType === 'video'
+      ? 'A <strong>video call</strong> has been booked for <strong>' + dateDisplay + ' at ' + timeInEmail + '</strong>. An automated email will be sent to you so you can join the meeting. You can access the meeting through your web browser on your computer — however, if you access the meeting on your phone or tablet you will need to download the <strong>Microsoft Teams app</strong> first.'
+      : 'A <strong>phone call</strong> has been booked for <strong>' + dateDisplay + ' at ' + timeInEmail + '</strong>. I will call you on your registered number at that time — please make sure you are available and have good reception.';
+
+    subjects = [
+      'Your home loan options, ' + name + ' — as discussed',
+      'Next steps for your loan, ' + name + ' \uD83D\uDCCB',
+      'Your appointment is confirmed — ' + getSmartDayLabel(apptDate) + ' ' + fmtDate(apptDate) + ' at ' + apptTime
+    ];
   }
 
-  var apptLine = callType === 'video'
-    ? 'A <strong>video call</strong> has been booked for <strong>' + dateDisplay + ' at ' + timeInEmail + '</strong>. An automated email will be sent to you so you can join the meeting. You can access the meeting through your web browser on your computer — however, if you access the meeting on your phone or tablet you will need to download the <strong>Microsoft Teams app</strong> first.'
-    : 'A <strong>phone call</strong> has been booked for <strong>' + dateDisplay + ' at ' + timeInEmail + '</strong>. I will call you on your registered number at that time — please make sure you are available and have good reception.';
-
   // Subject lines
-  var subjects = [
-    'Your home loan options, ' + name + ' — as discussed',
-    'Next steps for your loan, ' + name + ' \uD83D\uDCCB',
-    'Your appointment is confirmed — ' + getSmartDayLabel(apptDate) + ' ' + fmtDate(apptDate) + ' at ' + apptTime
-  ];
   var sl = document.getElementById('subjLines');
   sl.innerHTML = '';
   subjects.forEach(function(subj) {
@@ -726,16 +776,21 @@ function generate() {
   html += '<p style="font-size:15px;margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;">Hi ' + name + ',</p>';
   html += '<p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;">Please see the options we spoke about attached.</p>';
 
-  // Appointment block — table with left border (Outlook-safe)
-  html +=
-    '<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:0 0 14px;">' +
-      '<tr>' +
-        '<td width="4" bgcolor="' + G + '" style="width:4px;background-color:' + G + ';border-radius:4px 0 0 4px;font-size:0;line-height:0;">&nbsp;</td>' +
-        '<td bgcolor="#f0f7f4" style="background-color:#f0f7f4;padding:12px 16px;border-radius:0 4px 4px 0;">' +
-          '<p style="font-size:14px;line-height:1.7;margin:0;font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;">' + apptLine + '</p>' +
-        '</td>' +
-      '</tr>' +
-    '</table>';
+  // Appointment block — boxed with green left border when an appointment is booked.
+  // For soft close, render as a plain paragraph (no green box) since nothing's confirmed yet.
+  if (followUpMode === 'soft') {
+    html += '<p style="font-size:14px;line-height:1.7;margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;">' + apptLine + '</p>';
+  } else {
+    html +=
+      '<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:0 0 14px;">' +
+        '<tr>' +
+          '<td width="4" bgcolor="' + G + '" style="width:4px;background-color:' + G + ';border-radius:4px 0 0 4px;font-size:0;line-height:0;">&nbsp;</td>' +
+          '<td bgcolor="#f0f7f4" style="background-color:#f0f7f4;padding:12px 16px;border-radius:0 4px 4px 0;">' +
+            '<p style="font-size:14px;line-height:1.7;margin:0;font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;">' + apptLine + '</p>' +
+          '</td>' +
+        '</tr>' +
+      '</table>';
+  }
 
   // Document list — table with left border (Outlook-safe)
   var docHtml = buildDocList(applicants, txn);
