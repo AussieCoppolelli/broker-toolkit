@@ -240,7 +240,7 @@ textarea{resize:vertical;min-height:68px}
     <div class="sub-label">Cash out details</div>
     <div class="field">
       <label>Cash out amount ($)</label>
-      <input type="text" id="cashout-amount" placeholder="e.g. 50,000"/>
+      <input type="text" id="cashout-amount" placeholder="e.g. 50,000" oninput="formatMoneyInput(this)"/>
     </div>
     <div class="field">
       <label>Cash out purpose</label>
@@ -292,7 +292,7 @@ textarea{resize:vertical;min-height:68px}
       </div>
       <div class="field">
         <label>Valuation amount ($)</label>
-        <input type="text" id="val-amount" placeholder="e.g. 750,000"/>
+        <input type="text" id="val-amount" placeholder="e.g. 750,000" oninput="formatMoneyInput(this)"/>
       </div>
     </div>
   </div>
@@ -317,7 +317,7 @@ textarea{resize:vertical;min-height:68px}
     </div>
     <div class="field">
       <label>Estimated value ($)</label>
-      <input type="text" id="tba-val-amount" placeholder="e.g. 750,000"/>
+      <input type="text" id="tba-val-amount" placeholder="e.g. 750,000" oninput="formatMoneyInput(this)"/>
     </div>
   </div>
 
@@ -353,7 +353,7 @@ textarea{resize:vertical;min-height:68px}
   <div class="row2">
     <div class="field">
       <label>NMS surplus ($)</label>
-      <input type="text" id="nms" placeholder="e.g. 208"/>
+      <input type="text" id="nms" placeholder="e.g. 208" oninput="formatMoneyInput(this)"/>
     </div>
     <div class="field">
       <label>DTI</label>
@@ -467,8 +467,7 @@ function renderApplicants(){
         <div class="field" style="margin-bottom:0">
           <label>Full name</label>
           <input type="text" value="${esc(a.name)}" placeholder="e.g. John Smith"
-            oninput="applicants[${i}].name=this.value"
-            onblur="applicants[${i}].name=titleCaseName(this.value);this.value=applicants[${i}].name"/>
+            oninput="onApplicantNameInput(${i},this)"/>
         </div>
         <div class="field" style="margin-bottom:0">
           <label>Credit score</label>
@@ -975,7 +974,7 @@ document.addEventListener('paste',async(e)=>{
     const lender=extractLenderFromText(topResult.data.text);
 
     const filled=[];
-    if(nms){document.getElementById('nms').value=nms;filled.push('NMS $'+nms);}
+    if(nms){const nmsEl=document.getElementById('nms');nmsEl.value=nms;formatMoneyInput(nmsEl);filled.push('NMS $'+nmsEl.value);}
     if(dti){document.getElementById('dti').value=dti;filled.push('DTI '+dti);}
     if(lender){detectedLender=lender;document.getElementById('lender-suggest-text').textContent='Detected lender: '+lender;document.getElementById('lender-suggest').classList.add('show');}
     if(filled.length) setStatus('paste-status','success','\u2713 '+filled.join(' \u00b7 ')+' \u2014 verify below');
@@ -996,6 +995,18 @@ function dismissLender(){document.getElementById('lender-suggest').classList.rem
 function setStatus(id,type,msg){const el=document.getElementById(id);el.style.display='inline-flex';el.className='status-badge '+type;el.textContent=msg;}
 function v(id){return document.getElementById(id).value.trim();}
 function esc(s){return(s||'').replace(/"/g,'&quot;');}
+
+// Live thousands-separator formatting for dollar fields — preserves cursor position
+// by tracking distance from the end of the string (digit count doesn't change on
+// re-format, only comma placement does, so anchoring to the end keeps typing natural).
+function formatMoneyInput(el){
+  const cursorFromEnd = el.value.length - el.selectionStart;
+  const raw = el.value.replace(/[^\d]/g,'');
+  const formatted = raw ? Number(raw).toLocaleString('en-AU') : '';
+  el.value = formatted;
+  const newPos = Math.max(0, formatted.length - cursorFromEnd);
+  try { el.setSelectionRange(newPos, newPos); } catch(e) {}
+}
 
 // ── Clear fields ───────────────────────────────────────────────────────────────
 function clearFields(){
@@ -1076,6 +1087,34 @@ function titleCaseName(s){
   ).join(' ');
 }
 function applyNameCase(el){ el.value=titleCaseName(el.value); }
+
+// Live version for while-typing use — unlike titleCaseName, this never trims or
+// collapses whitespace, so a trailing space (needed to start a second word) isn't
+// stripped out from under the user on every keystroke.
+function liveTitleCase(s){
+  let result = '';
+  let capNext = true;
+  for (let i = 0; i < s.length; i++){
+    const ch = s[i];
+    if (ch === ' ' || ch === '-'){
+      result += ch;
+      capNext = true;
+    } else if (/[a-zA-Z]/.test(ch)){
+      result += capNext ? ch.toUpperCase() : ch.toLowerCase();
+      capNext = false;
+    } else {
+      result += ch;
+    }
+  }
+  return result;
+}
+function onApplicantNameInput(i, el){
+  const pos = el.selectionStart;
+  const cased = liveTitleCase(el.value);
+  applicants[i].name = cased;
+  el.value = cased;
+  try { el.setSelectionRange(pos, pos); } catch(e) {}
+}
 
 // Merge repeated-opener sentences into compound sentences for natural flow.
 // "The customer is seeking X. The customer is seeking Y. The customer is seeking Z."
