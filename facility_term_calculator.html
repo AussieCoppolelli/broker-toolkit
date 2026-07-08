@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Facility Term & Repayment History Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/tesseract.js@4/dist/tesseract.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F3EF;--card:#FFF;--border:#E0DDD7;--border2:#C8C5BC;
+  --navy:#0D2B45;--navy2:#1A4A6E;--text:#1A1A1A;--text2:#5C5C5C;--text3:#9A9A9A;
+  --success:#1A7A4A;--danger:#C0392B;--info-bg:#EBF2FB;--amber:#B45309;--amber-bg:#FEF3E2;
+  --r:10px;--rs:6px;
+}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh}
+.page{max-width:740px;margin:0 auto;padding:1.5rem 1.25rem 5rem}
+
+.topnav{padding:14px 24px;background:#161920;border-bottom:1px solid #2a2f3f;display:flex;align-items:center;gap:12px}
+.topnav a{color:#7c8299;text-decoration:none;font-size:13px;font-weight:500;transition:color .2s}
+.topnav a:hover{color:#c8a96e}
+.nav-sep{color:#4a5168;font-size:12px}
+.nav-current{color:#e8eaf0;font-size:13px;font-weight:500}
+.nav-beta{background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.35);color:#a78bfa;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:20px;margin-left:4px}
+
+.page-header{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;flex-wrap:wrap}
+.header-text{flex:1}
+.header-text h1{font-size:20px;font-weight:600;color:var(--navy);margin-bottom:2px}
+.header-text p{color:var(--text2);font-size:12.5px}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;margin-bottom:1rem}
+.card-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:1rem}
+
+.field{margin-bottom:12px}
+.field:last-child{margin-bottom:0}
+.field>label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px}
+.hint{font-weight:400;color:var(--text3)}
+input[type=text],input[type=number],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--rs);font-family:inherit;font-size:13.5px;color:var(--text);background:white;outline:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--navy2);box-shadow:0 0 0 3px rgba(26,74,110,.08)}
+textarea{resize:vertical;min-height:56px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.mt10{margin-top:10px}
+
+/* Facility cards */
+.facility-card{background:#FAFAF8;border:1px solid var(--border);border-radius:var(--rs);padding:14px;margin-bottom:10px}
+.fac-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px}
+.fac-title-input{border:none;background:transparent;font-size:13px;font-weight:600;color:var(--navy);padding:2px 0;flex:1;outline:none;border-bottom:1px dashed transparent}
+.fac-title-input:focus{border-bottom:1px dashed var(--navy2)}
+.remove-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px;line-height:1;padding:1px 5px;border-radius:4px;transition:all .15s}
+.remove-btn:hover{color:var(--danger);background:#FDEDEB}
+.add-btn{width:100%;margin-top:8px;padding:8px;border:1px dashed var(--border2);border-radius:var(--rs);background:transparent;font-family:inherit;font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s}
+.add-btn:hover{border-color:var(--navy2);color:var(--navy2);background:var(--info-bg)}
+
+/* Paste zone (shared pattern) */
+.paste-wrap{position:relative;margin-bottom:10px}
+.paste-zone{border:1.5px dashed var(--border2);border-radius:var(--rs);padding:16px 14px;text-align:center;cursor:pointer;transition:all .15s;background:white;outline:none}
+.paste-zone:focus{border-color:var(--navy2);background:var(--info-bg)}
+.paste-zone p{font-size:13px;color:var(--text2)}
+.paste-zone .phint{font-size:11.5px;color:var(--text3);margin-top:3px}
+.paste-preview{max-width:100%;max-height:120px;border-radius:4px;margin-top:10px;display:none;border:1px solid var(--border)}
+.paste-clear{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:rgba(30,30,30,.5);color:white;border:none;cursor:pointer;font-size:17px;line-height:1;display:none;align-items:center;justify-content:center}
+.paste-clear:hover{background:rgba(30,30,30,.8)}
+.status-badge{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:500;padding:4px 9px;border-radius:12px;margin-bottom:10px}
+.status-badge.loading{background:#EBF3FB;color:var(--navy2)}
+.status-badge.success{background:#EBF7F1;color:var(--success)}
+.status-badge.error{background:#FDEDEB;color:var(--danger)}
+.ocr-note{font-size:11.5px;color:var(--text3);margin-bottom:10px}
+
+.commentary-toggle{background:none;border:none;padding:0;font-size:12.5px;color:var(--navy2);cursor:pointer;font-family:inherit;font-weight:500;text-decoration:underline;text-underline-offset:2px}
+.commentary-toggle:hover{color:var(--navy)}
+.commentary-box{display:none;margin-top:8px;min-height:64px}
+.commentary-box.show{display:block}
+
+.sub-divider{height:1px;background:var(--border);margin:12px 0}
+.sub-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+
+/* Live stat panel */
+.stat-panel{background:white;border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin-top:12px}
+.stat-empty{font-size:12.5px;color:var(--text3)}
+.stat-row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;font-size:13px}
+.stat-row .k{color:var(--text2)}
+.stat-row .v{font-weight:600;color:var(--navy)}
+.stat-flag{display:inline-block;margin-top:6px;padding:3px 9px;border-radius:12px;font-size:11.5px;font-weight:600}
+.flag-clean{background:var(--info-bg);color:var(--success)}
+.flag-warn{background:var(--amber-bg);color:var(--amber)}
+.arrears-list{margin-top:8px;font-size:12px;color:var(--text2)}
+.arrears-list div{padding:2px 0}
+
+/* Output toggle */
+.toggle-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer;user-select:none;margin-bottom:.75rem}
+.toggle-row input{width:16px;height:16px;cursor:pointer;accent-color:var(--navy)}
+
+.action-row{display:flex;gap:10px;margin-top:.5rem}
+.generate-btn{flex:1;padding:11px;background:var(--navy);color:white;border:none;border-radius:var(--r);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s}
+.generate-btn:hover{background:var(--navy2)}
+.clear-btn{padding:11px 18px;background:white;color:var(--text2);border:1px solid var(--border2);border-radius:var(--r);font-family:inherit;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.clear-btn:hover{background:#FDEDEB;color:var(--danger);border-color:#F1B0A8}
+
+.output-card{display:none;background:white;border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;margin-top:1rem}
+.output-text{font-size:13.5px;line-height:1.85;color:var(--text);white-space:pre-wrap;font-family:inherit}
+.copy-btn{width:100%;margin-top:12px;padding:8px;border:1px solid var(--border2);border-radius:var(--rs);background:white;font-family:inherit;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s}
+.copy-btn:hover{background:#F4F3EF}
+.copy-btn.done{color:var(--success);border-color:#9FD4B7;background:#EBF7F1}
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a href="https://aussiecoppolelli.github.io/broker-toolkit/index.html">&#8592; Dashboard</a>
+  <span class="nav-sep">&middot;</span>
+  <span class="nav-current">Facility Term &amp; Repayment History Calculator</span>
+  <span class="nav-beta">Beta</span>
+</nav>
+<div class="page">
+
+<div class="page-header">
+  <div class="header-text">
+    <h1>Facility Term &amp; Repayment History Calculator</h1>
+    <p>Paste a CCR screenshot to work out term remaining and get a repayment history read-out.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-label">Facilities</div>
+  <div id="facilities-list"></div>
+  <button class="add-btn" onclick="addFacility()">+ Add facility</button>
+</div>
+
+<div class="card">
+  <div class="card-label">Output</div>
+  <label class="toggle-row">
+    <input type="checkbox" id="include-narrative" checked/>
+    Include narrative paragraph (in addition to the numbers)
+  </label>
+  <div class="action-row">
+    <button class="clear-btn" onclick="clearAll()">Clear all</button>
+    <button class="generate-btn" onclick="generateOutput()">Generate Summary</button>
+  </div>
+</div>
+
+<div class="output-card" id="output-card">
+  <div class="card-label">Generated summary</div>
+  <p class="output-text" id="output-text"></p>
+  <button class="copy-btn" id="copy-btn" onclick="copyText()">Copy to clipboard</button>
+</div>
+
+</div>
+<script>
+// ── Constants ────────────────────────────────────────────────────────────────
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// RHI code map — based on the standard ARCA 0–7 day-overdue scale used across
+// Australian CCR bureaus. Adjust the wording here if your source uses different
+// lettering (e.g. some reports use "S" instead of "U" for unclassified periods).
+const CODE_MAP={
+  '0':'up to date',
+  '1':'1\u201329 days overdue',
+  '2':'30\u201359 days overdue',
+  '3':'60\u201389 days overdue',
+  '4':'90\u2013119 days overdue',
+  '5':'120\u2013149 days overdue',
+  '6':'150\u2013179 days overdue',
+  '7':'180+ days overdue',
+  'C':'account closed',
+  'U':'not reported / unable to classify',
+  'X':'not reported / unable to classify',
+  'P':'paid / no repayment due',
+  '-':'not reported'
+};
+
+// ── State ──────────────────────────────────────────────────────────────────────
+let facilities=[];
+let nextId=1;
+
+function newFacility(){
+  return {
+    id:nextId++, label:'', openDate:'', status:'Open',
+    termYears:'', termMonths:'', asOfDate:'', rhiCodes:'', commentary:'',
+    _stats:null
+  };
+}
+facilities.push(newFacility());
+
+// ── Date helpers ───────────────────────────────────────────────────────────────
+function parseDMY(s){
+  if(!s) return null;
+  const m=s.trim().match(/(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})/);
+  if(!m) return null;
+  const day=parseInt(m[1]);
+  const monName=m[2].slice(0,3).toLowerCase();
+  const monIdx=MONTHS.findIndex(mo=>mo.toLowerCase()===monName);
+  if(monIdx<0) return null;
+  return new Date(parseInt(m[3]),monIdx,day);
+}
+function formatDMY(d){ if(!d) return ''; return d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear(); }
+function addYearsMonths(date,years,months){
+  const d=new Date(date.getTime());
+  d.setMonth(d.getMonth()+ (parseInt(months)||0));
+  d.setFullYear(d.getFullYear()+ (parseInt(years)||0));
+  return d;
+}
+function monthsBetween(d1,d2){
+  let m=(d2.getFullYear()-d1.getFullYear())*12+(d2.getMonth()-d1.getMonth());
+  if(d2.getDate()<d1.getDate()) m--;
+  return m;
+}
+
+// ── OCR field extraction ─────────────────────────────────────────────────────
+function extractCCRFields(text){
+  const clean=text.replace(/[^\x20-\x7E\n\r]/g,' ');
+  const result={openDate:'',status:'',termYears:'',termMonths:'',asOfDate:'',rhiCodes:''};
+  const m1=clean.match(/(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})\s+(Open|Closed)/i);
+  if(m1){result.openDate=m1[1];result.status=m1[2][0].toUpperCase()+m1[2].slice(1).toLowerCase();}
+  const m2=clean.match(/As\s*of\s+(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})/i);
+  if(m2) result.asOfDate=m2[1];
+  const m3=clean.match(/(\d{1,2})\s+years?\s+(\d{1,2})\s+months?/i);
+  if(m3){result.termYears=m3[1];result.termMonths=m3[2];}
+  const m4=clean.match(/RHI\s+([0-9CUXP\-\s]{5,})/i);
+  if(m4){
+    result.rhiCodes=m4[1].trim().split(/\s+/).filter(t=>/^[0-9CUXP-]$/i.test(t)).join(' ');
+  }
+  return result;
+}
+
+// ── Repayment classification ───────────────────────────────────────────────────
+function classifyCodes(codesStr,asOfDate){
+  const clean=(codesStr||'').trim().split(/[\s,]+/).map(c=>c.toUpperCase()).filter(Boolean);
+  let onTime=0,arrears=0,notReported=0,closed=0,worst=0;
+  const arrearsList=[];
+  clean.forEach((c,idx)=>{
+    const fromEnd=clean.length-1-idx;
+    let monthLabel='';
+    if(asOfDate){
+      const d=new Date(asOfDate.getFullYear(),asOfDate.getMonth()-fromEnd,1);
+      monthLabel=MONTHS[d.getMonth()]+' '+d.getFullYear();
+    }
+    if(c==='0') onTime++;
+    else if(/^[1-7]$/.test(c)){
+      arrears++;
+      const n=parseInt(c);
+      if(n>worst) worst=n;
+      arrearsList.push({code:c,label:CODE_MAP[c]||c,month:monthLabel});
+    } else if(c==='C'){ closed++; }
+    else { notReported++; }
+  });
+  return {total:clean.length,onTime,arrears,notReported,closed,worst,arrearsList};
+}
+
+// ── Per-facility narrative + stats ────────────────────────────────────────────
+function computeFacility(f){
+  const open=parseDMY(f.openDate);
+  const years=parseInt(f.termYears)||0, months=parseInt(f.termMonths)||0;
+  const asOf=parseDMY(f.asOfDate);
+  const out={maturity:null,remainingMonths:null,termText:'',repayStats:null,repayText:''};
+
+  if(open&&(years||months)){
+    out.maturity=addYearsMonths(open,years,months);
+    const today=new Date();
+    const remMonthsTotal=monthsBetween(today,out.maturity);
+    out.remainingMonths=remMonthsTotal;
+    if(remMonthsTotal<=0){
+      out.termText=`This facility reached full term on ${formatDMY(out.maturity)} and appears to have matured.`;
+    } else {
+      const ry=Math.floor(remMonthsTotal/12), rm=remMonthsTotal%12;
+      const remStr=[ry?`${ry} year${ry===1?'':'s'}`:'',rm?`${rm} month${rm===1?'':'s'}`:''].filter(Boolean).join(' ')||'less than a month';
+      out.termText=`This facility was opened on ${formatDMY(open)} with an approved term of ${years} year${years===1?'':'s'}${months?` ${months} month${months===1?'':'s'}`:''}, maturing on ${formatDMY(out.maturity)}. As at ${formatDMY(today)}, approximately ${remStr} remain${remMonthsTotal===1?'s':''} on the facility.`;
+    }
+  }
+
+  if(f.rhiCodes){
+    const stats=classifyCodes(f.rhiCodes,asOf);
+    out.repayStats=stats;
+    if(!stats.total){
+      out.repayText='';
+    } else if(stats.arrears===0){
+      out.repayText=`Repayment history over the most recent ${stats.total} reported month${stats.total===1?'':'s'} shows no missed payments, with all repayments recorded as up to date.`;
+    } else {
+      const worstLabel=CODE_MAP[String(stats.worst)]||'';
+      const examples=stats.arrearsList.slice(0,3).map(a=>`${a.label}${a.month?' ('+a.month+')':''}`).join(', ');
+      out.repayText=`Repayment history over the most recent ${stats.total} reported months shows ${stats.arrears} instance${stats.arrears===1?'':'s'} of overdue payment, with the most severe being ${worstLabel}. Affected period${stats.arrearsList.length===1?'':'s'}: ${examples}${stats.arrearsList.length>3?', among others':''}.`;
+    }
+  }
+
+  if(f.status&&f.status.toLowerCase()==='closed'){
+    out.termText+=(out.termText?' ':'')+'Note: this facility is recorded as closed.';
+  }
+
+  return out;
+}
+
+// ── Rendering ──────────────────────────────────────────────────────────────────
+function esc(s){return(s||'').replace(/"/g,'&quot;');}
+function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function renderFacilities(){
+  const list=document.getElementById('facilities-list');
+  list.innerHTML='';
+  facilities.forEach((f,i)=>{
+    const computed=computeFacility(f);
+    f._stats=computed;
+    const d=document.createElement('div');
+    d.className='facility-card';
+    d.innerHTML=`
+      <div class="fac-header">
+        <input class="fac-title-input" value="${esc(f.label)}" placeholder="Facility ${i+1} \u2014 e.g. CBA Home Loan"
+          oninput="facilities[${i}].label=this.value"/>
+        ${facilities.length>1?`<button class="remove-btn" onclick="removeFacility(${i})">&times;</button>`:''}
+      </div>
+
+      <div class="paste-wrap">
+        <div class="paste-zone" id="paste-zone-${f.id}" tabindex="0"
+          onclick="this.focus()" onfocus="window.activePasteFacilityId=${f.id}"
+          title="Click here then paste your CCR screenshot">
+          <p>&#128203; Click here, then paste your CCR screenshot (Ctrl+V / Cmd+V)</p>
+          <p class="phint">Open date, term, status and repayment history extracted automatically</p>
+          <img class="paste-preview" id="paste-preview-${f.id}"/>
+        </div>
+        <button class="paste-clear" id="paste-clear-${f.id}" onclick="clearPaste(${i})" title="Remove">&times;</button>
+      </div>
+      <div style="margin-bottom:6px">
+        <span id="paste-status-${f.id}" class="status-badge" style="display:none"></span>
+      </div>
+      <p class="ocr-note">Always verify the extracted fields below before generating.</p>
+
+      <div class="row2">
+        <div class="field" style="margin-bottom:0">
+          <label>Open date</label>
+          <input type="text" value="${esc(f.openDate)}" placeholder="e.g. 27 Apr 2023"
+            oninput="onFieldInput(${i},'openDate',this.value)"/>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Status</label>
+          <select onchange="onFieldInput(${i},'status',this.value)">
+            <option value="Open" ${f.status==='Open'?'selected':''}>Open</option>
+            <option value="Closed" ${f.status==='Closed'?'selected':''}>Closed</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row2 mt10">
+        <div class="field" style="margin-bottom:0">
+          <label>Term \u2014 years</label>
+          <input type="number" min="0" value="${esc(f.termYears)}" placeholder="e.g. 30"
+            oninput="onFieldInput(${i},'termYears',this.value)"/>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Term \u2014 months</label>
+          <input type="number" min="0" max="11" value="${esc(f.termMonths)}" placeholder="e.g. 0"
+            oninput="onFieldInput(${i},'termMonths',this.value)"/>
+        </div>
+      </div>
+
+      <div class="field mt10">
+        <label>Repayment history codes <span class="hint">(oldest \u2192 newest, left to right as shown in the CCR)</span></label>
+        <input type="text" value="${esc(f.rhiCodes)}" placeholder="e.g. 0 0 0 0 0 0 1 0 0 0"
+          oninput="onFieldInput(${i},'rhiCodes',this.value)"/>
+      </div>
+
+      <div class="field mt10">
+        <button type="button" class="commentary-toggle" id="commentary-toggle-${f.id}" onclick="toggleCommentary(${f.id})">${f.commentary?'\u2212 Hide commentary':'+ Add commentary (optional)'}</button>
+        <textarea class="commentary-box${f.commentary?' show':''}" id="commentary-box-${f.id}"
+          placeholder="e.g. Facility closed Mar 2025 following refinance. Late payment in Jun 2024 due to an employer pay delay, since rectified."
+          oninput="onFieldInput(${i},'commentary',this.value)">${escHtml(f.commentary)}</textarea>
+      </div>
+
+      <div class="stat-panel" id="stat-panel-${f.id}">
+        ${renderStatPanelHTML(computed)}
+      </div>
+    `;
+    list.appendChild(d);
+  });
+}
+
+function renderStatPanelHTML(c){
+  if(!c.termText&&!c.repayStats){
+    return '<p class="stat-empty">Paste a screenshot or fill in the fields above to see term and repayment stats.</p>';
+  }
+  let html='';
+  if(c.maturity){
+    const ry=c.remainingMonths>0?Math.floor(c.remainingMonths/12):0;
+    const rm=c.remainingMonths>0?c.remainingMonths%12:0;
+    html+=`<div class="stat-row"><span class="k">Maturity date</span><span class="v">${formatDMY(c.maturity)}</span></div>`;
+    html+=`<div class="stat-row"><span class="k">Remaining</span><span class="v">${c.remainingMonths>0?`${ry}y ${rm}m`:'Matured'}</span></div>`;
+  }
+  if(c.repayStats&&c.repayStats.total){
+    const s=c.repayStats;
+    html+=`<div class="stat-row"><span class="k">Reported months</span><span class="v">${s.total}</span></div>`;
+    html+=`<div class="stat-row"><span class="k">On time</span><span class="v">${s.onTime}</span></div>`;
+    html+=`<div class="stat-row"><span class="k">Arrears instances</span><span class="v">${s.arrears}</span></div>`;
+    html+= s.arrears===0
+      ? `<span class="stat-flag flag-clean">Clean repayment history</span>`
+      : `<span class="stat-flag flag-warn">${s.arrears} overdue period${s.arrears===1?'':'s'} \u2014 worst: ${CODE_MAP[String(s.worst)]}</span>`;
+    if(s.arrearsList.length){
+      html+='<div class="arrears-list">'+s.arrearsList.map(a=>`<div>&#8226; ${a.label}${a.month?' \u2014 '+a.month:''}</div>`).join('')+'</div>';
+    }
+  }
+  return html;
+}
+
+function onFieldInput(i,key,val){
+  facilities[i][key]=val;
+  const f=facilities[i];
+  const computed=computeFacility(f);
+  f._stats=computed;
+  document.getElementById('stat-panel-'+f.id).innerHTML=renderStatPanelHTML(computed);
+}
+
+function toggleCommentary(id){
+  const box=document.getElementById('commentary-box-'+id);
+  const btn=document.getElementById('commentary-toggle-'+id);
+  if(!box||!btn) return;
+  const showing=box.classList.toggle('show');
+  btn.textContent=showing?'\u2212 Hide commentary':'+ Add commentary (optional)';
+  if(showing) box.focus();
+}
+
+function addFacility(){facilities.push(newFacility());renderFacilities();}
+function removeFacility(i){facilities.splice(i,1);renderFacilities();}
+
+// ── Paste + OCR ────────────────────────────────────────────────────────────────
+function preprocessToCanvas(blob,scale=3){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    const url=URL.createObjectURL(blob);
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      const srcW=img.naturalWidth,srcH=img.naturalHeight;
+      const PAD=8;
+      const canvas=document.createElement('canvas');
+      canvas.width=srcW*scale+PAD*2;canvas.height=srcH*scale+PAD*2;
+      const ctx=canvas.getContext('2d');
+      ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(img,0,0,srcW,srcH,PAD,PAD,srcW*scale,srcH*scale);
+      // Note: deliberately no black/white threshold here — CCR tables mix bold
+      // and small text in the same screenshot, and hard thresholding wrecks the
+      // smaller Term-column text. A plain upscale reads the whole table cleanly.
+      resolve(canvas);
+    };
+    img.onerror=reject;img.src=url;
+  });
+}
+
+function setStatus(id,type,msg){const el=document.getElementById(id);if(!el)return;el.style.display='inline-flex';el.className='status-badge '+type;el.textContent=msg;}
+
+function facilityIndexById(id){return facilities.findIndex(f=>f.id===id);}
+
+document.addEventListener('paste',async(e)=>{
+  const active=document.activeElement;
+  if(!active||!active.id||!active.id.startsWith('paste-zone-')) return;
+  const facId=parseInt(active.id.replace('paste-zone-',''));
+  const i=facilityIndexById(facId);
+  if(i<0) return;
+  const imgItem=[...e.clipboardData.items].find(it=>it.type.startsWith('image/'));
+  if(!imgItem) return;
+  e.preventDefault();
+  const blob=imgItem.getAsFile();
+  const previewUrl=URL.createObjectURL(blob);
+  const prev=document.getElementById('paste-preview-'+facId);
+  prev.src=previewUrl;prev.style.display='block';
+  prev.onload=()=>URL.revokeObjectURL(previewUrl);
+  document.getElementById('paste-clear-'+facId).style.display='flex';
+  setStatus('paste-status-'+facId,'loading','Preprocessing image\u2026');
+  try{
+    const canvas=await preprocessToCanvas(blob,3);
+    setStatus('paste-status-'+facId,'loading','Running OCR\u2026');
+    const result=await Tesseract.recognize(canvas,'eng',{
+      logger:m=>{if(m.status==='recognizing text') setStatus('paste-status-'+facId,'loading',`Reading\u2026 ${Math.round(m.progress*100)}%`);}
+    });
+    console.log('CCR OCR ('+facId+'):\n',result.data.text);
+    const fields=extractCCRFields(result.data.text);
+    const filled=[];
+    if(fields.openDate){facilities[i].openDate=fields.openDate;filled.push('open date');}
+    if(fields.status){facilities[i].status=fields.status;filled.push('status');}
+    if(fields.termYears){facilities[i].termYears=fields.termYears;facilities[i].termMonths=fields.termMonths||'0';filled.push('term');}
+    if(fields.asOfDate){facilities[i].asOfDate=fields.asOfDate;filled.push('as-of date');}
+    if(fields.rhiCodes){facilities[i].rhiCodes=fields.rhiCodes;filled.push('repayment history ('+fields.rhiCodes.split(' ').length+' codes)');}
+    renderFacilities();
+    setStatus('paste-status-'+facId,filled.length?'success':'error',
+      filled.length?'\u2713 Imported: '+filled.join(', '):'\u26a0 No fields found \u2014 enter manually below');
+  }catch(err){
+    setStatus('paste-status-'+facId,'error','\u26a0 OCR failed \u2014 enter manually below');
+    console.error(err);
+  }
+});
+
+function clearPaste(i){
+  const f=facilities[i];
+  const prev=document.getElementById('paste-preview-'+f.id);
+  if(prev){prev.src='';prev.style.display='none';}
+  const clearBtn=document.getElementById('paste-clear-'+f.id);
+  if(clearBtn) clearBtn.style.display='none';
+  const status=document.getElementById('paste-status-'+f.id);
+  if(status) status.style.display='none';
+}
+
+// ── Generate combined output ───────────────────────────────────────────────────
+function generateOutput(){
+  const includeNarrative=document.getElementById('include-narrative').checked;
+  const blocks=[];
+  facilities.forEach((f,i)=>{
+    const c=computeFacility(f);
+    const label=f.label||`Facility ${i+1}`;
+    const lines=[label+':'];
+    if(c.maturity){
+      const ry=c.remainingMonths>0?Math.floor(c.remainingMonths/12):0;
+      const rm=c.remainingMonths>0?c.remainingMonths%12:0;
+      lines.push(`Maturity date: ${formatDMY(c.maturity)}`);
+      lines.push(`Term remaining: ${c.remainingMonths>0?`${ry} year${ry===1?'':'s'} ${rm} month${rm===1?'':'s'}`:'Matured'}`);
+    }
+    if(c.repayStats&&c.repayStats.total){
+      const s=c.repayStats;
+      lines.push(`Repayment history: ${s.total} months reported, ${s.onTime} on time, ${s.arrears} arrears instance${s.arrears===1?'':'s'}`);
+    }
+    if(includeNarrative){
+      if(c.termText) lines.push('');
+      if(c.termText) lines.push(c.termText);
+      if(c.repayText) lines.push(c.repayText);
+    }
+    if(f.commentary&&f.commentary.trim()){
+      lines.push('');
+      lines.push('Commentary: '+f.commentary.trim());
+    }
+    blocks.push(lines.join('\n'));
+  });
+  const result=blocks.join('\n\n---\n\n');
+  document.getElementById('output-text').textContent=result;
+  const card=document.getElementById('output-card');
+  card.style.display='block';
+  setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+}
+
+function copyText(){
+  navigator.clipboard.writeText(document.getElementById('output-text').textContent).then(()=>{
+    const btn=document.getElementById('copy-btn');
+    btn.classList.add('done');btn.textContent='\u2713 Copied to clipboard';
+    setTimeout(()=>{btn.classList.remove('done');btn.textContent='Copy to clipboard';},2000);
+  });
+}
+
+function clearAll(){
+  if(!confirm('Clear all facilities? This cannot be undone.')) return;
+  facilities=[newFacility()];
+  document.getElementById('output-card').style.display='none';
+  renderFacilities();
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+renderFacilities();
+</script>
+</body>
+</html>
