@@ -162,7 +162,7 @@ const CODE_MAP={
   '5':'120\u2013149 days overdue',
   '6':'150\u2013179 days overdue',
   '7':'180+ days overdue',
-  'C':'account closed',
+  'C':'not applicable \u2014 no data for this period',
   'U':'not reported / unable to classify',
   'X':'not reported / unable to classify',
   'P':'paid / no repayment due',
@@ -183,15 +183,57 @@ function newFacility(){
 facilities.push(newFacility());
 
 // ── Date helpers ───────────────────────────────────────────────────────────────
+// Accepts several formats since this field is filled either by OCR (always
+// "27 Apr 2023" style) or typed manually from a phone call (often numeric,
+// sometimes with only a month/year if the client wasn't sure of the exact day).
+// Numeric dates are read as DD/MM/YYYY (Australian convention).
+function monthIndex(name){
+  const monName=(name||'').slice(0,3).toLowerCase();
+  return MONTHS.findIndex(mo=>mo.toLowerCase()===monName);
+}
 function parseDMY(s){
   if(!s) return null;
-  const m=s.trim().match(/(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})/);
-  if(!m) return null;
-  const day=parseInt(m[1]);
-  const monName=m[2].slice(0,3).toLowerCase();
-  const monIdx=MONTHS.findIndex(mo=>mo.toLowerCase()===monName);
-  if(monIdx<0) return null;
-  return new Date(parseInt(m[3]),monIdx,day);
+  s=s.trim();
+
+  // "27 Apr 2023" / "27 April 2023"
+  let m=s.match(/^(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})$/);
+  if(m){
+    const monIdx=monthIndex(m[2]);
+    if(monIdx>=0) return new Date(parseInt(m[3]),monIdx,parseInt(m[1]));
+  }
+
+  // "Apr 2023" / "April 2023" — day unknown, default to the 1st
+  m=s.match(/^([A-Za-z]{3,9})\s+(\d{4})$/);
+  if(m){
+    const monIdx=monthIndex(m[1]);
+    if(monIdx>=0) return new Date(parseInt(m[2]),monIdx,1);
+  }
+
+  // "27/03/2026", "27-03-26", "27.03.2026" — DD/MM/YY(YY)
+  m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+  if(m){
+    const day=parseInt(m[1]),mon=parseInt(m[2])-1;
+    let year=parseInt(m[3]); if(year<100) year+=2000;
+    if(mon>=0&&mon<=11) return new Date(year,mon,day);
+  }
+
+  // "03/2026" — month/year only, day unknown, default to the 1st
+  m=s.match(/^(\d{1,2})[\/\-.](\d{2,4})$/);
+  if(m){
+    const mon=parseInt(m[1])-1;
+    let year=parseInt(m[2]); if(year<100) year+=2000;
+    if(mon>=0&&mon<=11) return new Date(year,mon,1);
+  }
+
+  // "2026-03-27" — ISO
+  m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if(m) return new Date(parseInt(m[1]),parseInt(m[2])-1,parseInt(m[3]));
+
+  // Bare year — day/month unknown, default to 1 Jan
+  m=s.match(/^(\d{4})$/);
+  if(m) return new Date(parseInt(m[1]),0,1);
+
+  return null;
 }
 function formatDMY(d){ if(!d) return ''; return d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear(); }
 function addYearsMonths(date,years,months){
@@ -207,6 +249,26 @@ function monthsBetween(d1,d2){
 }
 
 // ── OCR field extraction ─────────────────────────────────────────────────────
+// Term extraction is deliberately loose: OCR reliably reads "X years" (it's a
+// clean whole word) but frequently mangles "months" into things like "ths" or
+// "monihs" depending on table layout/page breaks. Rather than require the exact
+// word, we find the years number then just look for the next standalone
+// 0-11 number that follows it — that's the months value regardless of what
+// happened to the word next to it.
+function extractTerm(text){
+  const ym=text.match(/(\d{1,2})\s*years?/i);
+  if(!ym) return {years:'',months:''};
+  const years=ym[1];
+  const after=text.slice(ym.index+ym[0].length, ym.index+ym[0].length+25);
+  const mm=after.match(/(\d{1,2})/);
+  let months='0';
+  if(mm){
+    const n=parseInt(mm[1]);
+    if(n>=0&&n<=11) months=String(n);
+  }
+  return {years,months};
+}
+
 function extractCCRFields(text){
   const clean=text.replace(/[^\x20-\x7E\n\r]/g,' ');
   const result={openDate:'',status:'',termYears:'',termMonths:'',asOfDate:'',rhiCodes:''};
@@ -214,8 +276,8 @@ function extractCCRFields(text){
   if(m1){result.openDate=m1[1];result.status=m1[2][0].toUpperCase()+m1[2].slice(1).toLowerCase();}
   const m2=clean.match(/As\s*of\s+(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})/i);
   if(m2) result.asOfDate=m2[1];
-  const m3=clean.match(/(\d{1,2})\s+years?\s+(\d{1,2})\s+months?/i);
-  if(m3){result.termYears=m3[1];result.termMonths=m3[2];}
+  const termInfo=extractTerm(clean);
+  if(termInfo.years){result.termYears=termInfo.years;result.termMonths=termInfo.months;}
   const m4=clean.match(/RHI\s+([0-9CUXP\-\s]{5,})/i);
   if(m4){
     result.rhiCodes=m4[1].trim().split(/\s+/).filter(t=>/^[0-9CUXP-]$/i.test(t)).join(' ');
@@ -224,12 +286,26 @@ function extractCCRFields(text){
 }
 
 // ── Repayment classification ───────────────────────────────────────────────────
-function classifyCodes(codesStr,asOfDate){
+function classifyCodes(codesStr,asOfDate,openDate){
   const clean=(codesStr||'').trim().split(/[\s,]+/).map(c=>c.toUpperCase()).filter(Boolean);
+
+  // A facility can't have credit conduct before it existed. If we know both
+  // the open date and the as-of date, work out how many trailing entries
+  // could possibly be real reported months and disregard everything earlier
+  // as pre-account padding — regardless of what symbol the report shows
+  // there (some CCR exports use 'C', but a misread could put anything there).
+  let preAccount=0, relevant=clean;
+  if(openDate&&asOfDate){
+    const span=monthsBetween(openDate,asOfDate)+1; // inclusive of both months
+    const validCount=Math.max(0, Math.min(clean.length, span));
+    preAccount=clean.length-validCount;
+    relevant=clean.slice(preAccount);
+  }
+
   let onTime=0,arrears=0,notReported=0,closed=0,worst=0;
   const arrearsList=[];
-  clean.forEach((c,idx)=>{
-    const fromEnd=clean.length-1-idx;
+  relevant.forEach((c,idx)=>{
+    const fromEnd=relevant.length-1-idx;
     let monthLabel='';
     if(asOfDate){
       const d=new Date(asOfDate.getFullYear(),asOfDate.getMonth()-fromEnd,1);
@@ -244,7 +320,7 @@ function classifyCodes(codesStr,asOfDate){
     } else if(c==='C'){ closed++; }
     else { notReported++; }
   });
-  return {total:clean.length,onTime,arrears,notReported,closed,worst,arrearsList};
+  return {total:onTime+arrears+notReported,rawTotal:clean.length,onTime,arrears,notReported,closed,preAccount,worst,arrearsList};
 }
 
 // ── Per-facility narrative + stats ────────────────────────────────────────────
@@ -264,21 +340,25 @@ function computeFacility(f){
     } else {
       const ry=Math.floor(remMonthsTotal/12), rm=remMonthsTotal%12;
       const remStr=[ry?`${ry} year${ry===1?'':'s'}`:'',rm?`${rm} month${rm===1?'':'s'}`:''].filter(Boolean).join(' ')||'less than a month';
-      out.termText=`This facility was opened on ${formatDMY(open)} with an approved term of ${years} year${years===1?'':'s'}${months?` ${months} month${months===1?'':'s'}`:''}, maturing on ${formatDMY(out.maturity)}. As at ${formatDMY(today)}, approximately ${remStr} remain${remMonthsTotal===1?'s':''} on the facility.`;
+      out.termText=`This facility was opened on ${formatDMY(open)} with an approved term of ${years} year${years===1?'':'s'}${months?` ${months} month${months===1?'':'s'}`:''}, maturing on ${formatDMY(out.maturity)}. As at ${formatDMY(today)}, approximately ${remStr} remain${remMonthsTotal===1?'s':''} on the facility (${remMonthsTotal} months total).`;
     }
   }
 
   if(f.rhiCodes){
-    const stats=classifyCodes(f.rhiCodes,asOf);
+    const stats=classifyCodes(f.rhiCodes,asOf,open);
     out.repayStats=stats;
+    const noteParts=[];
+    if(stats.preAccount) noteParts.push(`${stats.preAccount} earlier month${stats.preAccount===1?'':'s'} predate this facility's start date and are excluded`);
+    if(stats.closed) noteParts.push(`${stats.closed} month${stats.closed===1?'':'s'} marked not applicable/no data`);
+    const closedNote=noteParts.length?` (${noteParts.join('; ')})`:'';
     if(!stats.total){
-      out.repayText='';
+      out.repayText=(stats.preAccount||stats.closed)?`All ${stats.rawTotal} reported month${stats.rawTotal===1?'':'s'} predate this facility's start date or have no data \u2014 no repayment conduct data available.`:'';
     } else if(stats.arrears===0){
-      out.repayText=`Repayment history over the most recent ${stats.total} reported month${stats.total===1?'':'s'} shows no missed payments, with all repayments recorded as up to date.`;
+      out.repayText=`Repayment history over the most recent ${stats.total} reported month${stats.total===1?'':'s'} shows no missed payments, with all repayments recorded as up to date${closedNote}.`;
     } else {
       const worstLabel=CODE_MAP[String(stats.worst)]||'';
       const examples=stats.arrearsList.slice(0,3).map(a=>`${a.label}${a.month?' ('+a.month+')':''}`).join(', ');
-      out.repayText=`Repayment history over the most recent ${stats.total} reported months shows ${stats.arrears} instance${stats.arrears===1?'':'s'} of overdue payment, with the most severe being ${worstLabel}. Affected period${stats.arrearsList.length===1?'':'s'}: ${examples}${stats.arrearsList.length>3?', among others':''}.`;
+      out.repayText=`Repayment history over the most recent ${stats.total} reported months shows ${stats.arrears} instance${stats.arrears===1?'':'s'} of overdue payment, with the most severe being ${worstLabel}. Affected period${stats.arrearsList.length===1?'':'s'}: ${examples}${stats.arrearsList.length>3?', among others':''}${closedNote}.`;
     }
   }
 
@@ -325,8 +405,8 @@ function renderFacilities(){
 
       <div class="row2">
         <div class="field" style="margin-bottom:0">
-          <label>Open date</label>
-          <input type="text" value="${esc(f.openDate)}" placeholder="e.g. 27 Apr 2023"
+          <label>Open / start date <span class="hint">(the "Latest start date" next to Term \u2014 exact or approximate)</span></label>
+          <input type="text" value="${esc(f.openDate)}" placeholder="e.g. 27 Apr 2023, 27/03/2026, or just Mar 2026"
             oninput="onFieldInput(${i},'openDate',this.value)"/>
         </div>
         <div class="field" style="margin-bottom:0">
@@ -382,17 +462,26 @@ function renderStatPanelHTML(c){
     const rm=c.remainingMonths>0?c.remainingMonths%12:0;
     html+=`<div class="stat-row"><span class="k">Maturity date</span><span class="v">${formatDMY(c.maturity)}</span></div>`;
     html+=`<div class="stat-row"><span class="k">Remaining</span><span class="v">${c.remainingMonths>0?`${ry}y ${rm}m`:'Matured'}</span></div>`;
+    if(c.remainingMonths>0) html+=`<div class="stat-row"><span class="k">Remaining (months only)</span><span class="v">${c.remainingMonths} months</span></div>`;
   }
-  if(c.repayStats&&c.repayStats.total){
+  if(c.repayStats&&c.repayStats.rawTotal){
     const s=c.repayStats;
-    html+=`<div class="stat-row"><span class="k">Reported months</span><span class="v">${s.total}</span></div>`;
-    html+=`<div class="stat-row"><span class="k">On time</span><span class="v">${s.onTime}</span></div>`;
-    html+=`<div class="stat-row"><span class="k">Arrears instances</span><span class="v">${s.arrears}</span></div>`;
-    html+= s.arrears===0
-      ? `<span class="stat-flag flag-clean">Clean repayment history</span>`
-      : `<span class="stat-flag flag-warn">${s.arrears} overdue period${s.arrears===1?'':'s'} \u2014 worst: ${CODE_MAP[String(s.worst)]}</span>`;
-    if(s.arrearsList.length){
-      html+='<div class="arrears-list">'+s.arrearsList.map(a=>`<div>&#8226; ${a.label}${a.month?' \u2014 '+a.month:''}</div>`).join('')+'</div>';
+    if(s.total){
+      html+=`<div class="stat-row"><span class="k">Reported months</span><span class="v">${s.total}</span></div>`;
+      html+=`<div class="stat-row"><span class="k">On time</span><span class="v">${s.onTime}</span></div>`;
+      html+=`<div class="stat-row"><span class="k">Arrears instances</span><span class="v">${s.arrears}</span></div>`;
+      if(s.preAccount) html+=`<div class="stat-row"><span class="k">Before facility started</span><span class="v">${s.preAccount}</span></div>`;
+      if(s.closed) html+=`<div class="stat-row"><span class="k">N/A \u2014 no data</span><span class="v">${s.closed}</span></div>`;
+      html+= s.arrears===0
+        ? `<span class="stat-flag flag-clean">Clean repayment history</span>`
+        : `<span class="stat-flag flag-warn">${s.arrears} overdue period${s.arrears===1?'':'s'} \u2014 worst: ${CODE_MAP[String(s.worst)]}</span>`;
+      if(s.arrearsList.length){
+        html+='<div class="arrears-list">'+s.arrearsList.map(a=>`<div>&#8226; ${a.label}${a.month?' \u2014 '+a.month:''}</div>`).join('')+'</div>';
+      }
+    } else {
+      if(s.preAccount) html+=`<div class="stat-row"><span class="k">Before facility started</span><span class="v">${s.preAccount}</span></div>`;
+      if(s.closed) html+=`<div class="stat-row"><span class="k">N/A \u2014 no data</span><span class="v">${s.closed}</span></div>`;
+      html+=`<span class="stat-flag flag-warn">No conduct data \u2014 all reported months predate this facility or have no data</span>`;
     }
   }
   return html;
@@ -445,6 +534,78 @@ function setStatus(id,type,msg){const el=document.getElementById(id);if(!el)retu
 
 function facilityIndexById(id){return facilities.findIndex(f=>f.id===id);}
 
+// ── Targeted second-pass OCR for the "Other details" data row ─────────────────
+// The Term value and the Latest start date both live in one dense row that
+// full-page OCR frequently mangles. Isolating each cell and re-reading it at
+// higher effective resolution fixes this reliably (verified against several
+// real CCR exports). The row is always anchored on the word "start" (from
+// "Latest start date"), which reads cleanly far more consistently than the
+// faint grey "Other details" column-header row above it — that header row
+// sometimes fails to OCR at all (seen near page breaks), so Term falls back
+// to a fixed proportion of the page width in that case. That proportion
+// (~68–89% of page width) was measured from real reports and held steady
+// across every layout tested, including ones where the header row failed.
+async function cropAndRecognize(bigCanvas,left,top,right,bottom,extraScale=2.5){
+  if(right<=left||bottom<=top) return null;
+  const cropW=right-left, cropH=bottom-top;
+  const cropCanvas=document.createElement('canvas');
+  cropCanvas.width=Math.max(1,cropW*extraScale);
+  cropCanvas.height=Math.max(1,cropH*extraScale);
+  const ctx=cropCanvas.getContext('2d');
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,cropCanvas.width,cropCanvas.height);
+  ctx.drawImage(bigCanvas,left,top,cropW,cropH,0,0,cropCanvas.width,cropCanvas.height);
+  const result=await Tesseract.recognize(cropCanvas,'eng',{});
+  return result.data.text;
+}
+
+async function tryTargetedTermOCR(bigCanvas, words, facId){
+  const startWord=words.find(w=>/^start$/i.test(w.text.trim()));
+  if(!startWord) return null;
+
+  const termHeader=words.find(w=>/^term$/i.test(w.text.trim()));
+  let left,right;
+  if(termHeader){
+    const sameRow=words.filter(w=>Math.abs(w.bbox.y0-termHeader.bbox.y0)<40 && w.bbox.x0>termHeader.bbox.x1);
+    sameRow.sort((a,b)=>a.bbox.x0-b.bbox.x0);
+    const nextHeader=sameRow[0];
+    left=Math.max(0, termHeader.bbox.x0-300);
+    right=nextHeader ? Math.max(left+50, nextHeader.bbox.x0-80) : Math.min(bigCanvas.width, termHeader.bbox.x1+700);
+  } else {
+    left=Math.round(bigCanvas.width*0.68);
+    right=Math.round(bigCanvas.width*0.89);
+  }
+  const top=Math.max(0, startWord.bbox.y1+10);
+  const bottom=bigCanvas.height;
+
+  setStatus('paste-status-'+facId,'loading','Re-reading term column\u2026');
+  const text=await cropAndRecognize(bigCanvas,left,top,right,bottom);
+  if(!text) return null;
+  console.log('Targeted term crop OCR:\n',text);
+  const termInfo=extractTerm(text);
+  return termInfo.years ? termInfo : null;
+}
+
+async function tryTargetedStartDateOCR(bigCanvas, words, facId){
+  const startWord=words.find(w=>/^start$/i.test(w.text.trim()));
+  if(!startWord) return null;
+  const latestWords=words.filter(w=>/^latest$/i.test(w.text.trim()) && Math.abs(w.bbox.y0-startWord.bbox.y0)<40);
+  const beforeStart=latestWords.filter(w=>w.bbox.x0<startWord.bbox.x0).sort((a,b)=>b.bbox.x0-a.bbox.x0)[0];
+  const afterStart=latestWords.filter(w=>w.bbox.x0>startWord.bbox.x0).sort((a,b)=>a.bbox.x0-b.bbox.x0)[0];
+  if(!beforeStart) return null;
+
+  const left=Math.max(0, beforeStart.bbox.x0-60);
+  const right=afterStart ? Math.max(left+50, afterStart.bbox.x0-80) : left+700;
+  const top=Math.max(0, startWord.bbox.y1+10);
+  const bottom=bigCanvas.height;
+
+  setStatus('paste-status-'+facId,'loading','Re-reading start date\u2026');
+  const text=await cropAndRecognize(bigCanvas,left,top,right,bottom);
+  if(!text) return null;
+  console.log('Targeted start-date crop OCR:\n',text);
+  const m=text.match(/(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})/);
+  return m ? m[1] : null;
+}
+
 document.addEventListener('paste',async(e)=>{
   const active=document.activeElement;
   if(!active||!active.id||!active.id.startsWith('paste-zone-')) return;
@@ -469,6 +630,20 @@ document.addEventListener('paste',async(e)=>{
     });
     console.log('CCR OCR ('+facId+'):\n',result.data.text);
     const fields=extractCCRFields(result.data.text);
+
+    // The whole-page pass often mangles the Term cell, and the top-table
+    // "Open date" isn't necessarily the same as the "Latest start date" next
+    // to Term (which is the field that should drive this calculation) — so
+    // re-scan both from the same anchored data row and prefer them.
+    try{
+      const targetedTerm=await tryTargetedTermOCR(canvas, result.data.words||[], facId);
+      if(targetedTerm){ fields.termYears=targetedTerm.years; fields.termMonths=targetedTerm.months; }
+    }catch(termErr){ console.error('Targeted term OCR failed:',termErr); }
+    try{
+      const targetedStart=await tryTargetedStartDateOCR(canvas, result.data.words||[], facId);
+      if(targetedStart){ fields.openDate=targetedStart; }
+    }catch(dateErr){ console.error('Targeted start-date OCR failed:',dateErr); }
+
     const filled=[];
     if(fields.openDate){facilities[i].openDate=fields.openDate;filled.push('open date');}
     if(fields.status){facilities[i].status=fields.status;filled.push('status');}
@@ -506,11 +681,18 @@ function generateOutput(){
       const ry=c.remainingMonths>0?Math.floor(c.remainingMonths/12):0;
       const rm=c.remainingMonths>0?c.remainingMonths%12:0;
       lines.push(`Maturity date: ${formatDMY(c.maturity)}`);
-      lines.push(`Term remaining: ${c.remainingMonths>0?`${ry} year${ry===1?'':'s'} ${rm} month${rm===1?'':'s'}`:'Matured'}`);
+      lines.push(`Term remaining: ${c.remainingMonths>0?`${ry} year${ry===1?'':'s'} ${rm} month${rm===1?'':'s'} (${c.remainingMonths} months total)`:'Matured'}`);
     }
-    if(c.repayStats&&c.repayStats.total){
+    if(c.repayStats&&c.repayStats.rawTotal){
       const s=c.repayStats;
-      lines.push(`Repayment history: ${s.total} months reported, ${s.onTime} on time, ${s.arrears} arrears instance${s.arrears===1?'':'s'}`);
+      if(s.total){
+        const extras=[];
+        if(s.preAccount) extras.push(`${s.preAccount} predate facility start (excluded)`);
+        if(s.closed) extras.push(`${s.closed} N/A (excluded)`);
+        lines.push(`Repayment history: ${s.total} months reported, ${s.onTime} on time, ${s.arrears} arrears instance${s.arrears===1?'':'s'}${extras.length?', '+extras.join(', '):''}`);
+      } else {
+        lines.push(`Repayment history: all ${s.rawTotal} reported months predate this facility's start date or have no data \u2014 no conduct data`);
+      }
     }
     if(includeNarrative){
       if(c.termText) lines.push('');
