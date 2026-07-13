@@ -169,6 +169,56 @@ const CODE_MAP={
   '-':'not reported'
 };
 
+// Known lender names for matching the bank/lender line above "Open date".
+// Same list used in the Loan Summary Notes tool for consistency.
+const KNOWN_LENDERS=[
+  'ANZ','CBA','NAB','Westpac',
+  'AMP','ING','BOQ','IMB','HSBC','RAMS','STG','BOM',
+  'Bank of Melbourne','Bank of Queensland','Bank Australia','Bank SA',
+  'St George','Bankwest','Macquarie','Suncorp','Bendigo',
+  'Heritage Bank','Greater Bank','Newcastle Permanent',
+  'Teachers Mutual Bank','UniBank','Police Bank',
+  'Australian Military Bank','Beyond Bank',
+  'Credit Union Australia','Gateway Bank',
+  'Regional Australia Bank','Rural Bank',
+  'Virgin Money','ME Bank','UBank',
+  'Liberty','Pepper','La Trobe','Firstmac',
+  'Athena','Reduce Home Loans','Well Home Loans',
+  'Homestar Finance','loans.com.au','Tic:Toc',
+  'P&N Bank','G&C Mutual Bank'
+];
+function smartCaseLender(s){
+  if(!s) return '';
+  return s.trim().split(/\s+/).map(w=>{
+    if(!w) return w;
+    const u=w.toUpperCase();
+    const acronyms=new Set(['ANZ','CBA','NAB','AMP','ING','BOQ','IMB','ME','STG','BOM']);
+    return acronyms.has(u)?u:w[0].toUpperCase()+w.slice(1).toLowerCase();
+  }).join(' ');
+}
+
+// Bank name and account number sit above "Open date" on the CCR screenshot —
+// not covered by any of the crops used elsewhere in this file. This scans
+// only the text BEFORE "Open date" so it can't accidentally pick up an
+// unrelated number from later in the report (like the credit limit).
+function extractLenderAndAccount(text){
+  const anchor=text.search(/open\s+date/i);
+  const headerText=anchor>0?text.slice(0,anchor):text;
+  let lender='';
+  for(const l of KNOWN_LENDERS){
+    if(new RegExp('\\b'+l.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(headerText)){
+      lender=smartCaseLender(l);break;
+    }
+  }
+  let accountLast4='';
+  const digitRuns=[...headerText.matchAll(/(\d[\d\s-]{5,20}\d)/g)].map(m=>m[1].replace(/[\s-]/g,''));
+  if(digitRuns.length){
+    const longest=digitRuns.sort((a,b)=>b.length-a.length)[0];
+    accountLast4=longest.slice(-4);
+  }
+  return {lender,accountLast4};
+}
+
 // ── State ──────────────────────────────────────────────────────────────────────
 let facilities=[];
 let nextId=1;
@@ -193,7 +243,7 @@ function monthIndex(name){
 }
 function parseDMY(s){
   if(!s) return null;
-  s=s.trim();
+  s=s.trim().replace(/(\d{1,2})(st|nd|rd|th)\b/gi,'$1');
 
   // "27 Apr 2023" / "27 April 2023"
   let m=s.match(/^(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})$/);
@@ -644,12 +694,18 @@ document.addEventListener('paste',async(e)=>{
       if(targetedStart){ fields.openDate=targetedStart; }
     }catch(dateErr){ console.error('Targeted start-date OCR failed:',dateErr); }
 
+    const lenderInfo=extractLenderAndAccount(result.data.text);
+
     const filled=[];
     if(fields.openDate){facilities[i].openDate=fields.openDate;filled.push('open date');}
     if(fields.status){facilities[i].status=fields.status;filled.push('status');}
     if(fields.termYears){facilities[i].termYears=fields.termYears;facilities[i].termMonths=fields.termMonths||'0';filled.push('term');}
     if(fields.asOfDate){facilities[i].asOfDate=fields.asOfDate;filled.push('as-of date');}
     if(fields.rhiCodes){facilities[i].rhiCodes=fields.rhiCodes;filled.push('repayment history ('+fields.rhiCodes.split(' ').length+' codes)');}
+    if((lenderInfo.lender||lenderInfo.accountLast4) && !facilities[i].label.trim()){
+      const suggested=[lenderInfo.lender,lenderInfo.accountLast4?('\u2022\u2022\u2022\u2022'+lenderInfo.accountLast4):''].filter(Boolean).join(' ');
+      if(suggested){ facilities[i].label=suggested; filled.push('label ('+suggested+')'); }
+    }
     renderFacilities();
     setStatus('paste-status-'+facId,filled.length?'success':'error',
       filled.length?'\u2713 Imported: '+filled.join(', '):'\u26a0 No fields found \u2014 enter manually below');
