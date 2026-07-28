@@ -531,6 +531,13 @@
             <div class="toggle-desc">Digital identity verification — link sent via SMS</div>
           </div>
         </div>
+        <div class="toggle-item" data-group="voi" data-value="digital-id-bankwest" onclick="selectItem(this)">
+          <div class="toggle-dot"></div>
+          <div class="toggle-info">
+            <div class="toggle-name">Digital ID (Bankwest) <span class="delivery-pill pill-sms">SMS</span></div>
+            <div class="toggle-desc">Bankwest digital identity verification — link sent via SMS</div>
+          </div>
+        </div>
         <div class="toggle-item" data-group="voi" data-value="sunverify" onclick="selectItem(this)">
           <div class="toggle-dot"></div>
           <div class="toggle-info">
@@ -636,9 +643,10 @@
     'docusign':  'DocuSign request (email)',
   };
   const voiLabels = {
-    'nextgenid':   'NextGenID (SMS)',
-    'sunverify':   'SunVerify',
-    'anz-everify': 'ANZ eVerify',
+    'nextgenid':           'NextGenID (SMS)',
+    'digital-id-bankwest': 'Digital ID (SMS)',
+    'sunverify':           'SunVerify',
+    'anz-everify':         'ANZ eVerify',
   };
 
   // ── FORMAT DATE/TIME ──
