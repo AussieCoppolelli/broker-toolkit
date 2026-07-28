@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rate Comparison Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root {
+    --bg: #0d0f14; --surface: #161920; --surface-2: #1e2230; --surface-3: #262b3d; --border: #2a2f3f;
+    --accent: #c8a96e; --accent-soft: rgba(200,169,110,0.12); --accent-glow: rgba(200,169,110,0.25);
+    --green: #4caf82; --green-soft: rgba(76,175,130,0.12);
+    --red: #e05c5c; --red-soft: rgba(224,92,92,0.12);
+    --blue: #6d9fd6; --blue-soft: rgba(109,159,214,0.12);
+    --text: #e8eaf0; --text-muted: #7c8299; --text-dim: #4a5168;
+    --radius: 12px; --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; line-height: 1.6; }
+  nav { padding: 18px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: var(--surface); }
+  nav a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; }
+  nav a:hover { color: var(--accent); }
+  nav .sep { color: var(--text-dim); font-size: 12px; }
+  nav .current { color: var(--text); font-size: 13px; font-weight: 500; }
+  .nav-live { background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.35); color: #a78bfa; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; margin-left: 4px; }
+  header { padding: 52px 32px 40px; max-width: 900px; margin: 0 auto; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.3); color: #a78bfa; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; margin-bottom: 18px; }
+  header h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px,4vw,40px); font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 10px; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--text-muted); font-size: 15px; max-width: 580px; }
+  .layout { max-width: 900px; margin: 0 auto; padding: 0 32px 80px; display: flex; flex-direction: column; gap: 24px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
+  .card-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .card-sub { font-size: 13px; color: var(--text-muted); margin-top: -12px; margin-bottom: 20px; }
+
+  .dropzone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 40px 24px; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .dropzone:hover, .dropzone.dragover { border-color: var(--accent); background: var(--accent-soft); }
+  .dropzone .dz-icon { font-size: 32px; margin-bottom: 12px; }
+  .dropzone .dz-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .dropzone .dz-sub { font-size: 13px; color: var(--text-muted); }
+  #file-input { display: none; }
+  .status-line { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-top: 16px; padding: 12px 14px; border-radius: var(--radius-sm); }
+  .status-line.loading { background: var(--accent-soft); color: var(--accent); }
+  .status-line.success { background: var(--green-soft); color: var(--green); }
+  .status-line.error { background: var(--red-soft); color: var(--red); }
+  .status-line.hidden { display: none; }
+  .file-clear { margin-left: auto; cursor: pointer; text-decoration: underline; opacity: 0.8; }
+
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 7px; }
+  input[type="text"], input[type="number"], textarea { width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 11px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
+  textarea { resize: vertical; min-height: 64px; line-height: 1.5; }
+  input[type="text"]:focus, input[type="number"]:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 560px) { .field-row, .field-row.three { grid-template-columns: 1fr; } }
+
+  #scenario-list-card { display: none; }
+  .mode-toggle { display: flex; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px; }
+  .mode-btn { flex: 1; background: transparent; border: none; border-radius: 6px; padding: 9px 10px; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .mode-btn:hover { color: var(--text); }
+  .mode-btn.active { background: var(--accent); color: #0d0f14; }
+  .scenario-row { display: flex; align-items: center; gap: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px; }
+  .scenario-row:last-child { margin-bottom: 0; }
+  .scenario-row-main { flex: 1; min-width: 0; }
+  .scenario-row-title { font-weight: 600; font-size: 14px; color: var(--text); }
+  .scenario-row-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .scenario-row-note { font-size: 12px; color: var(--text-dim); margin-top: 4px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .scenario-row-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .pill-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 12px; color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+  .pill-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .pill-btn.danger:hover { border-color: var(--red); color: var(--red); }
+  .editing-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--blue-soft); border: 1px solid rgba(109,159,214,0.35); color: var(--blue); font-size: 13px; font-weight: 600; padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 20px; }
+  .editing-banner .pill-btn { background: transparent; }
+
+  #lenders-wrap { display: flex; flex-direction: column; gap: 16px; }
+  .lender-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .lender-card.excluded { opacity: 0.5; }
+  .lender-head { display: flex; align-items: center; gap: 12px; padding: 16px 18px; cursor: pointer; user-select: none; background: rgba(255,255,255,0.02); }
+  .lender-head .chev { color: var(--text-dim); font-size: 11px; transition: transform 0.2s; flex-shrink: 0; }
+  .lender-head.open .chev { transform: rotate(90deg); }
+  .lender-head-name { font-weight: 600; font-size: 14px; flex: 1; }
+  .lender-head-repay { font-size: 13px; color: var(--accent); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .best-tag { background: var(--green-soft); color: var(--green); font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 8px; border-radius: 20px; }
+  .quick-include { position: relative; width: 18px; height: 18px; flex-shrink: 0; cursor: pointer; }
+  .quick-include input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+  .quick-check-box { position: absolute; inset: 0; border: 1.5px solid var(--border); border-radius: 5px; background: var(--surface); display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .quick-include input:checked ~ .quick-check-box { background: var(--accent); border-color: var(--accent); }
+  .quick-include input:checked ~ .quick-check-box::after { content: '✓'; font-size: 11px; color: #0d0f14; font-weight: 700; }
+  .quick-remove { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+  .quick-remove:hover { border-color: var(--red); color: var(--red); background: var(--red-soft); }
+  .head-savings { font-size: 11px; font-weight: 700; color: var(--green); background: var(--green-soft); padding: 2px 7px; border-radius: 10px; }
+  .head-savings.head-savings-neg { color: var(--red); background: var(--red-soft); }
+  .lender-body { padding: 4px 18px 20px; display: none; }
+  .lender-body.open { display: block; }
+  .switch-row { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; cursor: pointer; transition: all 0.2s; }
+  .slider::before { content: ''; position: absolute; width: 14px; height: 14px; background: var(--text-muted); border-radius: 50%; top: 3px; left: 3px; transition: all 0.2s; }
+  .switch input:checked + .slider { background: var(--accent-soft); border-color: var(--accent); }
+  .switch input:checked + .slider::before { background: var(--accent); transform: translateX(18px); }
+  .switch-label { font-size: 13px; color: var(--text); }
+
+  .mini-title { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); margin: 18px 0 10px; }
+  .mini-title:first-child { margin-top: 0; }
+  .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  @media (max-width: 480px) { .feature-grid { grid-template-columns: 1fr; } }
+  .feature-item { display: flex; align-items: center; gap: 9px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; cursor: pointer; transition: all 0.15s; font-size: 13px; }
+  .feature-item:hover { border-color: var(--accent); }
+  .feature-item input { display: none; }
+  .feature-item .check-box { width: 15px; height: 15px; border: 1.5px solid var(--border); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .feature-item input:checked ~ .check-box { background: var(--accent); border-color: var(--accent); }
+  .feature-item input:checked ~ .check-box::after { content: '✓'; font-size: 10px; color: #0d0f14; font-weight: 700; }
+
+  .best-radio-row { display: flex; align-items: center; gap: 10px; padding-top: 14px; margin-top: 4px; border-top: 1px solid var(--border); }
+  .best-radio-row input { accent-color: var(--accent); width: 15px; height: 15px; }
+  .best-radio-row label { text-transform: none; font-size: 13px; color: var(--text); margin: 0; letter-spacing: 0; font-weight: 500; }
+  .remove-lender { margin-top: 14px; width: 100%; background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px; color: var(--text-muted); font-size: 12px; cursor: pointer; transition: all 0.2s; }
+  .remove-lender:hover { border-color: var(--red); color: var(--red); background: var(--red-soft); }
+
+  .split-card { background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 12px; }
+  .split-card:last-of-type { margin-bottom: 0; }
+  .split-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .split-head input[type="text"] { font-weight: 600; font-size: 13px; padding: 7px 10px; width: auto; flex: 1; min-width: 110px; }
+  .occ-select, .rate-type-select { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 12px; padding: 7px 10px; border-radius: var(--radius-sm); }
+  .splits-wrap { margin-top: 4px; }
+
+  .generate-btn { width: 100%; background: var(--accent); border: none; border-radius: var(--radius); padding: 16px; color: #0d0f14; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.03em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 9px; transition: all 0.2s; box-shadow: 0 4px 24px var(--accent-glow); }
+  .generate-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 32px var(--accent-glow); filter: brightness(1.07); }
+  .generate-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+  .save-scenario-btn { width: 100%; background: var(--blue); border: none; border-radius: var(--radius); padding: 15px; color: #0d0f14; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .save-scenario-btn:hover { filter: brightness(1.08); }
+  .clear-btn { width: 100%; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); padding: 13px; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .clear-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-soft); }
+
+  #output-section { display: none; }
+  .output-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--text); margin-bottom: 16px; }
+  .download-btn { width: 100%; margin-top: 16px; background: var(--surface-2); border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: 14px 16px; color: var(--accent); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.18s; }
+  .download-btn:hover { background: var(--accent-soft); }
+  .download-btn.working { opacity: 0.6; cursor: wait; }
+
+  #pdf-preview-outer { background: #2a2a2a; border-radius: var(--radius); padding: 20px; overflow-x: auto; }
+  #pdf-preview { width: 794px; margin: 0 auto; }
+  .pdf-page { width: 794px; min-height: 1123px; background: #ffffff; font-family: Arial, Helvetica, sans-serif; color: #1a1a2e; page-break-after: always; }
+  .pdf-page + .pdf-page { margin-top: 22px; }
+  .pdf-band { background: #2d1a6e; padding: 20px 28px; display: flex; align-items: center; justify-content: space-between; }
+  .pdf-band-left .pdf-title { font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 4px; }
+  .pdf-band-left .pdf-sub { font-size: 12px; color: #d8d2f0; }
+  .pdf-band-right { text-align: right; font-size: 11px; color: #d8d2f0; line-height: 1.5; }
+  .pdf-band-right strong { color: #ffffff; font-size: 12px; }
+  .pdf-yellow-bar { height: 4px; background: #f5c800; }
+  .pdf-body { padding: 20px 28px 10px; }
+  .scenario-note { background: #f7f5fc; border-left: 3px solid #2d1a6e; border-radius: 0 6px 6px 0; padding: 10px 14px; font-size: 12px; color: #4a4f6a; margin-bottom: 16px; line-height: 1.5; }
+
+  /* Lender cards (client-facing PDF) */
+  .lc-card { border: 1px solid #e4e1f2; border-radius: 10px; margin-bottom: 14px; break-inside: avoid; page-break-inside: avoid; overflow: hidden; }
+  .lc-card.lc-best { border: 1.5px solid #f5c800; box-shadow: 0 0 0 1px #f5c800 inset; }
+  .lc-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; background: #f7f5fc; border-bottom: 1px solid #e4e1f2; }
+  .lc-bank { font-size: 15px; font-weight: 700; color: #2d1a6e; }
+  .lc-best-pill { flex-shrink: 0; background: #f5c800; color: #2d1a6e; font-size: 9.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+  .lc-body { padding: 14px 16px 16px; }
+  .lc-repay-row { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+  .lc-repay { font-size: 21px; font-weight: 700; color: #2d1a6e; }
+  .lc-repay span { font-size: 11px; font-weight: 400; color: #8a8a99; }
+  .lc-savings { font-size: 11px; color: #0a7c5c; font-weight: 600; background: #e6f5f0; display: inline-block; padding: 3px 9px; border-radius: 6px; margin-top: 4px; }
+  .lc-savings.lc-savings-neg { color: #c0392b; background: #fdecea; }
+  .lc-fees-line { font-size: 10.5px; color: #6a6f89; margin-top: 8px; }
+  .lc-divider { height: 1px; background: #eee; margin: 12px 0; }
+  .lc-split { border: 1px solid #eeebf8; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+  .lc-split:last-child { margin-bottom: 0; }
+  .lc-split-head { font-size: 11.5px; font-weight: 700; color: #2d1a6e; margin-bottom: 4px; display:flex; align-items:center; gap:5px; flex-wrap: wrap; }
+  .lc-split-product { font-size: 10.5px; color: #4a4f6a; margin-bottom: 8px; }
+  .lc-split-grid { display: flex; flex-wrap: wrap; gap: 8px 6px; }
+  .lc-split-grid > div { flex: 0 0 calc(25% - 4.5px); box-sizing: border-box; }
+  .lc-split-grid div { font-size: 9.5px; }
+  .lc-split-grid .lc-lbl { color: #8a8a99; text-transform: uppercase; letter-spacing: 0.03em; font-size: 8.5px; margin-bottom: 2px; }
+  .lc-split-grid .lc-val { font-weight: 600; color: #1a1a2e; font-size: 10.5px; }
+  .lc-features-title { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #8a8a99; margin: 12px 0 7px; }
+  .lc-feature-grid { display: flex; flex-wrap: wrap; gap: 5px 8px; }
+  .lc-feature-grid > .lc-feature { flex: 0 0 calc(33.33% - 5.33px); box-sizing: border-box; }
+  .lc-feature { display: flex; align-items: center; gap: 5px; font-size: 9.5px; color: #4a4f6a; }
+  .split-tag { display: inline-block; font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 1px 5px; border-radius: 8px; }
+  .split-tag.oo { background: #eaf1fb; color: #1d5fad; }
+  .split-tag.inv { background: #fdecea; color: #c0392b; }
+  .split-tag.rate-fixed { background: #f0ecfb; color: #5b3fa6; }
+  .split-tag.rate-variable { background: #e6f5f0; color: #0a7c5c; }
+  .tick { color: #0a7c5c; font-weight: 700; }
+  .cross { color: #c2c2c2; }
+  .pdf-footer { padding: 10px 28px 22px; font-size: 8.5px; color: #8a8a99; line-height: 1.5; border-top: 1px solid #eee; margin-top: 8px; }
+  .pdf-contact { padding: 4px 28px 12px; font-size: 10.5px; color: #4a4f6a; }
+  .pdf-contact strong { color: #1a1a2e; }
+  .cover-page .pdf-body { padding: 26px 32px; }
+  .cover-intro { font-size: 12px; color: #4a4f6a; margin-bottom: 18px; line-height: 1.6; }
+  .cover-list { display: flex; flex-direction: column; gap: 10px; }
+  .cover-item { border: 1px solid #e4e1f2; border-radius: 8px; padding: 13px 15px; display: flex; align-items: center; gap: 12px; }
+  .cover-item-num { width: 26px; height: 26px; border-radius: 50%; background: #2d1a6e; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0; }
+  .cover-item-main { flex: 1; min-width: 0; }
+  .cover-item-title { font-size: 13.5px; font-weight: 700; color: #2d1a6e; margin-bottom: 2px; }
+  .cover-item-note { font-size: 11px; color: #4a4f6a; line-height: 1.4; }
+  .cover-item-meta { text-align: right; font-size: 10px; color: #8a8a99; flex-shrink: 0; }
+  .cover-item-meta strong { display: block; font-size: 12.5px; color: #2d1a6e; }
+
+  /* Funding summary panel (cover page) */
+  .fs-panel { border: 1px solid #e4e1f2; border-radius: 10px; padding: 16px 18px; margin-bottom: 20px; background: #fbfaff; }
+  .fs-panel-title { font-size: 13.5px; font-weight: 700; color: #2d1a6e; margin-bottom: 4px; }
+  .fs-address { font-size: 11.5px; color: #4a4f6a; margin-bottom: 12px; }
+  .fs-stats { display: flex; gap: 10px; margin-bottom: 14px; }
+  .fs-stat { flex: 1; background: #ffffff; border: 1px solid #eeebf8; border-radius: 8px; padding: 9px 10px; text-align: center; }
+  .fs-stat-label { font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: #8a8a99; margin-bottom: 3px; }
+  .fs-stat-val { font-size: 14px; font-weight: 700; color: #2d1a6e; }
+  .fs-breakdown { display: flex; gap: 16px; margin-bottom: 12px; }
+  .fs-col { flex: 1; }
+  .fs-col-title { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: #8a8a99; margin-bottom: 6px; }
+  .fs-line { display: flex; justify-content: space-between; font-size: 10.5px; color: #4a4f6a; padding: 3px 0; }
+  .fs-line-total { border-top: 1px solid #e4e1f2; margin-top: 3px; padding-top: 5px; font-weight: 700; color: #1a1a2e; }
+  .fs-surplus { text-align: center; font-size: 12px; font-weight: 700; padding: 7px; border-radius: 6px; }
+  .fs-surplus.fs-positive { background: #e6f5f0; color: #0a7c5c; }
+  .fs-surplus.fs-shortfall { background: #fdecea; color: #c0392b; }
+
+@media print {
+  @page { size: A4 portrait; margin: 0; }
+  html, body { background: #ffffff !important; }
+  body > *:not(#print-root) { display: none !important; }
+  #print-root { display: block !important; position: static !important; }
+  #pdf-preview { width: 100% !important; margin: 0 !important; }
+  .pdf-page {
+    width: 100% !important; min-height: 100vh !important;
+    page-break-after: always !important; break-after: page !important;
+    box-shadow: none !important;
+  }
+  .pdf-page:last-child { page-break-after: auto !important; break-after: auto !important; }
+  .lc-card { break-inside: avoid !important; page-break-inside: avoid !important; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="https://aussiecoppolelli.github.io/broker-toolkit/index.html">← Dashboard</a>
+  <span class="sep">·</span>
+  <span class="current">Rate Comparison Tool</span>
+  <span class="nav-live">Beta</span>
+</nav>
+
+<header>
+  <div class="badge">Beta</div>
+  <h1>Rate <span>Comparison</span> Tool</h1>
+  <p>Drop in comparison sheet exports — build out one or more scenarios, and get back a single client-ready PDF so they can weigh up every option in one place.</p>
+</header>
+
+<div class="layout">
+
+  <div class="card">
+    <div class="card-title">Client Details</div>
+    <div class="field-row">
+      <div class="field"><label>Client Name</label><input type="text" id="client-name" placeholder="e.g. Sophie Ray" /></div>
+      <div class="field"><label>Current Monthly Repayment</label><input type="text" id="current-repayment" placeholder="e.g. $3,200 (optional)" oninput="renderLenderEditor()"/></div>
+    </div>
+    <div class="card-sub" style="margin-top:2px; margin-bottom:0;">If you enter their current repayment, every lender card will automatically show the monthly saving (or cost) compared to it — no need to work it out per lender.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Setup</div>
+    <div class="field" style="margin-bottom:0;">
+      <label>How many scenarios are you comparing?</label>
+      <div class="mode-toggle">
+        <button type="button" class="mode-btn active" id="mode-btn-single" onclick="setScenarioMode('single')">Single scenario</button>
+        <button type="button" class="mode-btn" id="mode-btn-multi" onclick="setScenarioMode('multi')">Multiple scenarios</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="funding-summary-card" style="display:none;">
+    <div class="card-title">Funding Summary <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);">(optional — appears on the cover page)</span></div>
+    <div id="funding-summary-fields"></div>
+    <button class="remove-lender" style="margin-top:14px;" onclick="clearFundingSummary()">Remove funding summary</button>
+  </div>
+
+  <div class="card" id="scenario-list-card">
+    <div class="card-title">Your Scenarios</div>
+    <div id="scenario-list"></div>
+  </div>
+
+  <div class="card" id="upload-card">
+    <div class="card-title" id="upload-card-title">Upload Comparison Sheet(s)</div>
+    <div class="card-sub">Works with the multi-lender "Product Comparison Sheet" export, single-lender "Product Details" PDFs (drop several in together — each adds a lender), or a "Funding Summary" PDF (adds the refinance funding breakdown to the cover page).</div>
+    <div id="editing-banner-slot"></div>
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+      <div class="dz-icon">📄</div>
+      <div class="dz-title">Drop one or more PDFs here</div>
+      <div class="dz-sub">or click to browse your files</div>
+    </div>
+    <input type="file" id="file-input" accept="application/pdf" multiple />
+    <div class="status-line hidden" id="status-line"></div>
+  </div>
+
+  <div class="card" id="review-card" style="display:none;">
+    <div class="card-title">Review &amp; Edit</div>
+    <div class="card-sub">Occupancy/rate type are auto-detected from the product name. Feature ticks default to "available" (most products offer most of these) — untick anything that doesn't apply.</div>
+
+    <div class="field-row">
+      <div class="field" id="scenario-title-field"><label>Scenario Title</label><input type="text" id="scenario-title" placeholder="e.g. Option A — Split Loan with Offset"/></div>
+      <div class="field"><label id="scenario-note-label">Notes for this scenario</label><input type="text" id="scenario-note" placeholder="e.g. Keeps the investment portion fixed for 2 years"/></div>
+    </div>
+
+    <div id="lenders-wrap"></div>
+
+    <button class="save-scenario-btn" id="save-scenario-btn" onclick="saveScenario()" style="margin-top:20px;">💾 Save This Scenario</button>
+  </div>
+
+  <button class="generate-btn" id="generate-btn" onclick="renderPreview()" disabled>Generate Full Comparison PDF</button>
+  <button class="clear-btn" onclick="clearEverything()">Clear Everything &amp; Start Over</button>
+
+  <div id="output-section">
+    <div class="output-title">Client-Ready Comparison</div>
+    <div id="pdf-preview-outer">
+      <div id="pdf-preview"></div>
+    </div>
+    <button class="download-btn" id="download-btn" onclick="downloadPDF()">🖨️ Print / Save as PDF</button>
+    <div style="text-align:center; font-size:12px; color:var(--text-dim); margin-top:8px;">Opens your browser's print dialog — choose "Save as PDF" (or "Microsoft Print to PDF") as the destination/printer.</div>
+  </div>
+
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const FIELD_LABELS = [
+  'Loan Type','Lender','Total repayments','Repayments savings','Total interest savings',
+  'LOAN FEES',
+  'Total upfront fees','Valuation','Application','Legal','Settlement','Establishment',
+  'Total ongoing fees (annually)','Total ongoing fees (monthly)',
+  'LENDER FEATURES',
+  'Branch access','Fee free ATM transactions','Internet banking','Mobile App','Apple Pay','Google Pay','Samsung Pay',
+  'Product name','Loan amount','Max. LVR','Rate','Comparison rate',"Discounted rate*",'Repayments',
+  'Redraw','Offset','Extra repayments','Construction'
+];
+const SECTION_HEADERS = new Set(['LOAN FEES','LENDER FEATURES']);
+const SPLIT_RE = /^SPLIT \d+$/;
+const LENDER_FEATURE_KEYS = [
+  ['branchAccess','Branch access'],['feeFreeAtm','Fee free ATM transactions'],
+  ['internetBanking','Internet banking'],['mobileApp','Mobile App'],
+  ['applePay','Apple Pay'],['googlePay','Google Pay'],['samsungPay','Samsung Pay']
+];
+const SPLIT_FEATURE_KEYS = [
+  ['redraw','Redraw'],['extraRepayments','Extra repayments'],['construction','Construction']
+];
+
+let draftLenders = [];
+let scenarios = [];
+let editingScenarioIndex = null;
+let fundingSummary = null;
+let scenarioMode = 'single';
+
+function setScenarioMode(mode){
+  const changed = mode !== scenarioMode;
+  if(changed && mode === 'single' && scenarios.length > 0){
+    const keepDraft = draftLenders.length > 0;
+    const discardCount = keepDraft ? scenarios.length : scenarios.length - 1;
+    if(discardCount > 0){
+      const msg = `Switching to single scenario will discard ${discardCount} saved scenario${discardCount===1?'':'s'}` +
+        (keepDraft ? ", keeping only the lenders you're currently editing." : ` and keep only "${scenarios[0].title}".`) + ' Continue?';
+      if(!confirm(msg)) return;
+    }
+    if(!keepDraft){
+      draftLenders = scenarios[0].lenders;
+      document.getElementById('scenario-note').value = scenarios[0].note || '';
+      renderLenderEditor();
+      document.getElementById('review-card').style.display = 'block';
+    }
+    scenarios = [];
+    renderScenarioList();
+  }
+  scenarioMode = mode;
+  document.getElementById('mode-btn-single').classList.toggle('active', mode==='single');
+  document.getElementById('mode-btn-multi').classList.toggle('active', mode==='multi');
+  document.getElementById('scenario-title-field').style.display = mode==='multi' ? 'block' : 'none';
+  document.getElementById('scenario-note-label').textContent = mode==='multi' ? 'Notes for this scenario' : 'Notes (optional)';
+  document.getElementById('save-scenario-btn').style.display = mode==='multi' ? 'block' : 'none';
+  document.getElementById('scenario-list-card').style.display = (mode==='multi' && scenarios.length>0) ? 'block' : 'none';
+  document.getElementById('generate-btn').textContent = mode==='multi' ? 'Generate Full Comparison PDF' : 'Generate Comparison PDF';
+  updateGenerateButtonState();
+}
+function updateGenerateButtonState(){
+  document.getElementById('generate-btn').disabled = scenarioMode==='multi' ? scenarios.length===0 : draftLenders.length===0;
+}
+
+async function extractItems(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  let items = [];
+  for(let p=1; p<=pdf.numPages; p++){
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    content.items.forEach(it=>{
+      if(it.str === '') return;
+      if(/^Printed .* AEST \| Page \d+ of \d+$/.test(it.str.trim())) return; // page stamp - can collide with adjacent headings
+      items.push({str: it.str, x: it.transform[4], y: it.transform[5], page: p});
+    });
+  }
+  return items;
+}
+
+function groupRows(items, rowTol){
+  // Group per page first — y-coordinates reset on every page, so rows from
+  // different pages must never be merged even if their y values coincide.
+  const byPage = {};
+  items.forEach(it=>{ const pg = it.page||1; (byPage[pg] = byPage[pg]||[]).push(it); });
+  const rows = [];
+  Object.keys(byPage).sort((a,b)=>a-b).forEach(pg=>{
+    const pgItems = [...byPage[pg]].sort((a,b)=> b.y-a.y || a.x-b.x);
+    const pgRows = [];
+    for(const it of pgItems){
+      let row = pgRows.find(r=>Math.abs(r.y-it.y)<=rowTol);
+      if(!row){ row = {y: it.y, page: Number(pg), items: []}; pgRows.push(row); }
+      row.items.push(it);
+    }
+    rows.push(...pgRows);
+  });
+  return rows;
+}
+function joinItems(colItems){
+  const sorted = [...colItems].sort((a,b)=> {
+    if(Math.abs(a.y-b.y) > 2) return b.y-a.y; // different visual line - line order
+    return a.x-b.x; // same line (within jitter tolerance) - reading order
+  });
+  let out = '', lastY = null;
+  for(const it of sorted){
+    if(lastY!==null && Math.abs(it.y-lastY)>2 && !out.endsWith(' ') && !it.str.startsWith(' ')) out += ' ';
+    out += it.str;
+    lastY = it.y;
+  }
+  return out.replace(/\s+/g,' ').trim();
+}
+
+function parseComparisonSheet(items){
+  const titleIdx = items.findIndex(it=>it.str.trim()==='Product Comparison Sheet');
+  const clientName = titleIdx>=0 ? items[titleIdx+1].str.trim() : '';
+
+  const rowTol = 3;
+  const rows = groupRows(items, rowTol);
+
+  const lenderRow = rows.find(r => joinItems(r.items.filter(it=>it.x<100)) === 'Lender');
+  if(!lenderRow) throw new Error('Could not find the "Lender" row — is this the standard comparison sheet export?');
+  const lenderRowItems = lenderRow.items.filter(it=>it.x>=100 && it.str.trim()!=='');
+  const colAnchors = lenderRowItems.map(it=>it.x).sort((a,b)=>a-b);
+  const colSpacing = colAnchors.length>1 ? (colAnchors[colAnchors.length-1]-colAnchors[0])/(colAnchors.length-1) : 90;
+  const maxColDist = colSpacing/2;
+
+  function nearestCol(x){
+    let best=-1, bestDist=Infinity;
+    colAnchors.forEach((cx,i)=>{ const d=Math.abs(x-cx); if(d<bestDist){bestDist=d; best=i;} });
+    return bestDist<=maxColDist ? best : -1;
+  }
+
+  const labelHits = [];
+  rows.forEach(r=>{
+    const labelText = joinItems(r.items.filter(it=>it.x<100));
+    if(FIELD_LABELS.includes(labelText) || SPLIT_RE.test(labelText)) labelHits.push({label:labelText, y:r.y});
+  });
+
+  const sections = [];
+  let current = {name:'General', fields:{}};
+  sections.push(current);
+  for(let i=0;i<labelHits.length;i++){
+    const hit = labelHits[i];
+    if(SPLIT_RE.test(hit.label)){ current = {name: hit.label, fields:{}}; sections.push(current); continue; }
+    if(SECTION_HEADERS.has(hit.label)) continue;
+    const yStart = hit.y;
+    const yEnd = (i+1<labelHits.length) ? labelHits[i+1].y + rowTol : yStart - 40;
+    const cellItems = items.filter(it => it.x >= 100 && it.y <= yStart+rowTol && it.y > yEnd);
+    const cols = Array.from({length: colAnchors.length}, ()=>[]);
+    cellItems.forEach(it=>{ const c = nearestCol(it.x); if(c>=0) cols[c].push(it); });
+    current.fields[hit.label] = cols.map(joinItems);
+  }
+  return {clientName, colCount: colAnchors.length, sections};
+}
+
+function detectFormat(items){
+  const text = items.slice(0,20).map(it=>it.str).join(' ');
+  if(text.includes('Product Comparison Sheet')) return 'comparison';
+  if(text.includes('Product Details')) return 'details';
+  if(text.includes('Funding summary') || text.includes('Funding Summary')) return 'funding';
+  return 'unknown';
+}
+
+function availToBool(s){ return /available/i.test(s) && !/unavailable/i.test(s); }
+
+function parseFundingSummary(items){
+  let lines = extractLinesFromItems(items)
+    .map(l => l.replace(/Printed[\s\S]*?Page\s*\d+\s*of\s*\d+/i, '').trim())
+    .filter(l => l !== '');
+
+  const titleIdx = lines.findIndex(l=>/^Funding summary$/i.test(l));
+  const loanDetailsIdx = lines.findIndex(l=>/^Your loan details$/i.test(l));
+  let clientName = '';
+  for(let i=titleIdx+1; i<loanDetailsIdx; i++){
+    if(!/^Joshua Coppolelli$/i.test(lines[i]) && !/^\d[\d\s]+$/.test(lines[i])) { clientName = lines[i]; break; }
+  }
+
+  const propertyAddress = (lines.find(l=>/^Property\s/i.test(l))||'').replace(/^Property\s*/i,'').trim();
+  const loanPurpose = (lines.find(l=>/^Loan purpose/i.test(l))||'').replace(/^Loan purpose\s*/i,'').trim();
+
+  const pvLine = lines.find(l=>/^Total property value/i.test(l)) || '';
+  const propertyValue = pvLine.match(/Total property value\s*(\$[\d,]+)/i)?.[1] || '';
+  const topDeposit = pvLine.match(/Total deposit\s*(\$[\d,]+)/i)?.[1] || '';
+
+  const laLine = lines.find(l=>/^Total loan amount/i.test(l)) || '';
+  const loanAmount = laLine.match(/Total loan amount\s*(\$[\d,]+)/i)?.[1] || '';
+  let effectiveLvr = laLine.match(/Effective LVR\s*([\d.]+%)/i)?.[1] || '';
+  if(!effectiveLvr){
+    const lvrLine = lines.find(l=>/Effective LVR/i.test(l)) || '';
+    effectiveLvr = lvrLine.match(/([\d.]+%)/)?.[1] || '';
+  }
+
+  // Generic line-item capture for "Required Funds" and "Available Funds" — these vary a lot
+  // (purchase vs refinance have entirely different fee breakdowns), so rather than hardcoding
+  // specific field names, just grab every "Label $Amount" line in each section verbatim.
+  function captureSection(startRe, endRe, totalLabelRe){
+    const startIdx = lines.findIndex(l=>startRe.test(l));
+    if(startIdx<0) return {items:[], total:''};
+    let endIdx = lines.length;
+    for(let i=startIdx+1;i<lines.length;i++){ if(endRe.test(lines[i])){ endIdx=i; break; } }
+    const block = lines.slice(startIdx+1, endIdx);
+    const items = [];
+    let total = '';
+    block.forEach(l=>{
+      const m = l.match(/^(.+?)\s*(\$[\d,]+\.?\d*)$/);
+      if(!m) return;
+      const label = m[1].trim(), value = m[2];
+      if(totalLabelRe.test(label)) total = value;
+      else items.push({label, value});
+    });
+    return {items, total};
+  }
+
+  const required = captureSection(/^Required Funds$/i, /^Available Funds$/i, /^Subtotal$/i);
+  const available = captureSection(/^Available Funds$/i, /^(LESS total contributions|=?\s*Total required|Property breakdown|Surplus)/i, /^Total funds available$/i);
+
+  const surplusLine = lines.find(l=>/^Surplus/i.test(l)) || '';
+  const surplus = surplusLine.match(/[+\-]\$[\d,]+\.?\d*/)?.[0] || '';
+
+  return {
+    clientName, propertyAddress, loanPurpose,
+    propertyValue, deposit: topDeposit, loanAmount, effectiveLvr,
+    requiredFundsItems: required.items, requiredSubtotal: required.total,
+    availableFundsItems: available.items, totalFundsAvailable: available.total,
+    surplus
+  };
+}
+
+function extractLinesFromItems(items){
+  const pageNums = [...new Set(items.map(it=>it.page ?? 0))].sort((a,b)=>a-b);
+  let lines = [];
+  for(const p of pageNums){
+    const pageItems = items.filter(it => (it.page ?? 0) === p);
+    const rows = groupRows(pageItems, 3);
+    rows.sort((a,b)=>b.y-a.y);
+    rows.forEach(r=>{ const l = joinItems(r.items); if(l) lines.push(l); });
+  }
+  return lines;
+}
+
+function parseProductDetails(items){
+  let lines = extractLinesFromItems(items)
+    .map(l => l.replace(/Printed[\s\S]*?Page\s*\d+\s*of\s*\d+/i, '').trim())
+    .filter(l => l !== '');
+  const compact = lines.map(l => l.replace(/\s+/g,'').toUpperCase());
+
+  function findIdx(pred, from=0, to=lines.length){
+    for(let i=from;i<to;i++) if(pred(lines[i], compact[i])) return i;
+    return -1;
+  }
+
+  const totalPkgIdx = findIdx((l)=>/^Total loan package$/i.test(l));
+  const bank = totalPkgIdx>0 ? lines[totalPkgIdx-1].trim() : '';
+  const totalMonthlyRepay = (lines.find(l=>/^Total monthly repayments/i.test(l))||'').match(/\$[\d,.]+/)?.[0] || '';
+
+  const upfrontIdx = findIdx(l=>/^Upfront fees$/i.test(l));
+  const splitsRegionEnd = upfrontIdx >= 0 ? upfrontIdx : lines.length;
+
+  const splitBoundaries = [];
+  for(let i = (totalPkgIdx>=0?totalPkgIdx:0); i < splitsRegionEnd; i++){
+    const m = compact[i].match(/^SPLIT(\d+)$/);
+    if(m) splitBoundaries.push({idx:i, num:m[1]});
+  }
+
+  const splits = splitBoundaries.map((b, bi) => {
+    const start = b.idx+1;
+    const end = bi+1<splitBoundaries.length ? splitBoundaries[bi+1].idx : splitsRegionEnd;
+    const block = lines.slice(start, end);
+    const productLine = block.find(l => !/^(Loan Amount:|Repayment type:|Loan Term:|Monthly repayments:|Max\. LVR|Features$|Redraw|Offset|Extra repayments|Construction|variable$|fixed$)/i.test(l)) || '';
+
+    const loanAmount = (block.find(l=>/^Loan Amount:/i.test(l))||'').match(/\$[\d,.]+/)?.[0] || '';
+    const loanTerm = (block.find(l=>/^Loan Term:/i.test(l))||'').replace(/^Loan Term:\s*/i,'').trim();
+    const monthlyRepay = (block.find(l=>/^Monthly repayments:/i.test(l))||'').match(/\$[\d,.]+/)?.[0] || '';
+    const maxLvr = (block.find(l=>/^Max\. LVR/i.test(l))||'').match(/[\d.]+%/)?.[0] || '';
+
+    function rateFor(label){
+      const li = block.findIndex(l => new RegExp(label+':?','i').test(l) && /%/.test(l));
+      if(li<0) return '';
+      const pct = block[li].match(/[\d.]+%/)?.[0] || '';
+      const typeLine = (block[li+1]||'').trim();
+      const type = /^(variable|fixed)$/i.test(typeLine) ? typeLine.toLowerCase() : '';
+      return (pct + (type?' '+type:'')).trim();
+    }
+    const rate = rateFor('Rate');
+    const comparisonRate = rateFor('Comparison rate');
+
+    function featureFor(label){
+      const li = block.findIndex(l => new RegExp('^'+label+'\\s*-\\s*(Available|Unavailable)','i').test(l) || new RegExp(label+'\\s*-\\s*(Available|Unavailable)$','i').test(l));
+      if(li<0) return {available:false, extra:''};
+      const l = block[li];
+      const available = availToBool(l);
+      const extraMatch = l.match(/(\d+\s*ACCOUNTS?)/i);
+      return {available, extra: extraMatch ? extraMatch[1] : ''};
+    }
+    const redraw = featureFor('Redraw');
+    const offset = featureFor('Offset');
+    const extraRepay = featureFor('Extra repayments');
+    const construction = featureFor('Construction');
+
+    return {
+      splitName: 'Split ' + b.num,
+      product: productLine,
+      occupancy: detectOccupancy(productLine),
+      rateType: detectRateType(productLine, rate),
+      loanAmount, maxLvr,
+      rate, comparisonRate,
+      discountedRate: '', effectiveRate: rate,
+      repayment: monthlyRepay,
+      loanTerm,
+      offsetAccounts: offset.available ? (offset.extra || 'Available') : '',
+      features: { redraw: redraw.available, extraRepayments: extraRepay.available, construction: construction.available }
+    };
+  });
+
+  function feeLineValue(sectionStartRe, sectionEndRe, fieldRe){
+    const s = findIdx(l=>sectionStartRe.test(l));
+    if(s<0) return '';
+    let e = lines.length;
+    for(let i=s+1;i<lines.length;i++){ if(sectionEndRe.test(lines[i])){ e=i; break; } }
+    const line = lines.slice(s,e).find(l=>fieldRe.test(l));
+    return line ? (line.match(/\$[\d,.\/A-Za-z]+/)?.[0] || '') : '';
+  }
+  const upfrontFees = feeLineValue(/^Upfront fees$/i, /^Ongoing fees$/i, /^Total\b/i);
+  const ongoingAnnual = feeLineValue(/^Ongoing fees$/i, /^Additional fees$/i, /^Annual\b/i);
+  const ongoingMonthly = feeLineValue(/^Ongoing fees$/i, /^Additional fees$/i, /^Monthly\b/i);
+
+  const lfIdx = findIdx(l=>/^Lender features$/i.test(l));
+  function lenderFeature(label){
+    if(lfIdx<0) return false;
+    const l = lines.slice(lfIdx+1, lfIdx+10).find(x=> new RegExp('^'+label,'i').test(x));
+    return l ? availToBool(l) : false;
+  }
+
+  return {
+    include: true, bank, loanType: '', repayment: totalMonthlyRepay,
+    repaymentSavings: '', interestSavings: '',
+    upfrontFees, ongoingAnnual, ongoingMonthly,
+    features: {
+      branchAccess: lenderFeature('Branch access'), feeFreeAtm: lenderFeature('Fee free ATM'),
+      internetBanking: lenderFeature('Internet banking'), mobileApp: lenderFeature('Mobile App'),
+      applePay: lenderFeature('Apple Pay'), googlePay: lenderFeature('Google Pay'), samsungPay: lenderFeature('Samsung Pay')
+    },
+    best: false,
+    splits: splits.length ? splits : [{
+      splitName:'Split 1', product:'', occupancy:'', rateType:'', loanAmount:'', maxLvr:'',
+      rate:'', comparisonRate:'', discountedRate:'', effectiveRate:'', repayment:'', loanTerm:'',
+      offsetAccounts:'', features:{redraw:true, extraRepayments:true, construction:false}
+    }]
+  };
+}
+
+
+function moneyToNumber(s){ const m = (s||'').replace(/[^0-9.]/g,''); return m ? parseFloat(m) : 0; }
+function fmtMoney(n){ return '$' + Math.abs(n).toLocaleString('en-AU', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+// Prefers an explicit per-lender "Repayment savings" figure (e.g. pulled straight from a
+// refinance comparison sheet) if one's been entered; otherwise derives it from the client's
+// current repayment field, so a single entry covers every lender automatically.
+function computeSavingsInfo(l, currentRepaymentStr){
+  if(l.repaymentSavings){
+    return { text: `Saves ${l.repaymentSavings}/month vs current`, positive: true };
+  }
+  const cur = moneyToNumber(currentRepaymentStr);
+  const lend = moneyToNumber(l.repayment);
+  if(!cur || !lend) return null;
+  const diff = cur - lend;
+  if(Math.abs(diff) < 0.005) return { text: 'About the same as their current repayment', positive: true };
+  if(diff > 0) return { text: `Saves ${fmtMoney(diff)}/month vs current (${fmtMoney(cur)})`, positive: true };
+  return { text: `${fmtMoney(diff)}/month more than current (${fmtMoney(cur)})`, positive: false };
+}
+
+function detectOccupancy(str){
+  const m = (str||'').match(/\b(Owner Occupied|Investment)\b/i);
+  if(!m) return '';
+  return m[1].toLowerCase()==='investment' ? 'Investment' : 'Owner Occupied';
+}
+function detectRateType(productStr, rateStr){
+  let m = (productStr||'').match(/\b(Fixed|Variable)\b/i);
+  if(!m) m = (rateStr||'').match(/\b(fixed|variable)\b/i);
+  return m ? (m[1][0].toUpperCase()+m[1].slice(1).toLowerCase()) : '';
+}
+
+function buildLenderModel(parsed){
+  const general = parsed.sections.find(s=>s.name==='General')?.fields || {};
+  const splitSections = parsed.sections.filter(s=>SPLIT_RE.test(s.name));
+  const n = parsed.colCount;
+  const out = [];
+  for(let i=0;i<n;i++){
+    const splits = splitSections.map(sec=>{
+      const product = (sec.fields['Product name']||[])[i] || '';
+      const rateRaw = (sec.fields['Rate']||[])[i] || '';
+      const cleanRate = rateRaw.replace(/^was\s*/i,'').trim();
+      const discounted = (sec.fields['Discounted rate*']||[])[i] || '';
+      const effectiveRate = (discounted && discounted.toUpperCase()!=='NA') ? discounted : cleanRate;
+      const comparisonRate = ((sec.fields['Comparison rate']||[])[i] || '').replace(/^was\s*/i,'').trim();
+      const repayFull = (sec.fields['Repayments']||[])[i] || '';
+      const termMatch = repayFull.match(/over\s+(\d+)\s+years?/i);
+      return {
+        splitName: sec.name.replace(/^SPLIT\s*/i,'Split '),
+        product,
+        occupancy: detectOccupancy(product),
+        rateType: detectRateType(product, rateRaw),
+        loanAmount: (sec.fields['Loan amount']||[])[i] || '',
+        maxLvr: (sec.fields['Max. LVR']||[])[i] || '',
+        rate: cleanRate,
+        comparisonRate,
+        discountedRate: discounted,
+        effectiveRate,
+        repayment: repayFull,
+        loanTerm: termMatch ? (termMatch[1]+' years') : '',
+        offsetAccounts: (sec.fields['Offset']||[])[i] || '',
+        features: { redraw:true, extraRepayments:true, construction:false }
+      };
+    });
+    out.push({
+      include: true,
+      bank: (general['Lender']||[])[i] || '',
+      loanType: (general['Loan Type']||[])[i] || '',
+      repayment: (general['Total repayments']||[])[i] || '',
+      repaymentSavings: (general['Repayments savings']||[])[i] || '',
+      interestSavings: (general['Total interest savings']||[])[i] || '',
+      upfrontFees: (general['Total upfront fees']||[])[i] || '',
+      ongoingAnnual: ((general['Total ongoing fees (annually)']||[])[i] || '').replace(/This fee is subject to lenders T&Cs/i,'').trim(),
+      ongoingMonthly: (general['Total ongoing fees (monthly)']||[])[i] || '',
+      // Feature ticks are drawn as vector icons in the PDF (no extractable text), so they
+      // can't be read reliably. Default to ticked since most standard products offer most
+      // of these — flip off the few that don't apply rather than ticking most of them on.
+      features: { branchAccess:true, feeFreeAtm:true, internetBanking:true, mobileApp:true, applePay:true, googlePay:true, samsungPay:true },
+      best: false,
+      splits: splits.length ? splits : [{
+        splitName:'Split 1', product:'', occupancy:'', rateType:'', loanAmount:'', maxLvr:'',
+        rate:'', comparisonRate:'', discountedRate:'', effectiveRate:'', repayment:'', loanTerm:'',
+        offsetAccounts:'', features:{redraw:true, extraRepayments:true, construction:false}
+      }]
+    });
+  }
+  return out;
+}
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('file-input');
+['dragenter','dragover'].forEach(ev=>dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.add('dragover'); }));
+['dragleave','drop'].forEach(ev=>dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.remove('dragover'); }));
+dropzone.addEventListener('drop', e=>{ handleFiles(e.dataTransfer.files); });
+fileInput.addEventListener('change', e=>{ handleFiles(e.target.files); });
+
+function setStatus(type, msg, showClear){
+  const el = document.getElementById('status-line');
+  el.className = 'status-line ' + type;
+  el.innerHTML = msg + (showClear ? '<span class="file-clear" onclick="resetDraft()">clear</span>' : '');
+}
+
+async function handleFiles(fileList){
+  const files = Array.from(fileList || []);
+  if(files.length === 0) return;
+  setStatus('loading', files.length>1 ? `Reading ${files.length} PDFs\u2026` : 'Reading PDF\u2026');
+  let addedLenders = 0, addedFunding = false, errors = [];
+  let clientNameFound = '';
+  for(const file of files){
+    if(file.type !== 'application/pdf'){ errors.push(`${file.name}: not a PDF`); continue; }
+    try{
+      const items = await extractItems(file);
+      const format = detectFormat(items);
+      if(format === 'comparison'){
+        const parsed = parseComparisonSheet(items);
+        const lenders = buildLenderModel(parsed);
+        draftLenders.push(...lenders);
+        addedLenders += lenders.length;
+        if(parsed.clientName) clientNameFound = clientNameFound || parsed.clientName;
+      }else if(format === 'details'){
+        const lender = parseProductDetails(items);
+        draftLenders.push(lender);
+        addedLenders += 1;
+      }else if(format === 'funding'){
+        fundingSummary = parseFundingSummary(items);
+        addedFunding = true;
+        if(fundingSummary.clientName) clientNameFound = clientNameFound || fundingSummary.clientName;
+      }else{
+        errors.push(`${file.name}: unrecognised PDF format`);
+      }
+    }catch(e){
+      console.error(e);
+      errors.push(`${file.name}: ${e.message || 'could not be read'}`);
+    }
+  }
+
+  if(clientNameFound && !document.getElementById('client-name').value.trim()){
+    document.getElementById('client-name').value = clientNameFound;
+  }
+  if(scenarioMode==='multi' && addedLenders > 0 && !document.getElementById('scenario-title').value.trim()){
+    document.getElementById('scenario-title').value = 'Option ' + String.fromCharCode(65 + scenarios.length);
+  }
+  if(addedFunding) renderFundingSummaryCard();
+
+  if(addedLenders > 0){
+    autoPickBest();
+    renderLenderEditor();
+    document.getElementById('review-card').style.display = 'block';
+    updateGenerateButtonState();
+    const parts = [];
+    if(addedLenders>0) parts.push(`added ${addedLenders} lender${addedLenders===1?'':'s'}${scenarioMode==='multi'?` (${draftLenders.length} total in this scenario)`:''}`);
+    if(addedFunding) parts.push('added the funding summary');
+    const okMsg = parts.join(' and ') + (scenarioMode==='multi' ? ' — review below, then save this scenario.' : ' — review below, then generate the PDF.');
+    const errMsg = errors.length ? ` ${errors.length} file${errors.length===1?'':'s'} couldn\u2019t be read: ${errors.join('; ')}` : '';
+    setStatus(errors.length ? 'error' : 'success', okMsg.charAt(0).toUpperCase()+okMsg.slice(1) + errMsg, true);
+    document.getElementById('review-card').scrollIntoView({behavior:'smooth', block:'start'});
+  }else if(addedFunding){
+    const errMsg = errors.length ? ` ${errors.length} other file${errors.length===1?'':'s'} couldn\u2019t be read: ${errors.join('; ')}` : '';
+    setStatus(errors.length ? 'error' : 'success', 'Added the funding summary.' + errMsg, true);
+    document.getElementById('funding-summary-card').scrollIntoView({behavior:'smooth', block:'start'});
+  }else{
+    setStatus('error', 'Couldn\u2019t read ' + (files.length>1?'any of those files':'that file') + ' — ' + errors.join('; '), true);
+  }
+}
+
+function autoPickBest(){
+  let bestIdx = -1, bestVal = Infinity;
+  draftLenders.forEach((l,i)=>{ const v = moneyToNumber(l.repayment); if(v>0 && v<bestVal){ bestVal=v; bestIdx=i; } });
+  draftLenders.forEach((l,i)=> l.best = (i===bestIdx));
+}
+
+function renderLenderEditor(){
+  const wrap = document.getElementById('lenders-wrap');
+  wrap.innerHTML = draftLenders.map((l,i)=> lenderCardHtml(l,i)).join('');
+}
+
+function splitCardHtml(sp, li, si){
+  const feat = f => `<label class="feature-item"><input type="checkbox" ${sp.features[f]?'checked':''} onchange="updateSplitFeature(${li},${si},'${f}',this.checked)"/><span class="check-box"></span>${SPLIT_FEATURE_KEYS.find(k=>k[0]===f)[1]}</label>`;
+  return `
+  <div class="split-card">
+    <div class="split-head">
+      <input type="text" value="${esc(sp.splitName)}" oninput="updateSplitField(${li},${si},'splitName',this.value)"/>
+      <select class="occ-select" onchange="updateSplitField(${li},${si},'occupancy',this.value)">
+        <option value="" ${sp.occupancy===''?'selected':''}>Occupancy —</option>
+        <option value="Owner Occupied" ${sp.occupancy==='Owner Occupied'?'selected':''}>Owner Occupied</option>
+        <option value="Investment" ${sp.occupancy==='Investment'?'selected':''}>Investment</option>
+      </select>
+      <select class="rate-type-select" onchange="updateSplitField(${li},${si},'rateType',this.value)">
+        <option value="" ${sp.rateType===''?'selected':''}>Rate type —</option>
+        <option value="Variable" ${sp.rateType==='Variable'?'selected':''}>Variable</option>
+        <option value="Fixed" ${sp.rateType==='Fixed'?'selected':''}>Fixed</option>
+      </select>
+    </div>
+    <div class="field"><label>Product name</label><input type="text" value="${esc(sp.product)}" oninput="updateSplitField(${li},${si},'product',this.value)"/></div>
+    <div class="field-row three">
+      <div class="field"><label>Loan amount</label><input type="text" value="${esc(sp.loanAmount)}" oninput="updateSplitField(${li},${si},'loanAmount',this.value)"/></div>
+      <div class="field"><label>Max LVR</label><input type="text" value="${esc(sp.maxLvr)}" oninput="updateSplitField(${li},${si},'maxLvr',this.value)"/></div>
+      <div class="field"><label>Loan term</label><input type="text" value="${esc(sp.loanTerm)}" oninput="updateSplitField(${li},${si},'loanTerm',this.value)"/></div>
+    </div>
+    <div class="field-row three">
+      <div class="field"><label>Rate</label><input type="text" value="${esc(sp.rate)}" oninput="updateSplitField(${li},${si},'rate',this.value)"/></div>
+      <div class="field"><label>Comparison rate</label><input type="text" value="${esc(sp.comparisonRate)}" oninput="updateSplitField(${li},${si},'comparisonRate',this.value)"/></div>
+      <div class="field"><label>Discounted rate</label><input type="text" value="${esc(sp.discountedRate)}" oninput="updateSplitField(${li},${si},'discountedRate',this.value)"/></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Split repayment</label><input type="text" value="${esc(sp.repayment)}" oninput="updateSplitField(${li},${si},'repayment',this.value)"/></div>
+      <div class="field"><label>Offset accounts</label><input type="text" value="${esc(sp.offsetAccounts)}" placeholder="leave blank if none" oninput="updateSplitField(${li},${si},'offsetAccounts',this.value)"/></div>
+    </div>
+    <div class="feature-grid" style="margin-top:10px;">${feat('redraw')}${feat('extraRepayments')}${feat('construction')}</div>
+    ${draftLenders[li].splits.length>1 ? `<button class="remove-lender" style="margin-top:12px;" onclick="removeSplit(${li},${si})">Remove this split</button>` : ''}
+  </div>`;
+}
+
+function lenderCardHtml(l, i){
+  const feat = f => `<label class="feature-item"><input type="checkbox" ${l.features[f]?'checked':''} onchange="updateFeature(${i},'${f}',this.checked)"/><span class="check-box"></span>${LENDER_FEATURE_KEYS.find(k=>k[0]===f)[1]}</label>`;
+  const splitsHtml = l.splits.map((sp,si)=> splitCardHtml(sp, i, si)).join('');
+  const currentRepayment = document.getElementById('current-repayment') ? document.getElementById('current-repayment').value.trim() : '';
+  const savingsInfo = computeSavingsInfo(l, currentRepayment);
+  return `
+  <div class="lender-card ${l.include?'':'excluded'}" id="lender-card-${i}">
+    <div class="lender-head ${i===0?'open':''}" onclick="toggleLender(${i})">
+      <span class="chev ${i===0?'open':''}" id="chev-${i}">▶</span>
+      <label class="quick-include" title="${l.include?'Included':'Excluded'} — click to toggle" onclick="event.stopPropagation()">
+        <input type="checkbox" ${l.include?'checked':''} onchange="updateLenderIncluded(${i}, this.checked)"/>
+        <span class="quick-check-box"></span>
+      </label>
+      <span class="lender-head-name">${l.bank || 'Lender ' + (i+1)}</span>
+      ${l.best ? '<span class="best-tag">Recommended</span>' : ''}
+      <span class="lender-head-repay">
+        ${l.repayment ? l.repayment.split('/')[0].trim() : ''}
+        ${savingsInfo ? `<span class="head-savings ${savingsInfo.positive?'':'head-savings-neg'}">${savingsInfo.positive?'▼':'▲'} ${savingsInfo.text.match(/\$[\d,.]+/)?.[0]||''}/mo</span>` : ''}
+      </span>
+      <button type="button" class="quick-remove" title="Remove this lender entirely" onclick="event.stopPropagation(); removeLender(${i})">✕</button>
+    </div>
+    <div class="lender-body ${i===0?'open':''}" id="lender-body-${i}">
+      <div class="switch-row">
+        <label class="switch"><input type="checkbox" ${l.include?'checked':''} onchange="updateLenderIncluded(${i}, this.checked)"/><span class="slider"></span></label>
+        <span class="switch-label">Include in comparison PDF</span>
+      </div>
+
+      <div class="mini-title">Lender</div>
+      <div class="field"><label>Bank name</label><input type="text" value="${esc(l.bank)}" oninput="updateField(${i},'bank',this.value)"/></div>
+
+      <div class="mini-title">Repayments &amp; Fees (whole package)</div>
+      <div class="field-row three">
+        <div class="field"><label>Total monthly repayment</label><input type="text" value="${esc(l.repayment)}" oninput="updateField(${i},'repayment',this.value); renderLenderEditor();"/></div>
+        <div class="field"><label>Upfront fees</label><input type="text" value="${esc(l.upfrontFees)}" oninput="updateField(${i},'upfrontFees',this.value)"/></div>
+        <div class="field"><label>Ongoing fees (p.a.)</label><input type="text" value="${esc(l.ongoingAnnual)}" oninput="updateField(${i},'ongoingAnnual',this.value)"/></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Repayment savings (vs current loan)</label><input type="text" value="${esc(l.repaymentSavings)}" placeholder="leave blank to auto-calculate from Current Monthly Repayment above" oninput="updateField(${i},'repaymentSavings',this.value); renderLenderEditor();"/></div>
+        <div class="field"><label>Total interest savings</label><input type="text" value="${esc(l.interestSavings)}" placeholder="leave blank if not a refinance" oninput="updateField(${i},'interestSavings',this.value)"/></div>
+      </div>
+
+      <div class="mini-title">Loan Splits <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim);">(occupancy &amp; rate type are auto-detected from the product name — double-check these)</span></div>
+      <div class="splits-wrap">${splitsHtml}</div>
+      <button class="pill-btn" style="margin-top:4px;" onclick="addSplit(${i})">+ Add another split</button>
+
+      <div class="mini-title">Bank-Wide Features <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim);">(tick marks in the PDF are icons, not text, so these can't be read directly — defaulted to ticked since most products offer most of these; untick anything that doesn't apply)</span></div>
+      <div class="feature-grid">${feat('branchAccess')}${feat('feeFreeAtm')}${feat('internetBanking')}${feat('mobileApp')}${feat('applePay')}${feat('googlePay')}${feat('samsungPay')}</div>
+
+      <div class="best-radio-row">
+        <input type="radio" name="best-lender" id="best-${i}" ${l.best?'checked':''} onchange="setBest(${i})"/>
+        <label for="best-${i}">Mark as recommended option</label>
+      </div>
+
+      <button class="remove-lender" onclick="removeLender(${i})">Remove this lender</button>
+    </div>
+  </div>`;
+}
+function esc(s){ return (s||'').replace(/"/g,'&quot;'); }
+
+function toggleLender(i){
+  document.getElementById('lender-body-'+i).classList.toggle('open');
+  document.getElementById('chev-'+i).classList.toggle('open');
+}
+function updateField(i, key, val){ draftLenders[i][key] = val; }
+function updateFeature(i, key, val){ draftLenders[i].features[key] = val; }
+function updateSplitField(li, si, key, val){ draftLenders[li].splits[si][key] = val; }
+function updateSplitFeature(li, si, key, val){ draftLenders[li].splits[si].features[key] = val; }
+function updateLenderIncluded(i, val){
+  draftLenders[i].include = val;
+  document.getElementById('lender-card-'+i).classList.toggle('excluded', !val);
+}
+function setBest(i){ draftLenders.forEach((l,j)=> l.best = (j===i)); renderLenderEditor(); }
+function removeLender(i){
+  const name = draftLenders[i].bank || 'this lender';
+  if(!confirm(`Remove ${name} from this scenario?`)) return;
+  draftLenders.splice(i,1);
+  renderLenderEditor();
+  updateGenerateButtonState();
+}
+function addSplit(li){
+  draftLenders[li].splits.push({
+    splitName:'Split '+(draftLenders[li].splits.length+1), product:'', occupancy:'', rateType:'',
+    loanAmount:'', maxLvr:'', rate:'', comparisonRate:'', discountedRate:'', effectiveRate:'',
+    repayment:'', loanTerm:'', offsetAccounts:'', features:{redraw:true, extraRepayments:true, construction:false}
+  });
+  renderLenderEditor();
+}
+function removeSplit(li, si){ draftLenders[li].splits.splice(si,1); renderLenderEditor(); }
+
+const FUNDING_FIELDS = [
+  ['propertyAddress','Property address'], ['loanPurpose','Loan purpose'],
+  ['propertyValue','Property value'], ['deposit','Deposit'],
+  ['loanAmount','Total loan amount'], ['effectiveLvr','Effective LVR'],
+  ['requiredSubtotal','Required funds subtotal'], ['totalFundsAvailable','Total funds available'],
+  ['surplus','Surplus / shortfall'],
+];
+function fundingItemsEditorHtml(items, listName){
+  const rows = (items||[]).map((it,i)=> `
+    <div class="field-row" style="align-items:flex-end;">
+      <div class="field"><label>${i===0?'Item':''}</label><input type="text" value="${esc(it.label)}" oninput="updateFundingItem('${listName}',${i},'label',this.value)"/></div>
+      <div class="field" style="max-width:140px;"><label>${i===0?'Amount':''}</label><input type="text" value="${esc(it.value)}" oninput="updateFundingItem('${listName}',${i},'value',this.value)"/></div>
+      <button class="pill-btn" style="margin-bottom:16px;" onclick="removeFundingItem('${listName}',${i})">✕</button>
+    </div>`).join('');
+  return rows + `<button class="pill-btn" onclick="addFundingItem('${listName}')">+ Add line item</button>`;
+}
+function renderFundingSummaryCard(){
+  const card = document.getElementById('funding-summary-card');
+  const wrap = document.getElementById('funding-summary-fields');
+  if(!fundingSummary){ card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  const pairs = [];
+  for(let i=0;i<FUNDING_FIELDS.length;i+=2) pairs.push(FUNDING_FIELDS.slice(i,i+2));
+  const topFields = pairs.map(pair => `<div class="field-row">${pair.map(([key,label])=>
+    `<div class="field"><label>${label}</label><input type="text" value="${esc(fundingSummary[key]||'')}" oninput="updateFundingField('${key}',this.value)"/></div>`
+  ).join('')}</div>`).join('');
+  wrap.innerHTML = topFields +
+    `<div class="mini-title">Required Funds breakdown</div>${fundingItemsEditorHtml(fundingSummary.requiredFundsItems, 'requiredFundsItems')}` +
+    `<div class="mini-title">Available Funds breakdown</div>${fundingItemsEditorHtml(fundingSummary.availableFundsItems, 'availableFundsItems')}`;
+}
+function updateFundingField(key, val){ if(fundingSummary) fundingSummary[key] = val; }
+function updateFundingItem(listName, i, key, val){ if(fundingSummary && fundingSummary[listName][i]) fundingSummary[listName][i][key] = val; }
+function addFundingItem(listName){
+  if(!fundingSummary) return;
+  fundingSummary[listName] = fundingSummary[listName] || [];
+  fundingSummary[listName].push({label:'', value:''});
+  renderFundingSummaryCard();
+}
+function removeFundingItem(listName, i){
+  if(!fundingSummary) return;
+  fundingSummary[listName].splice(i,1);
+  renderFundingSummaryCard();
+}
+function clearFundingSummary(){
+  fundingSummary = null;
+  renderFundingSummaryCard();
+}
+
+function renderScenarioList(){
+  const card = document.getElementById('scenario-list-card');
+  const list = document.getElementById('scenario-list');
+  if(scenarios.length === 0 || scenarioMode !== 'multi'){ card.style.display='none'; return; }
+  card.style.display = 'block';
+  list.innerHTML = scenarios.map((s,i)=>{
+    const included = s.lenders.filter(l=>l.include);
+    const vals = included.map(l=>moneyToNumber(l.repayment)).filter(v=>v>0);
+    const range = vals.length ? `$${Math.min(...vals).toLocaleString('en-AU',{minimumFractionDigits:0,maximumFractionDigits:0})} – $${Math.max(...vals).toLocaleString('en-AU',{minimumFractionDigits:0,maximumFractionDigits:0})}/mo` : '';
+    return `
+    <div class="scenario-row">
+      <div class="scenario-row-main">
+        <div class="scenario-row-title">${esc2(s.title) || 'Untitled scenario'}</div>
+        <div class="scenario-row-meta">${included.length} lender${included.length===1?'':'s'}${range?' · '+range:''}</div>
+        ${s.note ? `<div class="scenario-row-note">${esc2(s.note)}</div>` : ''}
+      </div>
+      <div class="scenario-row-actions">
+        <button class="pill-btn" onclick="editScenario(${i})">Edit</button>
+        <button class="pill-btn danger" onclick="removeScenario(${i})">Remove</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveScenario(){
+  if(draftLenders.length === 0){ alert('Upload a comparison sheet first.'); return; }
+  const title = document.getElementById('scenario-title').value.trim() || ('Option ' + String.fromCharCode(65 + scenarios.length));
+  const note = document.getElementById('scenario-note').value.trim();
+  const scenario = { title, note, lenders: draftLenders };
+  if(editingScenarioIndex !== null){ scenarios[editingScenarioIndex] = scenario; editingScenarioIndex = null; }
+  else { scenarios.push(scenario); }
+  renderScenarioList();
+  resetDraft();
+  updateGenerateButtonState();
+  document.getElementById('scenario-list-card').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function editScenario(i){
+  const s = scenarios[i];
+  editingScenarioIndex = i;
+  draftLenders = JSON.parse(JSON.stringify(s.lenders));
+  document.getElementById('scenario-title').value = s.title;
+  document.getElementById('scenario-note').value = s.note;
+  renderLenderEditor();
+  document.getElementById('review-card').style.display = 'block';
+  document.getElementById('upload-card-title').textContent = 'Replace PDF for This Scenario (optional)';
+  document.getElementById('editing-banner-slot').innerHTML =
+    `<div class="editing-banner"><span>✏️ Editing "${esc2(s.title)}" — save to update it, or clear to discard changes.</span><button class="pill-btn" onclick="resetDraft()">Cancel</button></div>`;
+  document.getElementById('review-card').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function removeScenario(i){
+  if(!confirm('Remove this scenario from the comparison?')) return;
+  scenarios.splice(i,1);
+  renderScenarioList();
+  updateGenerateButtonState();
+}
+
+function resetDraft(){
+  draftLenders = [];
+  editingScenarioIndex = null;
+  document.getElementById('scenario-title').value = '';
+  document.getElementById('scenario-note').value = '';
+  document.getElementById('lenders-wrap').innerHTML = '';
+  document.getElementById('review-card').style.display = 'none';
+  document.getElementById('upload-card-title').textContent = 'Upload Comparison Sheet(s)';
+  document.getElementById('editing-banner-slot').innerHTML = '';
+  document.getElementById('status-line').className = 'status-line hidden';
+  fileInput.value = '';
+}
+
+function clearEverything(){
+  if(scenarios.length && !confirm('This clears every saved scenario. Continue?')) return;
+  scenarios = [];
+  resetDraft();
+  document.getElementById('client-name').value = '';
+  updateGenerateButtonState();
+  document.getElementById('output-section').style.display = 'none';
+  fundingSummary = null;
+  renderFundingSummaryCard();
+  renderScenarioList();
+}
+
+function tickCross(v){ return v ? '<span class="tick">&#10003;</span>' : '<span class="cross">&#10005;</span>'; }
+function esc2(s){ return (s===undefined||s===null) ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function occTag(sp){
+  let out = '';
+  if(sp.occupancy) out += `<span class="split-tag ${sp.occupancy==='Investment'?'inv':'oo'}">${sp.occupancy==='Investment'?'Inv':'OO'}</span>`;
+  if(sp.rateType) out += ` <span class="split-tag rate-${sp.rateType.toLowerCase()}">${sp.rateType}</span>`;
+  return out;
+}
+function splitBlockHtml(sp, showFeatures){
+  const grid = [
+    ['Loan amount', sp.loanAmount], ['Max LVR', sp.maxLvr],
+    ['Rate', sp.rate], ['Comparison rate', sp.comparisonRate],
+    ['Effective rate', sp.effectiveRate], ['Loan term', sp.loanTerm],
+    ['Repayment', sp.repayment], ['Offset accounts', sp.offsetAccounts || '—'],
+  ].map(([lbl,val])=> `<div><div class="lc-lbl">${lbl}</div><div class="lc-val">${esc2(val)||'—'}</div></div>`).join('');
+  const feats = showFeatures ? SPLIT_FEATURE_KEYS.map(([key,label])=>
+    `<div class="lc-feature">${tickCross(sp.features[key])} ${label}</div>`
+  ).join('') : '';
+  return `
+  <div class="lc-split">
+    <div class="lc-split-head">${esc2(sp.splitName)} ${occTag(sp)}</div>
+    <div class="lc-split-product">${esc2(sp.product) || 'Product details not provided'}</div>
+    <div class="lc-split-grid">${grid}</div>
+    ${showFeatures ? `<div class="lc-feature-grid" style="margin-top:8px;">${feats}</div>` : ''}
+  </div>`;
+}
+
+function lenderCardPdfHtml(l, currentRepayment){
+  const showSplitFeaturesPerSplit = l.splits.length > 1;
+  const splitsHtml = l.splits.map(sp => splitBlockHtml(sp, showSplitFeaturesPerSplit)).join('');
+  const singleSplitFeatures = (!showSplitFeaturesPerSplit) ? SPLIT_FEATURE_KEYS.map(([key,label])=>
+    `<div class="lc-feature">${tickCross(l.splits[0].features[key])} ${label}</div>`
+  ).join('') : '';
+  const lenderFeatures = LENDER_FEATURE_KEYS.map(([key,label])=>
+    `<div class="lc-feature">${tickCross(l.features[key])} ${label}</div>`
+  ).join('');
+  const savingsInfo = computeSavingsInfo(l, currentRepayment);
+
+  return `
+  <div class="lc-card ${l.best?'lc-best':''}">
+    <div class="lc-head">
+      <div class="lc-bank">${esc2(l.bank) || 'Lender'}</div>
+      ${l.best ? '<div class="lc-best-pill">Recommended</div>' : ''}
+    </div>
+    <div class="lc-body">
+      <div class="lc-repay-row">
+        <div class="lc-repay">${esc2(l.repayment) || '—'} <span>total repayment</span></div>
+      </div>
+      ${savingsInfo ? `<div class="lc-savings ${savingsInfo.positive?'':'lc-savings-neg'}">${esc2(savingsInfo.text)}</div>` : ''}
+      ${l.interestSavings ? `<div class="lc-savings" style="margin-top:4px;">${esc2(l.interestSavings)} total interest saved</div>` : ''}
+      <div class="lc-fees-line">Upfront fees: ${esc2(l.upfrontFees)||'—'} &nbsp;·&nbsp; Ongoing fees: ${esc2(l.ongoingAnnual)||'—'} p.a.</div>
+      <div class="lc-divider"></div>
+      ${splitsHtml}
+      ${!showSplitFeaturesPerSplit ? `<div class="lc-features-title">Split Features</div><div class="lc-feature-grid">${singleSplitFeatures}</div>` : ''}
+      <div class="lc-features-title">Bank-Wide Features</div>
+      <div class="lc-feature-grid">${lenderFeatures}</div>
+    </div>
+  </div>`;
+}
+
+function scenarioPageHtml(scenario, clientName, today, opts){
+  opts = opts || {};
+  const currentRepayment = document.getElementById('current-repayment') ? document.getElementById('current-repayment').value.trim() : '';
+  const included = scenario.lenders.filter(l=>l.include);
+  const cards = included.map(l=> lenderCardPdfHtml(l, currentRepayment)).join('');
+
+  return `
+  <div class="pdf-page">
+    <div class="pdf-band">
+      <div class="pdf-band-left">
+        <div class="pdf-title">${esc2(scenario.title)}</div>
+        <div class="pdf-sub">${clientName ? 'Prepared for ' + esc2(clientName) : 'Loan comparison summary'} &nbsp;·&nbsp; ${today}</div>
+      </div>
+      <div class="pdf-band-right">
+        <strong>Josh Coppolelli</strong><br/>
+        Mortgage Broker · Aussie Home Loans<br/>
+        0426 275 799 &nbsp;·&nbsp; 02 7256 9675
+      </div>
+    </div>
+    <div class="pdf-yellow-bar"></div>
+    <div class="pdf-body">
+      ${opts.embedFunding ? fundingSummaryPanelHtml() : ''}
+      ${scenario.note ? `<div class="scenario-note">${esc2(scenario.note)}</div>` : ''}
+      ${cards}
+    </div>
+    <div class="pdf-contact">Have any questions about these options? I'm always happy to talk it through — just reach out any time.</div>
+    <div class="pdf-footer">
+      Should you proceed with any of the above products, there will be other fees payable by you to the lender and to other parties — see the final lender documentation and credit contract for firm details of amounts payable.
+      Rates and repayments shown are indicative, correct as at ${today}, and are subject to change. Applications remain subject to assessment and lender approval. This document is a guide only and does not constitute a formal loan offer.
+    </div>
+  </div>`;
+}
+
+function fundingSummaryPanelHtml(){
+  if(!fundingSummary) return '';
+  const fs = fundingSummary;
+  const isShortfall = (fs.surplus||'').trim().startsWith('-');
+  const reqLines = (fs.requiredFundsItems||[]).map(it=>
+    `<div class="fs-line"><span>${esc2(it.label)}</span><span>${esc2(it.value)}</span></div>`).join('');
+  const availLines = (fs.availableFundsItems||[]).map(it=>
+    `<div class="fs-line"><span>${esc2(it.label)}</span><span>${esc2(it.value)}</span></div>`).join('');
+  return `
+  <div class="fs-panel">
+    <div class="fs-panel-title">Funding Summary${fs.loanPurpose?' — '+esc2(fs.loanPurpose):''}</div>
+    ${fs.propertyAddress ? `<div class="fs-address">${esc2(fs.propertyAddress)}</div>` : ''}
+    <div class="fs-stats">
+      <div class="fs-stat"><div class="fs-stat-label">Property Value</div><div class="fs-stat-val">${esc2(fs.propertyValue)||'—'}</div></div>
+      <div class="fs-stat"><div class="fs-stat-label">Deposit</div><div class="fs-stat-val">${esc2(fs.deposit)||'—'}</div></div>
+      <div class="fs-stat"><div class="fs-stat-label">Loan Amount</div><div class="fs-stat-val">${esc2(fs.loanAmount)||'—'}</div></div>
+      <div class="fs-stat"><div class="fs-stat-label">Effective LVR</div><div class="fs-stat-val">${esc2(fs.effectiveLvr)||'—'}</div></div>
+    </div>
+    <div class="fs-breakdown">
+      <div class="fs-col">
+        <div class="fs-col-title">Required Funds</div>
+        ${reqLines}
+        <div class="fs-line fs-line-total"><span>Subtotal</span><span>${esc2(fs.requiredSubtotal)||'—'}</span></div>
+      </div>
+      <div class="fs-col">
+        <div class="fs-col-title">Available Funds</div>
+        ${availLines}
+        <div class="fs-line fs-line-total"><span>Total available</span><span>${esc2(fs.totalFundsAvailable)||'—'}</span></div>
+      </div>
+    </div>
+    ${fs.surplus ? `<div class="fs-surplus ${isShortfall?'fs-shortfall':'fs-positive'}">${isShortfall?'Shortfall':'Surplus'}: ${esc2(fs.surplus)}</div>` : ''}
+  </div>`;
+}
+
+function coverPageHtml(clientName, today){
+  const items = scenarios.map((s,i)=>{
+    const included = s.lenders.filter(l=>l.include);
+    const vals = included.map(l=>moneyToNumber(l.repayment)).filter(v=>v>0);
+    const lo = vals.length ? Math.min(...vals) : null, hi = vals.length ? Math.max(...vals) : null;
+    const rangeStr = (lo!==null) ? (lo===hi ? `$${lo.toLocaleString('en-AU')}/mo` : `$${lo.toLocaleString('en-AU')}–$${hi.toLocaleString('en-AU')}/mo`) : '';
+    return `
+    <div class="cover-item">
+      <div class="cover-item-num">${i+1}</div>
+      <div class="cover-item-main">
+        <div class="cover-item-title">${esc2(s.title)}</div>
+        ${s.note ? `<div class="cover-item-note">${esc2(s.note)}</div>` : ''}
+      </div>
+      <div class="cover-item-meta">${included.length} lender${included.length===1?'':'s'}${rangeStr?`<strong>${rangeStr}</strong>`:''}</div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="pdf-page cover-page">
+    <div class="pdf-band">
+      <div class="pdf-band-left">
+        <div class="pdf-title">Your Options</div>
+        <div class="pdf-sub">${clientName ? 'Prepared for ' + esc2(clientName) : 'Loan comparison summary'} &nbsp;·&nbsp; ${today}</div>
+      </div>
+      <div class="pdf-band-right">
+        <strong>Josh Coppolelli</strong><br/>
+        Mortgage Broker · Aussie Home Loans<br/>
+        0426 275 799 &nbsp;·&nbsp; 02 7256 9675
+      </div>
+    </div>
+    <div class="pdf-yellow-bar"></div>
+    <div class="pdf-body">
+      <div class="cover-intro">Here's a quick summary of the ${scenarios.length} scenario${scenarios.length===1?'':'s'} we've looked at together. The pages that follow break each one down in full — feel free to flick through and see which shape feels right, and jot down any questions for our next chat.</div>
+      ${fundingSummaryPanelHtml()}
+      <div class="cover-list">${items}</div>
+    </div>
+  </div>`;
+}
+
+function renderPreview(){
+  const clientName = document.getElementById('client-name').value.trim();
+  const today = new Date().toLocaleDateString('en-AU', {day:'numeric', month:'short', year:'numeric'});
+
+  if(scenarioMode === 'single'){
+    if(draftLenders.length === 0){ alert('Upload at least one lender first.'); return; }
+    const note = document.getElementById('scenario-note').value.trim();
+    const scenario = { title: 'Your Loan Comparison', note, lenders: draftLenders };
+    document.getElementById('pdf-preview').innerHTML = scenarioPageHtml(scenario, clientName, today, {embedFunding:true});
+  } else {
+    if(scenarios.length === 0){ alert('Save at least one scenario first.'); return; }
+    const pages = [coverPageHtml(clientName, today)]
+      .concat(scenarios.map(s=> scenarioPageHtml(s, clientName, today)));
+    document.getElementById('pdf-preview').innerHTML = pages.join('');
+  }
+
+  document.getElementById('output-section').style.display = 'block';
+  setTimeout(()=> document.getElementById('output-section').scrollIntoView({behavior:'smooth', block:'start'}), 80);
+}
+
+function downloadPDF(){
+  const pages = document.querySelectorAll('#pdf-preview .pdf-page');
+  if(pages.length === 0){ alert('Generate the comparison first.'); return; }
+
+  // Printing needs the content to be a direct child of <body> so the print CSS can hide
+  // everything else on the page (nav, editor cards, etc.) and show only this. We clone
+  // rather than move the original so the on-screen preview and your edits stay intact.
+  const original = document.getElementById('pdf-preview');
+  const printRoot = document.createElement('div');
+  printRoot.id = 'print-root';
+  printRoot.appendChild(original.cloneNode(true));
+  document.body.appendChild(printRoot);
+
+  function cleanup(){
+    if(printRoot.parentNode) document.body.removeChild(printRoot);
+    window.removeEventListener('afterprint', cleanup);
+  }
+  window.addEventListener('afterprint', cleanup);
+  setTimeout(cleanup, 60000); // safety net for browsers that don't fire afterprint reliably
+
+  window.print();
+}
+
+renderScenarioList();
+setScenarioMode('single');
+</script>
+</body>
+</html>
